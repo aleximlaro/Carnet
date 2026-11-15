@@ -1,0 +1,3 @@
+# Google Play vérifie que l'app et le site vous appartiennent grâce à ce fichier.
+# Déposez simplement assetlinks.json (fourni par PWABuilder) à côté de index.html.
+/.well-known/assetlinks.json  /assetlinks.json  200

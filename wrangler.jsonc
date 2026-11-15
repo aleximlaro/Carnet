@@ -1,0 +1,6 @@
+{
+  // Cloudflare Workers : sert les fichiers du dossier public/ tels quels.
+  "name": "carnet",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public" }
+}
