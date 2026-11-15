@@ -169,10 +169,19 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
 .dlg{background:var(--bg);border-radius:12px;padding:22px;width:min(480px,100%);max-height:90vh;overflow:auto}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:10px;display:flex;gap:14px;align-items:center;z-index:30;max-width:calc(100% - 32px);font-size:15px}
 .toast button{background:var(--pad);color:var(--padink);border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
+.late{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;border:1.5px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:15px}
+.late b{color:var(--red)}
+.lnsave{background:none;border:0;padding:6px 0 0;min-height:34px;font-size:13px;color:var(--muted);text-decoration:underline;cursor:pointer}
+.lnsave:disabled{text-decoration:none;cursor:default}
+.rows.items .rw{grid-template-columns:minmax(0,2fr) minmax(0,.9fr) minmax(0,.9fr) 44px}
+.pick{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 12px;margin-bottom:8px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);text-align:left;cursor:pointer}
+.pick:hover{background:var(--soft)}
+.pick b{white-space:nowrap;font-size:14px}
+.dlg .search{display:block;width:100%;margin-bottom:12px}
 [hidden]{display:none!important}
 @media(max-width:960px){.egrid{grid-template-columns:minmax(0,1fr)}.seg{display:flex}.egrid[data-m=edit] .pwrap{display:none}.egrid[data-m=prev] .eform{display:none}.pwrap{position:static}.pgrid{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){.kpi{padding:12px}.kpi .sub{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding:10px 0;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 4px;text-align:right}.stack td::before{content:attr(data-l);color:var(--muted);font-size:13px;text-align:left}.lnr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}.lnr output{grid-column:1/3;text-align:left;padding:0}.two{grid-template-columns:minmax(0,1fr)}.rows.tx .rw{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.rows.tx .rw label:nth-child(3){grid-column:1/3}.paper{padding:22px 18px;min-width:480px}.where{order:3}}
-@media print{.top,.ehead,.seg,.eform,.toast,.ov,.view:not(#v-edit){display:none!important}body{background:#fff}.band{padding:0;max-width:none}.egrid{display:block}.pwrap{display:block!important;position:static;background:none;padding:0}.paper{box-shadow:none;padding:0;min-width:0;max-width:none}@page{margin:14mm}}
+@media(max-width:600px){.kpi{padding:12px}.kpi .sub{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding:10px 0;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 4px;text-align:right}.stack td::before{content:attr(data-l);color:var(--muted);font-size:13px;text-align:left}.lnr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}.lnr output{grid-column:1/3;text-align:left;padding:0}.two{grid-template-columns:minmax(0,1fr)}.rows.items .rw{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.rows.items .rw label:first-child{grid-column:1/-1}.rows.tx .rw{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.rows.tx .rw label:nth-child(3){grid-column:1/3}.paper{padding:22px 18px;min-width:480px}.where{order:3}}
+@media print{.top,.ehead,.seg,.eform,.late,.toast,.ov,.view:not(#v-edit){display:none!important}body{background:#fff}.band{padding:0;max-width:none}.egrid{display:block}.pwrap{display:block!important;position:static;background:none;padding:0}.paper{box-shadow:none;padding:0;min-width:0;max-width:none}@page{margin:14mm}}
 </style>
 </head>
 <body>
@@ -203,6 +212,7 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
       <button class="chip" data-act="flt" data-f="all" aria-pressed="true">Tout</button>
       <button class="chip" data-act="flt" data-f="S" aria-pressed="false" id="chip-s">Soumissions</button>
       <button class="chip" data-act="flt" data-f="F" aria-pressed="false">Factures</button>
+      <button class="chip" data-act="flt" data-f="late" aria-pressed="false">En retard</button>
       <input class="search" id="q" type="search" placeholder="Chercher un client, un numéro, des travaux" aria-label="Chercher">
     </div>
     <div class="scroll" id="doclist"></div>
@@ -267,6 +277,14 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
             <label>Conditions des factures<textarea id="p-termsF" data-p="termsF" rows="3"></textarea></label>
           </fieldset>
         </div>
+        <div class="panel" id="p-items-panel" style="margin-top:20px">
+          <fieldset style="margin:0">
+            <legend>Ma liste de travaux et produits</legend>
+            <p class="hint" style="margin-top:0">Ce que vous facturez souvent. Dans un document, ajoutez-les en un clic avec le bouton « + De ma liste ».</p>
+            <div class="rows items" id="p-items"></div>
+            <button type="button" class="btn ghost sm" data-act="item-add">+ Ajouter à ma liste</button>
+          </fieldset>
+        </div>
       </form>
       <div>
       <div class="panel" id="acct-panel" style="margin-bottom:20px"></div>
@@ -277,6 +295,12 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
           <button class="btn" data-act="export">Télécharger la sauvegarde</button>
           <button class="btn ghost" data-act="copy">Copier la sauvegarde</button>
           <label class="btn ghost" for="imp" style="margin:0">Importer une sauvegarde</label><input class="file" id="imp" type="file" accept="application/json,.json">
+        </div>
+        <h3>Pour votre comptable</h3>
+        <p class="sub">Toutes vos factures de l’année dans un fichier Excel : numéro, dates, client, montants, taxes et paiement.</p>
+        <div class="acts" style="margin-bottom:16px">
+          <select id="xl-year" aria-label="Année des factures"></select>
+          <button class="btn" data-act="xlsx">Télécharger le fichier Excel</button>
         </div>
         <h3>Recommencer à neuf</h3>
         <div class="acts">
@@ -338,6 +362,33 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
         <button type="submit" class="btn pri">Enregistrer</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="ov" id="mdlg" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mdlg-t">
+    <h3 id="mdlg-t">Envoyer par courriel</h3>
+    <form id="mform">
+      <label>À<input id="m-to" type="email" multiple autocomplete="off" placeholder="Courriel du client"></label>
+      <label>Objet<input id="m-subj"></label>
+      <label>Message<textarea id="m-body" rows="9"></textarea></label>
+      <p class="sub" style="margin:0 0 12px">Le PDF ne se joint pas tout seul : <button type="button" class="linkbtn" data-act="print">enregistrez d’abord le PDF</button>, puis joignez-le à votre courriel.</p>
+      <label class="chk" id="m-mark-l"><input type="checkbox" id="m-mark"> <span id="m-mark-t">Passer le statut à « Envoyée »</span></label>
+      <div class="acts" style="justify-content:flex-end">
+        <button type="button" class="btn ghost" data-act="mdlg-close">Fermer</button>
+        <button type="button" class="btn ghost" data-act="mail-copy">Copier le message</button>
+        <button type="submit" class="btn pri">Ouvrir mon courriel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="ov" id="idlg" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="idlg-t">
+    <h3 id="idlg-t">Ajouter de ma liste</h3>
+    <input class="search" id="i-q" type="search" placeholder="Chercher dans ma liste" aria-label="Chercher dans ma liste">
+    <div id="i-list"></div>
+    <div class="acts" style="justify-content:flex-end;margin-top:14px"><button type="button" class="btn ghost" data-act="idlg-close">Fermer</button></div>
   </div>
 </div>
 
@@ -541,6 +592,9 @@ function dropSamples(){
  state.docs=state.docs.filter(d=>!d.sample);state.clients=state.clients.filter(c=>!c.sample);
  toast('Les exemples ont été retirés. Place à vos vrais documents !');return true;
 }
+/* Ma liste de travaux et produits : {id, d (description), u (unité), p (prix)} */
+const items=()=>state.items||(state.items=[]);
+const inList=l=>{const t=ld(l).trim();return !!t&&items().some(x=>x.d===t)};
 function totals(d){
  const sub=r2(d.lines.reduce((s,l)=>s+lAmt(l),0));
  const taxes=d.taxes?(d.tx||[]).map(t=>({...t,r:rate(t),a:r2(sub*rate(t)/100)})):[];
@@ -592,7 +646,7 @@ function renderDocs(){
   ['Encaissé ce mois-ci',money(sum(paidM),'fr',pc),acc+ref?`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
  ].map(([l,v,s,a])=>`<div class="kpi${a?' alert':''}"><div class="l">${l}</div><div class="v">${v}</div><div class="sub">${s}</div></div>`).join('');
  const q=($('#q').value||'').toLowerCase().trim();
- const list=state.docs.filter(d=>flt==='all'||d.type===flt).filter(d=>{if(!q)return true;const c=client(d.clientId);return [d.num,titleOf(d),c&&c.name].join(' ').toLowerCase().includes(q)}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.num.localeCompare(a.num));
+ const list=state.docs.filter(d=>flt==='all'||(flt==='late'?overdue(d):d.type===flt)).filter(d=>{if(!q)return true;const c=client(d.clientId);return [d.num,titleOf(d),c&&c.name].join(' ').toLowerCase().includes(q)}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.num.localeCompare(a.num));
  if(!state.docs.length){$('#doclist').innerHTML=`<div class="empty">Aucun document pour l’instant. Commencez par ${dv()?'un devis':'une soumission'} : c’est ce document qui deviendra votre facture.</div>`;return}
  if(!list.length){$('#doclist').innerHTML=`<div class="empty">Aucun document ne correspond à « ${esc(q)} ».</div>`;return}
  $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${st==='retard'?'En retard':stLabel(d.status,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,'fr',d.cur)}</b></td></tr>`}).join('')}</tbody></table>`;
@@ -602,7 +656,7 @@ function clientOpts(sel){return `<option value="">Choisir un client</option>`+st
 function curSym(c){try{return new Intl.NumberFormat('fr',{style:'currency',currency:c}).formatToParts(0).find(p=>p.type==='currency').value}catch(e){return c}}
 function linesHTML(d){
  const cs=curSym(d.cur);
- return d.lines.map((l,i)=>`<div class="ln"><textarea rows="2" data-l="${i}" data-k="d" aria-label="Description, ligne ${i+1}" placeholder="${esc(l.dd||'Décrivez les travaux')}">${esc(l.d)}</textarea><div class="lnr"><label>Qté<input type="number" step="any" inputmode="decimal" data-l="${i}" data-k="q" value="${esc(l.q)}" placeholder="${esc(l.qd??1)}"></label><label>Unité<select data-l="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===l.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${esc(cs)})<input type="number" step="0.01" inputmode="decimal" data-l="${i}" data-k="p" value="${esc(l.p)}" placeholder="${esc(l.pd??0)}"></label><output id="lt-${i}">${money(lAmt(l),'fr',d.cur)}</output><button type="button" class="x" data-act="del-line" data-i="${i}" aria-label="Retirer la ligne ${i+1}">×</button></div></div>`).join('');
+ return d.lines.map((l,i)=>`<div class="ln"><textarea rows="2" data-l="${i}" data-k="d" aria-label="Description, ligne ${i+1}" placeholder="${esc(l.dd||'Décrivez les travaux')}">${esc(l.d)}</textarea><div class="lnr"><label>Qté<input type="number" step="any" inputmode="decimal" data-l="${i}" data-k="q" value="${esc(l.q)}" placeholder="${esc(l.qd??1)}"></label><label>Unité<select data-l="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===l.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${esc(cs)})<input type="number" step="0.01" inputmode="decimal" data-l="${i}" data-k="p" value="${esc(l.p)}" placeholder="${esc(l.pd??0)}"></label><output id="lt-${i}">${money(lAmt(l),'fr',d.cur)}</output><button type="button" class="x" data-act="del-line" data-i="${i}" aria-label="Retirer la ligne ${i+1}">×</button></div>${inList(l)?`<button type="button" class="lnsave" disabled>Dans ma liste ✓</button>`:`<button type="button" class="lnsave" data-act="item-save" data-i="${i}">Garder dans ma liste</button>`}</div>`).join('');
 }
 function txHTML(d){
  if(!d.tx||!d.tx.length)return `<p class="hint" style="margin:0 0 12px">Aucune taxe configurée. Ajoutez-en dans « Mon entreprise ».</p>`;
@@ -616,12 +670,14 @@ function openEditor(id){
   <h2>${S?qw():'Facture'} ${esc(d.num)}</h2>
   <div class="acts">
    <button class="btn yel" data-act="print">Imprimer / PDF</button>
+   <button class="btn" data-act="mail">Envoyer par courriel</button>
    ${S?`<button class="btn pri" data-act="convert">Convertir en facture</button>`:''}
    <button class="btn ghost" data-act="dup">Dupliquer</button>
    <button class="btn ghost danger" data-act="del">Supprimer</button>
   </div>
  </div>
  <div class="seg"><button data-act="mode" data-m="edit" aria-pressed="true">Modifier</button><button data-act="mode" data-m="prev" aria-pressed="false">Aperçu</button></div>
+ <div class="late" id="f-late" role="status" hidden></div>
  <div class="egrid" id="egrid" data-m="edit">
   <form class="eform" onsubmit="return false">
    <p class="hint" style="margin:0 0 14px">Le texte gris est une valeur par défaut : tapez simplement par-dessus pour la remplacer.</p>
@@ -631,7 +687,7 @@ function openEditor(id){
     <div class="two"><label>Date<input id="f-date" type="date" data-f="date"></label><label>${S?'Valide jusqu’au':'Échéance'}<input id="f-end" type="date" data-f="${S?'valid':'due'}"></label></div>
     <div class="two"><label>Statut<select id="f-status" data-f="status">${ST[d.type].map(s=>`<option value="${s}">${stLabel(s,d.type)}</option>`).join('')}</select></label><label>Langue du document<select id="f-lang" data-f="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select></label></div>
    </fieldset>
-   <fieldset><legend>Travaux</legend><div id="lines">${linesHTML(d)}</div><button type="button" class="btn ghost" data-act="add-line">+ Ajouter une ligne</button></fieldset>
+   <fieldset><legend>Travaux</legend><div id="lines">${linesHTML(d)}</div><div class="acts"><button type="button" class="btn ghost" data-act="add-line">+ Ajouter une ligne</button><button type="button" class="btn ghost" data-act="item-open">+ De ma liste</button></div></fieldset>
    <fieldset><legend>Taxes et paiement</legend>
     <label class="chk"><input id="f-taxes" type="checkbox" data-f="taxes"> Percevoir les taxes</label>
     <div class="txr" id="f-tx">${txHTML(d)}</div>
@@ -669,7 +725,78 @@ function renderPreview(){
  ${S?`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><span>${X.sign}</span><span>${X.date}</span></div></div>`:''}
  ${stamp?`<div class="stamp">${stamp}</div>`:''}`;
  $('#tb-total').textContent=m(t.total);
+ renderLate(d);
 }
+
+/* Facture en retard : avis en haut du document, avec un rappel tout prêt */
+const daysLate=d=>Math.round((new Date(todayISO()+'T12:00:00')-new Date(d.due+'T12:00:00'))/864e5);
+function renderLate(d){
+ const el=$('#f-late');if(!el)return;
+ if(!overdue(d)){el.hidden=true;el.innerHTML='';return}
+ const n=daysLate(d);el.hidden=false;
+ el.innerHTML=`<span><b>En retard de ${n} jour${n>1?'s':''}.</b> ${d.reminded?`Dernier rappel envoyé le ${esc(fdate(d.reminded,'fr'))}.`:'Aucun rappel envoyé pour l’instant.'}</span><button type="button" class="btn sm" data-act="remind">Envoyer un rappel</button>`;
+}
+
+/* Courriel tout prêt, dans la langue du document */
+function mailText(d,mode){
+ const lang=d.lang||'fr',X=Lx(d),c=client(d.clientId)||{},t=totals(d),m=n=>money(n,lang,d.cur),p=state.profile,S=d.type==='S';
+ const who=c.contact||c.name||'',ti=titleOf(d),endIso=S?d.valid:d.due,end=fdate(endIso,lang,d.cur);
+ const W={
+  fr:{hi:who?`Bonjour ${who},`:'Bonjour,',for:ti?` pour : ${ti}`:'',bye:'Merci,'},
+  en:{hi:who?`Hello ${who},`:'Hello,',for:ti?` for: ${ti}`:'',bye:'Thank you,'},
+  es:{hi:who?`Hola, ${who}:`:'Hola:',for:ti?` para: ${ti}`:'',bye:'Gracias,'}
+ }[lang];
+ const sep=lang==='fr'?' : ':': ';
+ let subj,body,bye=W.bye;
+ if(mode==='remind'){
+  subj={fr:`Rappel : facture ${d.num}`,en:`Reminder: invoice ${d.num}`,es:`Recordatorio: factura ${d.num}`}[lang];
+  body={
+   fr:`Petit rappel : la facture ${d.num}${W.for}, au montant de ${m(t.total)}, était due le ${end}.\n\nSi le paiement est déjà fait, merci de ne pas tenir compte de ce message. Sinon, je vous remercie de le faire dès que possible. N’hésitez pas à me contacter si vous avez des questions.`,
+   en:`This is a friendly reminder that invoice ${d.num}${W.for}, in the amount of ${m(t.total)}, was due on ${end}.\n\nIf you have already paid, please disregard this message. Otherwise, I would appreciate payment at your earliest convenience. Feel free to contact me if you have any questions.`,
+   es:`Le recordamos amablemente que la factura ${d.num}${W.for}, por un importe de ${m(t.total)}, venció el ${end}.\n\nSi ya realizó el pago, no tenga en cuenta este mensaje. De lo contrario, le agradeceríamos que lo hiciera lo antes posible. No dude en contactarnos si tiene alguna pregunta.`
+  }[lang];
+ }else if(S){
+  subj=`${X.S} ${d.num}${ti?` – ${ti}`:''}`;
+  const lines=[`${{fr:'Montant total',en:'Total',es:'Importe total'}[lang]}${sep}${m(t.total)}`];
+  if(t.dep>0)lines.push(`${X.dep}${sep}${m(t.dep)}`);
+  if(endIso)lines.push(`${X.valid} ${end}`);
+  body={
+   fr:`Voici notre ${X.S.toLowerCase()} ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nVous trouverez le document en pièce jointe. N’hésitez pas à me contacter si vous avez des questions.`,
+   en:`Please find attached our quote ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nFeel free to contact me if you have any questions.`,
+   es:`Le adjunto nuestro presupuesto ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nNo dude en contactarnos si tiene alguna pregunta.`
+  }[lang];
+ }else{
+  subj=`${X.F} ${d.num}${ti?` – ${ti}`:''}`;bye='';
+  if(d.status==='payee')body={fr:`Voici la facture ${d.num}${W.for}, payée en totalité.\n\nMerci de votre confiance !`,en:`Please find attached invoice ${d.num}${W.for}, paid in full.\n\nThank you for your business!`,es:`Le adjunto la factura ${d.num}${W.for}, pagada en su totalidad.\n\n¡Gracias por su confianza!`}[lang];
+  else{
+   const lines=[`${{fr:'Montant à payer',en:'Amount due',es:'Importe a pagar'}[lang]}${sep}${m(t.total)}`];
+   if(endIso)lines.push(`${X.due}${sep}${end}`);
+   body={fr:`Voici la facture ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nVous trouverez la facture en pièce jointe. Merci de votre confiance !`,en:`Please find attached invoice ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nThank you for your business!`,es:`Le adjunto la factura ${d.num}${W.for}.\n\n${lines.join('\n')}\n\n¡Gracias por su confianza!`}[lang];
+  }
+ }
+ const sig=[bye,p.name,p.tel,p.email].filter(Boolean).join('\n');
+ return {subj,body:`${W.hi}\n\n${body}${sig?'\n\n'+sig:''}`};
+}
+let mailMode='send';
+function openMail(mode){
+ const d=doc();if(!d)return;mailMode=mode;const c=client(d.clientId)||{},m=mailText(d,mode);
+ $('#mdlg-t').textContent=mode==='remind'?'Envoyer un rappel':'Envoyer par courriel';
+ $('#m-to').value=c.email||'';$('#m-subj').value=m.subj;$('#m-body').value=m.body;
+ const can=mode!=='remind'&&d.status==='brouillon';
+ $('#m-mark-l').hidden=!can;$('#m-mark').checked=can;$('#m-mark-t').textContent=`Passer le statut à « ${stLabel('envoyee',d.type)} »`;
+ $('#mdlg').hidden=false;if(!c.email)setTimeout(()=>$('#m-to').focus(),30);
+}
+$('#mform').addEventListener('submit',e=>{
+ e.preventDefault();const d=doc();if(!d)return;
+ const to=$('#m-to').value.replace(/\s+/g,''),c=client(d.clientId);
+ if(to&&c&&!c.email&&!c.sample)c.email=to;
+ if(mailMode==='remind')d.reminded=todayISO();
+ else if($('#m-mark').checked&&d.status==='brouillon'){d.status='envoyee';const s=$('#f-status');if(s)s.value='envoyee';$('#m-mark-l').hidden=true}
+ d.updated=Date.now();save();renderPreview();
+ const enc=s=>encodeURIComponent(s.replace(/\r?\n/g,'\r\n'));
+ location.href=`mailto:${to}?subject=${enc($('#m-subj').value)}&body=${enc($('#m-body').value)}`;
+ toast('Votre application de courriel s’ouvre. Joignez-y le PDF. Rien ne s’ouvre ? Cliquez sur « Copier le message ».');
+});
 
 function onEdit(e){
  const t=e.target,d=doc();if(!d)return;
@@ -745,6 +872,83 @@ function renderIdRows(){
  $('#p-ids').innerHTML=(p.ids||[]).map((x,i)=>`<div class="rw"><label>Libellé<input data-pi="${i}" data-k="l" value="${esc(x.l)}" placeholder="${esc(x.dl||'Ex. : No d’entreprise')}"${x.fmt==='rbq'?' readonly':''}></label><label>Numéro<input data-pi="${i}" data-k="v" value="${esc(x.v)}" placeholder="${esc(x.ph||'Laissez vide si ça ne s’applique pas')}"${x.fmt==='rbq'?' inputmode="numeric"':''}></label><button type="button" class="x" data-act="id-del" data-i="${i}" aria-label="Retirer ${esc(idEff(x).l||'ce numéro')}">×</button></div>`).join('');
  rbqHint();
 }
+function renderItemRows(){
+ const cs=esc(curSym(state.profile.currency));
+ $('#p-items').innerHTML=items().map((x,i)=>`<div class="rw"><label>Description<input data-pit="${i}" data-k="d" value="${esc(x.d)}" placeholder="Ex. : Pose de céramique"></label><label>Unité<select data-pit="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===x.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${cs})<input type="number" step="0.01" min="0" inputmode="decimal" data-pit="${i}" data-k="p" value="${esc(x.p)}" placeholder="0"></label><button type="button" class="x" data-act="item-del" data-i="${i}" aria-label="Retirer ${esc(x.d||'cet élément')}">×</button></div>`).join('')||`<p class="hint" style="margin:0 0 12px">Votre liste est vide. Ajoutez-y ce que vous facturez souvent, ou cliquez sur « Garder dans ma liste » sous une ligne de travaux, dans un document.</p>`;
+}
+function renderPick(){
+ const q=($('#i-q').value||'').toLowerCase().trim(),d=doc(),cu=d?d.cur:state.profile.currency;
+ const all=items().filter(x=>x.d),L=all.filter(x=>x.d.toLowerCase().includes(q)).sort((a,b)=>a.d.localeCompare(b.d,'fr'));
+ $('#i-q').hidden=!all.length;
+ $('#i-list').innerHTML=!all.length?`<div class="empty" style="padding:24px 16px">Votre liste est vide. Sous une ligne de travaux, cliquez sur « Garder dans ma liste ». Vous pouvez aussi remplir votre liste dans « Mon entreprise ».</div>`
+  :L.length?L.map(x=>`<button type="button" class="pick" data-act="item-pick" data-id="${x.id}"><span>${esc(x.d)}</span><b>${money(num(x.p,0),'fr',cu)} / ${esc(unitName(x.u,'fr'))}</b></button>`).join('')
+  :`<p class="sub">Rien ne correspond à « ${esc(q)} ».</p>`;
+}
+$('#i-q').addEventListener('input',renderPick);
+function xlYears(){
+ const sel=$('#xl-year'),old=sel.value,y=todayISO().slice(0,4);
+ const ys=[...new Set(state.docs.filter(d=>d.type==='F'&&!d.sample).map(d=>(d.date||'').slice(0,4)).filter(Boolean).concat(y))].sort().reverse();
+ sel.innerHTML=ys.map(v=>`<option value="${v}">Factures ${v}</option>`).join('')+`<option value="all">Toutes les années</option>`;
+ if(old&&[...sel.options].some(o=>o.value===old))sel.value=old;
+}
+
+/* Fichier Excel (.xlsx) pour le comptable, fabriqué ici même (petit zip sans compression) */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0};
+function zipStore(files){
+ const enc=new TextEncoder(),parts=[],cd=[];let off=0;
+ files.forEach(([fname,text])=>{
+  const name=enc.encode(fname),data=enc.encode(text),crc=crc32(data);
+  const h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);
+  parts.push(new Uint8Array(h.buffer),name,data);
+  const c=new DataView(new ArrayBuffer(46));
+  c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+  cd.push(new Uint8Array(c.buffer),name);
+  off+=30+name.length+data.length;
+ });
+ const size=cd.reduce((s,a)=>s+a.length,0),e=new DataView(new ArrayBuffer(22));
+ e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,size,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cd,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xesc=s=>String(s??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const colL=i=>{let s='';i++;while(i){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
+/* rows : [{cells:[texte ou nombre], bold}] ; les nombres sont affichés avec 2 décimales */
+function xlsxBlob(sheet,rows,widths){
+ const NS='http://schemas.openxmlformats.org',X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+ const data=rows.map((r,ri)=>`<row r="${ri+1}">${r.cells.map((v,ci)=>{const ref=colL(ci)+(ri+1);
+  if(v==null||v==='')return '';
+  if(typeof v==='number'&&isFinite(v))return `<c r="${ref}" s="${r.bold?3:2}"><v>${v}</v></c>`;
+  return `<c r="${ref}" t="inlineStr"${r.bold?' s="1"':''}><is><t xml:space="preserve">${xesc(v)}</t></is></c>`}).join('')}</row>`).join('');
+ const cols=widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+ return zipStore([
+  ['[Content_Types].xml',`${X}<Types xmlns="${NS}/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+  ['_rels/.rels',`${X}<Relationships xmlns="${NS}/package/2006/relationships"><Relationship Id="rId1" Type="${NS}/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+  ['xl/workbook.xml',`${X}<workbook xmlns="${NS}/spreadsheetml/2006/main" xmlns:r="${NS}/officeDocument/2006/relationships"><sheets><sheet name="${xesc(sheet)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+  ['xl/_rels/workbook.xml.rels',`${X}<Relationships xmlns="${NS}/package/2006/relationships"><Relationship Id="rId1" Type="${NS}/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${NS}/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+  ['xl/styles.xml',`${X}<styleSheet xmlns="${NS}/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`],
+  ['xl/worksheets/sheet1.xml',`${X}<worksheet xmlns="${NS}/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${data}</sheetData></worksheet>`]
+ ]);
+}
+function invoiceRows(year){
+ const pc=state.profile.currency;
+ const F=state.docs.filter(d=>d.type==='F'&&!d.sample&&(year==='all'||(d.date||'').slice(0,4)===year)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.num.localeCompare(b.num));
+ const tt=F.map(totals),names=[...new Set(tt.flatMap(t=>t.taxes.map(x=>x.n)))];
+ const sumTax=(t,n)=>r2(t.taxes.filter(x=>x.n===n).reduce((s,x)=>s+x.a,0));
+ const rows=[{bold:true,cells:['Numéro','Date','Échéance','Client','Objet','Sous-total',...names,'Total','Devise','Statut','Payée le']}];
+ F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),t.sub,...names.map(n=>sumTax(t,n)),t.total,d.cur||pc,overdue(d)?'En retard':stLabel(d.status,'F'),d.paidDate||'']})});
+ const curs=new Set(F.map(d=>d.cur||pc));
+ if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',`${F.length} facture${F.length>1?'s':''}`,'',r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),[...curs][0],'','']});
+ return {count:F.length,rows,widths:[13,12,12,28,36,14,...names.map(()=>12),14,8,12,12]};
+}
+function exportXlsx(){
+ const year=$('#xl-year').value||todayISO().slice(0,4),x=invoiceRows(year);
+ if(!x.count){toast(year==='all'?'Aucune facture pour l’instant.':`Aucune facture en ${year}.`);return}
+ const blob=xlsxBlob(year==='all'?'Factures':`Factures ${year}`,x.rows,x.widths),url=URL.createObjectURL(blob);
+ const l=document.createElement('a');l.href=url;l.download=`carnet-factures-${year==='all'?'toutes':year}.xlsx`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+ toast(embedded?'L’aperçu de Claude bloque les téléchargements. Essayez sur le site en ligne.':`Fichier Excel téléchargé : ${x.count} facture${x.count>1?'s':''}.`);
+}
+
 function renderProfile(){
  renderAccount();
  const p=state.profile,groups=[...new Set(REGIONS.map(r=>r.group))],r=region(p.region);
@@ -756,7 +960,7 @@ function renderProfile(){
  $('#p-exempt').placeholder=r.ex||'Ex. : Taxes non perçues';
  $('#p-valid').placeholder=30;$('#p-due').placeholder=30;$('#p-dep').placeholder=30;
  $('#p-terms').placeholder=P.termsDef();$('#p-termsF').placeholder=P.termsFDef();
- renderTaxRows();renderIdRows();
+ renderTaxRows();renderIdRows();renderItemRows();xlYears();
  $('#logo-img').hidden=!p.logo;if(p.logo)$('#logo-img').src=p.logo;$('#logo-rm').hidden=!p.logo;
 }
 function refreshSamples(){
@@ -779,6 +983,7 @@ $('#pform').addEventListener('input',e=>{
   p[k]=v;if(k==='currency')chrome();
   if(['dep','dueDays'].includes(k)){$('#p-terms').placeholder=P.termsDef();$('#p-termsF').placeholder=P.termsFDef()}
  }else if(t.dataset.pt){const x=p.taxList[+t.dataset.pt];if(!x)return;x[t.dataset.k]=t.dataset.k==='r'?(t.value===''?'':Math.max(0,+t.value||0)):t.value}
+ else if(t.dataset.pit){const x=items()[+t.dataset.pit];if(!x)return;x[t.dataset.k]=t.dataset.k==='p'?(t.value===''?'':Math.max(0,+t.value||0)):t.value;x.updated=Date.now()}
  else if(t.dataset.pi){const x=p.ids[+t.dataset.pi];if(!x)return;let v=t.value;if(x.fmt==='rbq'&&t.dataset.k==='v'){v=fmtRBQ(v);if(t.value!==v)t.value=v}x[t.dataset.k]=v;if(t.dataset.k==='l')x.en='';if(x.fmt==='rbq')rbqHint()}
  else return;
  save();
@@ -821,7 +1026,7 @@ document.addEventListener('click',e=>{
    state.docs.push(n);save();openEditor(n.id);toast(`Copie créée : ${n.num}.`);break}
   case 'del':{const i=state.docs.indexOf(d);state.docs.splice(i,1);lastDel={kind:'doc',item:d,i};save();show('docs');toast(`${d.num} supprimé.`,true);break}
   case 'undo':
-   if(lastDel){const arr=lastDel.kind==='doc'?state.docs:lastDel.kind==='client'?state.clients:lastDel.kind==='tax'?p.taxList:p.ids;arr.splice(lastDel.i,0,lastDel.item);save();
+   if(lastDel){const arr=lastDel.kind==='doc'?state.docs:lastDel.kind==='client'?state.clients:lastDel.kind==='tax'?p.taxList:lastDel.kind==='item'?items():p.ids;arr.splice(lastDel.i,0,lastDel.item);save();
     if(lastDel.kind==='doc')renderDocs();else if(lastDel.kind==='client')renderClients();else renderProfile();lastDel=null;$('#toast').hidden=true}break;
   case 'client-new':openClient(null,false);break;
   case 'client-edit':openClient(b.dataset.id,false);break;
@@ -834,6 +1039,25 @@ document.addEventListener('click',e=>{
   case 'id-add':p.ids=p.ids||[];p.ids.push({dl:'',den:'',l:'',en:'',v:''});save();renderIdRows();$(`[data-pi="${p.ids.length-1}"][data-k=l]`).focus();break;
   case 'id-del':{const i=+b.dataset.i,it=p.ids.splice(i,1)[0];lastDel={kind:'id',item:it,i};save();renderIdRows();toast(`${idEff(it).l||'Numéro'} retiré.`,true);break}
   case 'dlg-close':$('#dlg').hidden=true;break;
+  case 'mail':openMail('send');break;
+  case 'remind':openMail('remind');break;
+  case 'mdlg-close':$('#mdlg').hidden=true;break;
+  case 'mail-copy':{const t=`${$('#m-subj').value}\n\n${$('#m-body').value}`;try{navigator.clipboard.writeText(t).then(()=>toast('Message copié. Collez-le dans un nouveau courriel.'),()=>toast('Copie refusée par le navigateur.'))}catch(x){toast('Copie refusée par le navigateur.')}break}
+  case 'item-open':$('#i-q').value='';renderPick();$('#idlg').hidden=false;break;
+  case 'idlg-close':$('#idlg').hidden=true;break;
+  case 'item-pick':{
+   const x=items().find(i=>i.id===b.dataset.id);if(!x||!d)break;
+   const l={d:x.d,q:'',u:x.u||'f',p:x.p===''||x.p==null?'':+x.p},f=d.lines[0];
+   if(d.lines.length===1&&!ld(f)&&!lp(f)&&(f.q===''||f.q==null))d.lines[0]=l;else d.lines.push(l);
+   d.sample=false;d.updated=Date.now();$('#lines').innerHTML=linesHTML(d);save();renderPreview();toast(`Ajouté au document : ${x.d}`);break}
+  case 'item-save':{
+   const l=d&&d.lines[+b.dataset.i];if(!l)break;const t=ld(l).trim();
+   if(!t){toast('Écrivez d’abord la description des travaux.');break}
+   if(!items().some(x=>x.d===t))items().push({id:uid(),d:t,u:l.u||'f',p:lp(l)||'',updated:Date.now()});
+   save();b.textContent='Dans ma liste ✓';b.disabled=true;toast(`Gardé dans votre liste : ${t}`);break}
+  case 'item-add':items().push({id:uid(),d:'',u:'f',p:'',updated:Date.now()});save();renderItemRows();$(`[data-pit="${items().length-1}"][data-k=d]`).focus();break;
+  case 'item-del':{const i=+b.dataset.i,it=items().splice(i,1)[0];if(!it)break;lastDel={kind:'item',item:it,i};save();renderItemRows();toast(`${it.d||'Élément'} retiré de votre liste.`,true);break}
+  case 'xlsx':exportXlsx();break;
   case 'logo-rm':p.logo='';save();renderProfile();break;
   case 'export':{
    const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
@@ -887,7 +1111,7 @@ window.addEventListener('online',()=>{if(user&&syncSt==='err')pushNow()});
 function mergeState(local,remote){
  const byId=(a,b)=>{const m=new Map();[...a,...b].forEach(x=>{const o=m.get(x.id);if(!o||(x.updated||0)>(o.updated||0))m.set(x.id,x)});return [...m.values()]};
  const r=realOnly(remote),l=realOnly(local);
- const out={v:3,profile:(remote.updatedAt||0)>=(local.updatedAt||0)?remote.profile:local.profile,docs:byId(r.docs,l.docs),clients:byId(r.clients,l.clients),updatedAt:Math.max(remote.updatedAt||0,local.updatedAt||0)};
+ const out={v:3,profile:(remote.updatedAt||0)>=(local.updatedAt||0)?remote.profile:local.profile,docs:byId(r.docs,l.docs),clients:byId(r.clients,l.clients),items:byId(remote.items||[],local.items||[]),updatedAt:Math.max(remote.updatedAt||0,local.updatedAt||0)};
  if(!out.docs.length&&!out.clients.length){const f=sample(out.profile.region);out.docs=f.docs;out.clients=f.clients}
  return out;
 }
@@ -1020,8 +1244,8 @@ document.addEventListener('click',async e=>{
    show('docs');toast('Déconnecté. Vos documents restent sauvegardés dans votre compte.');break;
  }
 });
-['adlg','pdlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#adlg').hidden=true;$('#pdlg').hidden=true}});
+['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).hidden=true)}});
 
 chrome();renderDocs();
 if('serviceWorker' in navigator&&!embedded&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
