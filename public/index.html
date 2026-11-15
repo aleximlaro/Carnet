@@ -196,7 +196,7 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
         <button class="btn pri" data-act="new" data-t="F">+ Facture</button>
       </div>
     </div>
-    <p class="sample" id="sample-note">Les documents ci-dessous sont des exemples, adaptés au pays choisi. Entrez vos coordonnées dans « Mon entreprise », ou <button data-act="clear" data-mode="sample">effacez les exemples</button>.</p>
+    <p class="sample" id="sample-note">Les documents ci-dessous sont des exemples, adaptés au pays choisi. Ils disparaîtront dès que vous créerez votre premier document ou client. Vous pouvez aussi <button data-act="clear" data-mode="sample">les effacer maintenant</button>.</p>
     <div class="plan" id="plan-note" hidden></div>
     <div class="kpis" id="kpis"></div>
     <div class="tools">
@@ -535,6 +535,12 @@ let cur=null,flt='all',lastDel=null,clientEdit=null,clientFromEditor=false,clear
 const doc=()=>state.docs.find(d=>d.id===cur);
 const client=id=>state.clients.find(c=>c.id===id);
 const hasSample=()=>state.docs.some(d=>d.sample)||state.clients.some(c=>c.sample);
+/* Retire les exemples dès le premier vrai document ou client (l'appelant sauvegarde ensuite) */
+function dropSamples(){
+ if(!hasSample())return false;
+ state.docs=state.docs.filter(d=>!d.sample);state.clients=state.clients.filter(c=>!c.sample);
+ toast('Les exemples ont été retirés. Place à vos vrais documents !');return true;
+}
 function totals(d){
  const sub=r2(d.lines.reduce((s,l)=>s+lAmt(l),0));
  const taxes=d.taxes?(d.tx||[]).map(t=>({...t,r:rate(t),a:r2(sub*rate(t)/100)})):[];
@@ -686,7 +692,8 @@ $('#v-edit').addEventListener('change',onEdit);
 /* Un chiffre déjà inscrit se sélectionne au clic : on tape directement le nouveau */
 document.addEventListener('focusin',e=>{const t=e.target;if(!(t.matches&&t.matches('input[type=number]'))||t.value==='')return;try{t.select()}catch(x){}t.addEventListener('mouseup',ev=>ev.preventDefault(),{once:true})});
 
-function newDoc(type){
+function newDoc(type,keepSamples){
+ if(!keepSamples)dropSamples();
  const p=state.profile,t=todayISO(),S=type==='S',taxes=(p.taxList||[]).map(taxEff);
  const d={id:uid(),type,num:nextNum(type),clientId:'',title:'',date:t,valid:S?addDays(t,P.validDays()):'',due:S?'':addDays(t,P.dueDays()),status:'brouillon',lang:'fr',lines:[{d:'',q:'',u:'f',p:''}],taxes:!!p.taxes&&taxes.length>0,tx:taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''})),cur:p.currency,dep:'',depDef:S?P.dep():0,notes:'',notesDef:S?P.terms():P.termsF(),paidDate:'',updated:Date.now()};
  d.counted=true;d.createdAt=todayISO();state.docs.push(d);save();return d;
@@ -701,11 +708,11 @@ function openClient(id,fromEditor){
 $('#cform').addEventListener('submit',e=>{
  e.preventDefault();const v={},old=clientEdit?client(clientEdit):{};['name','contact','addr','city','tel','email'].forEach(k=>v[k]=$('#c-'+k).value.trim()||(old.sample?old[k]||'':''));
  if(!v.name){$('#c-name').focus();return}
- let c;if(clientEdit){c=client(clientEdit);Object.assign(c,v,{sample:false})}else{c={id:uid(),...v};state.clients.push(c)}
+ let c,dropped=false;if(clientEdit){c=client(clientEdit);Object.assign(c,v,{sample:false})}else{if(!clientFromEditor)dropped=dropSamples();c={id:uid(),...v};state.clients.push(c)}
  save();$('#dlg').hidden=true;
  if(clientFromEditor&&doc()){doc().clientId=c.id;$('#f-client').innerHTML=clientOpts(c.id);save();renderPreview()}
  else renderClients();
- toast(clientEdit?'Client modifié.':'Client ajouté.');
+ if(!dropped)toast(clientEdit?'Client modifié.':'Client ajouté.');
 });
 $('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')$('#dlg').hidden=true});
 document.addEventListener('keydown',e=>{
@@ -805,7 +812,7 @@ document.addEventListener('click',e=>{
    if(embedded)toast('L’aperçu de Claude bloque l’impression. Une fois l’outil en ligne, ce bouton ouvre l’impression : choisissez « Enregistrer en PDF ».');
    break;
   case 'convert':{
-   const f=newDoc('F');Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num});
+   const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num});
    if(d.status!=='refusee')d.status='acceptee';save();openEditor(f.id);toast(`Facture ${f.num} créée à partir de ${d.num}.`);break}
   case 'dup':{
    if(!canCreate())break;
