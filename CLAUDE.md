@@ -13,7 +13,9 @@ Le propriétaire n'est pas développeur : explique les choses simplement, en fra
   - `sw.js` : fonctionnement hors ligne. **Augmenter `CACHE` (carnet-v2, carnet-v3…) à chaque modification de `sw.js`.**
   - `_redirects` : sert `/.well-known/assetlinks.json` depuis `/assetlinks.json` (vérification Google Play).
 - `supabase/schema.sql` : tables `carnet_state` (données de chaque utilisateur, JSON) et `subscriptions` (statut Stripe), avec RLS. À exécuter à la main dans Supabase > SQL Editor.
-- `supabase/functions/stripe-webhook/index.ts` : fonction Edge appelée par Stripe ; met à jour `subscriptions`. Déployée à la main dans Supabase (Verify JWT désactivé). Secrets : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- `supabase/functions/stripe-webhook/index.ts` : fonction Edge appelée par Stripe ; met à jour `subscriptions`. Verify JWT désactivé. Secrets : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- `supabase/functions/stripe-portal/index.ts` : fonction Edge appelée par « Gérer mon abonnement » (`goPortal`) ; vérifie la session et ouvre directement le portail client Stripe, sans courriel. Verify JWT désactivé (la fonction vérifie elle-même). Si elle échoue, le site retombe sur `CFG.portalLink`.
+- Déployer une fonction (il faut un jeton `sbp_` du propriétaire) : `SUPABASE_ACCESS_TOKEN=… npx --yes supabase@3.1.0 functions deploy <nom> --remote=ebfjdefiklftqfikffwv --no-verify-jwt --use-api --yes`, puis effacer `supabase/.temp/`.
 - `wrangler.jsonc` : déploiement Cloudflare Workers (fichiers statiques de `public/`).
 
 ## Déploiement

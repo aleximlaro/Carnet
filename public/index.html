@@ -1286,7 +1286,13 @@ function goPay(){
  if(!CFG.payLink){toast('Le paiement en ligne sera offert très bientôt.');return}
  const u=new URL(CFG.payLink);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
-function goPortal(){
+async function goPortal(){
+ /* D'abord : ouvrir directement le portail Stripe de la personne connectée (fonction stripe-portal). */
+ if(sb&&user){
+  toast('Ouverture de votre abonnement…');
+  try{const {data,error}=await sb.functions.invoke('stripe-portal',{body:{}});if(!error&&data&&data.url){location.href=data.url;return}}catch(e){}
+ }
+ /* Sinon : page de connexion du portail (Stripe envoie un lien par courriel). */
  if(!CFG.portalLink){toast('La gestion de l’abonnement sera offerte très bientôt.');return}
  const u=new URL(CFG.portalLink);if(user)u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
