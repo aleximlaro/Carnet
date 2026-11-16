@@ -37,6 +37,8 @@ Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub �
 - Section « Comptes, sauvegarde en ligne et abonnement » : objet `CFG` (URL et clé publique Supabase, `payLink` et `portalLink` Stripe, prix, `freeLimit`). Supabase JS chargé depuis jsDelivr (version fixée).
   - Forfait gratuit : `CFG.freeLimit` documents créés par mois (`counted:true`). Convertir une soumission en facture ne compte pas.
   - Paiement : lien de paiement Stripe avec `client_reference_id` = id de l'utilisateur ; retour sur `?pay=ok`, puis on relit `subscriptions`.
+  - Essai gratuit : `CFG.payLinkTrial` (essai de `CFG.trialDays` jours) pour qui n'a jamais été abonné (`trialOK()` : aucune ligne dans `subscriptions`) ; sinon `CFG.payLink`, sans essai. Les textes (bouton, barre, page Pro, fenêtres) suivent `trialOK()`.
+  - Fenêtre d'accueil `#wdlg` (`maybePromo`) : au plus une fois par semaine par appareil (`localStorage` `carnet.promo`), jamais pour les abonnés Pro. Pas de faux prix barré (interdit au Canada).
 
 ## Règles
 

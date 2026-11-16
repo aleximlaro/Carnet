@@ -375,8 +375,8 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
     <h3 id="wdlg-t">Passez à Carnet Pro</h3>
     <p id="wdlg-p" style="margin:0 0 14px"></p>
     <p class="promo-price" id="wdlg-price"></p>
-    <button type="button" class="btn yel big" data-act="pay" style="width:100%">Passer à Pro</button>
-    <p class="sub" style="margin:10px 0 18px">Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement</p>
+    <button type="button" class="btn yel big" data-act="pay" id="wdlg-go" style="width:100%">Passer à Pro</button>
+    <p class="sub" id="wdlg-r" style="margin:10px 0 18px">Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement</p>
     <div class="acts" style="justify-content:space-between;align-items:center">
       <button type="button" class="linkbtn" data-act="wdlg-pro">Voir ce que Pro inclut</button>
       <button type="button" class="btn ghost" data-act="wdlg-close">Plus tard</button>
@@ -1137,7 +1137,9 @@ $('#q').addEventListener('input',renderDocs);
 const CFG={
  sbUrl:'https://ebfjdefiklftqfikffwv.supabase.co',
  sbKey:'sb_publishable_EDJG8SuN8RNMdNDtWrdDDw_9dgn1pPM',
- payLink:'https://buy.stripe.com/3cI4gAdckfYEdJj1KX1ZS00',              /* lien de paiement Stripe (mode réel) */
+ payLink:'https://buy.stripe.com/3cI4gAdckfYEdJj1KX1ZS00',              /* lien de paiement Stripe (mode réel), sans essai : pour qui a déjà été abonné */
+ payLinkTrial:'https://buy.stripe.com/dRmeVedck8wcbBbcpB1ZS01',         /* même abonnement avec essai gratuit (trialDays jours), pour les nouveaux */
+ trialDays:7,
  portalLink:'https://billing.stripe.com/p/login/3cI4gAdckfYEdJj1KX1ZS00', /* portail client Stripe (mode réel) */
  price:'11,99 $ CA par mois',
  freeLimit:3
@@ -1146,12 +1148,18 @@ let sb=null,user=null,sub=null,pushT=0,syncSt='',authMode='login',recovering=fal
 try{if(window.supabase&&window.supabase.createClient)sb=window.supabase.createClient(CFG.sbUrl,CFG.sbKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}catch(e){sb=null}
 
 const isPro=()=>!!sub&&['active','trialing'].includes(sub.status)&&(!sub.current_period_end||new Date(sub.current_period_end)>new Date());
+/* Essai gratuit : offert seulement à qui n'a jamais été abonné (aucune ligne dans subscriptions) */
+const trialOK=()=>CFG.trialDays>0&&!!CFG.payLinkTrial&&!sub;
+const ctaLabel=()=>trialOK()?`Essayer gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`;
+const subLine=end=>sub&&sub.status==='trialing'?`Essai gratuit${end?` jusqu’au ${end}`:' en cours'}`:`Renouvellement${end?` le ${end}`:''}`;
 const monthUsed=()=>{const m=todayISO().slice(0,7);return state.docs.filter(d=>d.counted&&!d.sample&&(d.createdAt||'').slice(0,7)===m).length};
 const left=()=>Math.max(0,CFG.freeLimit-monthUsed());
 function canCreate(){
  if(isPro()||left()>0)return true;
- $('#pdlg-p').textContent=`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Avec Carnet Pro, à ${CFG.price}, vous en faites autant que vous voulez. Vos documents existants restent toujours accessibles.`;
- $('#pdlg-go').textContent=user?'Passer à Pro':'Créer mon compte';
+ $('#pdlg-p').textContent=trialOK()
+  ?`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Essayez Carnet Pro gratuitement pendant ${CFG.trialDays} jours : vous en faites autant que vous voulez. Ensuite, c’est ${CFG.price}. Vos documents existants restent toujours accessibles.`
+  :`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Avec Carnet Pro, à ${CFG.price}, vous en faites autant que vous voulez. Vos documents existants restent toujours accessibles.`;
+ $('#pdlg-go').textContent=user?(trialOK()?'Essayer gratuitement':'Passer à Pro'):'Créer mon compte';
  $('#pdlg').hidden=false;return false;
 }
 
@@ -1200,23 +1208,24 @@ function renderPlan(){
  if(isPro()){el.hidden=false;el.innerHTML=`<span><b>Carnet Pro</b><span class="pro-tag">PRO</span> Documents illimités.</span>`;return}
  const u=monthUsed(),p=Math.min(100,u/CFG.freeLimit*100);
  el.hidden=false;
- el.innerHTML=`<span><b>Gratuit :</b> ${Math.min(u,CFG.freeLimit)} document${u>1?'s':''} sur ${CFG.freeLimit} ce mois-ci</span><span class="bar" aria-hidden="true"><i style="width:${p}%"${u>=CFG.freeLimit?' class="full"':''}></i></span><button class="linkbtn" data-act="view" data-v="pro">Passer à Pro : ${esc(CFG.price)}</button>`;
+ el.innerHTML=`<span><b>Gratuit :</b> ${Math.min(u,CFG.freeLimit)} document${u>1?'s':''} sur ${CFG.freeLimit} ce mois-ci</span><span class="bar" aria-hidden="true"><i style="width:${p}%"${u>=CFG.freeLimit?' class="full"':''}></i></span><button class="linkbtn" data-act="view" data-v="pro">${esc(trialOK()?`Essayer Pro gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`)}</button>`;
 }
 function renderPro(){
  const el=$('#pro-body');if(!el)return;
- const n=CFG.freeLimit,free=`${n} nouveau${n>1?'x':''} document${n>1?'s':''} par mois`,pro=isPro();
+ const n=CFG.freeLimit,free=`${n} nouveau${n>1?'x':''} document${n>1?'s':''} par mois`,pro=isPro(),tr=trialOK(),d=CFG.trialDays;
  const end=pro&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}):'';
  const q=(t,a)=>`<details><summary>${t}</summary><p>${a}</p></details>`;
  el.innerHTML=`<img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112"><h1>Carnet Pro</h1>
- <p class="pro-lede">Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez, pour ${esc(CFG.price)}.</p>
+ <p class="pro-lede">Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez${tr?`. Essayez gratuitement pendant ${d} jours, puis ${esc(CFG.price)}.`:`, pour ${esc(CFG.price)}.`}</p>
  <div class="cmp">
   <div><div class="k">Gratuit</div><div class="v">${free}</div></div>
   <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><div class="v">Documents illimités</div></div>
  </div>
- ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${sub.status==='trialing'?'Essai en cours':'Renouvellement'}${end?` le ${end}`:''}</p><button class="btn" data-act="portal">Gérer mon abonnement</button></div>`
-  :`<button class="btn yel big" data-act="pay">Passer à Pro : ${esc(CFG.price)}</button>`}
- <p class="reassure">Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu</p>
+ ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><button class="btn" data-act="portal">Gérer mon abonnement</button></div>`
+  :`<button class="btn yel big" data-act="pay">${esc(ctaLabel())}</button>`}
+ <p class="reassure">${tr&&!pro?`Aucuns frais pendant ${d} jours · `:''}Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu</p>
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
+ ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(CFG.price)}. L’essai est offert une seule fois par compte.`):''}
  ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.')}
  ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
  ${q('Est-ce que mes infos de carte sont gardées par Carnet ?','Non. Le paiement se fait chez Stripe : Carnet ne voit pas et ne garde pas vos infos de carte.')}
@@ -1233,8 +1242,8 @@ function renderAccount(){
  <p style="margin:0 0 4px"><b>${esc(user.email)}</b></p>
  <p style="margin:0 0 12px"><span class="sync" id="sync-st"></span></p>
  ${st}
- <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${sub.status==='trialing'?'Essai en cours':'Renouvellement'}${end?` le ${end}`:''}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci</span>`}</p>
- <div class="acts">${pro?'':`<button class="btn yel" data-act="pay">Passer à Pro : ${esc(CFG.price)}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
+ <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${subLine(end)}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci</span>`}</p>
+ <div class="acts">${pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
  setSync(syncSt||'ok');
 }
 
@@ -1303,9 +1312,11 @@ function maybePromo(tries){
  let last=0;try{last=+localStorage.getItem('carnet.promo')||0}catch(e){}
  if(Date.now()-last<7*864e5)return;
  try{localStorage.setItem('carnet.promo',String(Date.now()))}catch(e){}
- const m=CFG.price.match(/^(.*?\$)\s*(.*)$/);
+ const m=CFG.price.match(/^(.*?\$)\s*(.*)$/),tr=trialOK();
  $('#wdlg-p').textContent=`Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez. Le forfait gratuit permet ${CFG.freeLimit} nouveau${CFG.freeLimit>1?'x':''} document${CFG.freeLimit>1?'s':''} par mois.`;
- $('#wdlg-price').innerHTML=m?`<b>${esc(m[1])}</b><span>${esc(m[2])}</span>`:`<b>${esc(CFG.price)}</b>`;
+ $('#wdlg-price').innerHTML=tr?`<b>${CFG.trialDays} jours gratuits</b><span>puis ${esc(CFG.price)}</span>`:m?`<b>${esc(m[1])}</b><span>${esc(m[2])}</span>`:`<b>${esc(CFG.price)}</b>`;
+ $('#wdlg-go').textContent=tr?'Essayer gratuitement':'Passer à Pro';
+ $('#wdlg-r').textContent=`${tr?`Aucuns frais pendant ${CFG.trialDays} jours · `:'Paiement sécurisé par Stripe · '}Annulable en tout temps, sans engagement`;
  $('#wdlg').hidden=false;
 }
 setTimeout(maybePromo,2500);
@@ -1320,11 +1331,13 @@ setTimeout(maybePromo,2500);
  let n=0;const t=setInterval(async()=>{n++;await loadSub();if(isPro()){clearInterval(t);toast('Bienvenue dans Carnet Pro ! Documents illimités.')}else if(n>=15){clearInterval(t);toast('Le paiement est reçu, l’activation prend plus de temps que prévu. Rechargez la page dans une minute.')}},3000);
 })();
 
-function goPay(){
+async function goPay(){
  $('#pdlg').hidden=true;$('#wdlg').hidden=true;
- if(!user){openAuth('signup','Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
- if(!CFG.payLink){toast('Le paiement en ligne sera offert très bientôt.');return}
- const u=new URL(CFG.payLink);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
+ if(!user){openAuth('signup',trialOK()?'Créez d’abord votre compte gratuit. Ensuite, vous pourrez commencer votre essai gratuit.':'Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
+ if(!subChecked)await loadSub(); /* savoir s'il a déjà été abonné, avant de choisir le lien */
+ const link=trialOK()?CFG.payLinkTrial:CFG.payLink;
+ if(!link){toast('Le paiement en ligne sera offert très bientôt.');return}
+ const u=new URL(link);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
 async function goPortal(){
  /* D'abord : ouvrir directement le portail Stripe de la personne connectée (fonction stripe-portal). */
