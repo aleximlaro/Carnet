@@ -60,6 +60,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav .pro-tag{background:var(--padink);color:var(--pad)}
 .nav button[aria-current=true] .pro-tag{background:var(--pad);color:var(--padink)}
 .prov{max-width:760px}
+.pro-logo{display:block;width:84px;height:84px;padding:8px;background:var(--pad);border-radius:20px;margin:0 0 14px}
+.pro-logo.big{width:112px;height:112px;padding:10px;border-radius:26px;margin-bottom:18px}
 .pro-lede{font-size:clamp(18px,2.2vw,22px);line-height:1.4;margin:12px 0 24px;max-width:34em}
 .cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:24px}
 .cmp>div{border:1.5px solid var(--line);border-radius:12px;padding:18px 20px}
@@ -358,6 +360,7 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
 
 <div class="ov" id="pdlg" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="pdlg-t">
+    <img class="pro-logo" src="icons/carnet-pro.png" alt="" width="84" height="84">
     <h3 id="pdlg-t">Passez à Carnet Pro</h3>
     <p id="pdlg-p" style="margin:0 0 12px"></p>
     <ul style="margin:0 0 18px;padding-left:20px">
@@ -1176,7 +1179,7 @@ function renderPro(){
  const n=CFG.freeLimit,free=`${n} nouveau${n>1?'x':''} document${n>1?'s':''} par mois`,pro=isPro();
  const end=pro&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}):'';
  const q=(t,a)=>`<details><summary>${t}</summary><p>${a}</p></details>`;
- el.innerHTML=`<h1>Carnet Pro</h1>
+ el.innerHTML=`<img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112"><h1>Carnet Pro</h1>
  <p class="pro-lede">Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez, pour ${esc(CFG.price)}.</p>
  <div class="cmp">
   <div><div class="k">Gratuit</div><div class="v">${free}</div></div>
