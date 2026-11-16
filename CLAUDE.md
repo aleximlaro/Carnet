@@ -18,7 +18,12 @@ Le propriétaire n'est pas développeur : explique les choses simplement, en fra
 
 ## Déploiement
 
-Chaque `git push` sur `main` redéploie automatiquement le site sur Cloudflare (Worker `carnet`). Pas de build.
+Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub → Cloudflare). Après chaque changement, sans demander au propriétaire :
+
+1. Vérifier la syntaxe du script de `public/index.html` et tester dans Edge (400 px et ordinateur, clair et sombre, aucune erreur JavaScript).
+2. Commit sur `main`, puis push sur les deux dépôts : `git push origin main` (github.com/aleximlaro/carnet-projet) et `git push https://github.com/aleximlaro/Carnet.git main`.
+3. Mettre en ligne : `npx --yes wrangler deploy` depuis la racine (Worker `carnet` ; wrangler est déjà connecté au compte Cloudflare).
+4. Vérifier avec `curl` que https://carnet.carnet-0f4.workers.dev contient bien le changement.
 
 ## Architecture de `public/index.html`
 
