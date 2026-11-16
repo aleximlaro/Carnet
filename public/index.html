@@ -1229,6 +1229,7 @@ const isPro=()=>!!sub&&['active','trialing'].includes(sub.status)&&(!sub.current
 /* Essai gratuit : offert seulement à qui n'a jamais été abonné (aucune ligne dans subscriptions) */
 const trialOK=()=>CFG.trialDays>0&&!!CFG.payLinkTrial&&!sub;
 const ctaLabel=()=>trialOK()?`Essayer gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`;
+const payLate=()=>!!sub&&['past_due','unpaid'].includes(sub.status)&&!isPro(); /* paiement refusé : il faut changer de carte, pas repayer */
 const subLine=end=>sub&&sub.status==='trialing'?`Essai gratuit${end?` jusqu’au ${end}`:' en cours'}`:`Renouvellement${end?` le ${end}`:''}`;
 const monthUsed=()=>{const m=todayISO().slice(0,7);return state.docs.filter(d=>d.counted&&!d.sample&&(d.createdAt||'').slice(0,7)===m).length};
 const left=()=>Math.max(0,CFG.freeLimit-monthUsed());
@@ -1284,6 +1285,7 @@ function refreshView(){
 function renderPlan(){
  const el=$('#plan-note');if(!el)return;
  const a=$('#acct');if(a)a.textContent=user?(isPro()?'Mon compte · Pro':'Mon compte'):'Se connecter';
+ if(payLate()){el.hidden=false;el.innerHTML=`<span><b>Votre dernier paiement n’a pas passé.</b> Carnet Pro est en pause.</span><button class="linkbtn" data-act="card">Mettre à jour ma carte</button>`;return}
  if(isPro()){el.hidden=false;el.innerHTML=`<span><b>Carnet Pro</b><span class="pro-tag">PRO</span> Documents illimités.</span>`;return}
  const u=monthUsed(),p=Math.min(100,u/CFG.freeLimit*100);
  el.hidden=false;
@@ -1300,13 +1302,15 @@ function renderPro(){
   <div><div class="k">Gratuit</div><ul class="v"><li>${free}</li><li class="no">Acceptation en ligne</li><li class="no">Photos</li></ul></div>
   <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>Photos dans vos ${qwP().toLowerCase()} et factures</li></ul></div>
  </div>
- ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><button class="btn" data-act="portal">Gérer mon abonnement</button></div>`
+ ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><div class="acts"><button class="btn" data-act="portal">Gérer mon abonnement</button><button class="btn" data-act="card">Mettre à jour ma carte</button></div></div>`
+  :payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé (carte expirée ou refusée ?). Mettez à jour votre carte pour retrouver Carnet Pro.</p><button class="btn yel big" data-act="card">Mettre à jour ma carte</button>`
   :`<button class="btn yel big" data-act="pay">${esc(ctaLabel())}</button>`}
  <p class="reassure">${tr&&!pro?`Aucuns frais pendant ${d} jours · `:''}Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu</p>
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
  ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(CFG.price)}. L’essai est offert une seule fois par compte.`):''}
  ${q('Comment mon client accepte-t-il en ligne ?',`Dans ${dv()?'un devis':'une soumission'}, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « ${dv()?'Accepté':'Acceptée'} » dans Carnet, avec sa signature.`)}
  ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.')}
+ ${q('Comment je change ma carte de crédit ?','Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.')}
  ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
  ${q('Est-ce que mes infos de carte sont gardées par Carnet ?','Non. Le paiement se fait chez Stripe : Carnet ne voit pas et ne garde pas vos infos de carte.')}
  ${q('Faut-il un compte ?','Oui, un compte gratuit. Il sert à relier votre abonnement à vos documents.')}
@@ -1317,13 +1321,13 @@ function renderAccount(){
  if(!sb){el.innerHTML=`<h3>Votre compte</h3><p class="sub" style="margin:0">La connexion n’est pas disponible pour l’instant (pas d’Internet ?). Carnet continue de fonctionner sur cet appareil.</p>`;return}
  if(!user){el.innerHTML=`<h3>Votre compte</h3><p class="sub">Créez un compte gratuit pour retrouver vos documents sur votre téléphone et votre ordi, et pour passer à Carnet Pro.</p><div class="acts"><button class="btn pri" data-act="auth" data-m="signup">Créer un compte</button><button class="btn ghost" data-act="auth" data-m="login">Se connecter</button></div>`;return}
  const pro=isPro(),end=sub&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}):'';
- const st=sub&&!pro&&sub.status&&sub.status!=='inactive'?`<p class="msg err">Votre abonnement est ${sub.status==='past_due'||sub.status==='unpaid'?'en attente de paiement':'terminé'}. Mettez à jour votre carte pour retrouver Carnet Pro.</p>`:'';
+ const st=payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé. Mettez à jour votre carte pour retrouver Carnet Pro.</p>`:sub&&!pro&&sub.status&&sub.status!=='inactive'?`<p class="msg err">Votre abonnement Carnet Pro est terminé.</p>`:'';
  el.innerHTML=`<h3>Votre compte</h3>
  <p style="margin:0 0 4px"><b>${esc(user.email)}</b></p>
  <p style="margin:0 0 12px"><span class="sync" id="sync-st"></span></p>
  ${st}
  <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${subLine(end)}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci</span>`}</p>
- <div class="acts">${pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
+ <div class="acts">${payLate()?`<button class="btn yel" data-act="card">Mettre à jour ma carte</button>`:pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}${pro?`<button class="btn ghost" data-act="card">Mettre à jour ma carte</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
  setSync(syncSt||'ok');
 }
 
@@ -1580,7 +1584,7 @@ async function acceptShare(e){
 const cameFromPay=new URLSearchParams(location.search).has('pay');
 function maybePromo(tries){
  tries=tries||0;
- if(SHARE||embedded||cameFromPay||isPro())return;
+ if(SHARE||embedded||cameFromPay||isPro()||payLate())return;
  if(user&&!subChecked){if(tries<10)setTimeout(()=>maybePromo(tries+1),1000);return}
  if($$('.ov').some(o=>!o.hidden))return;
  try{if(localStorage.getItem('carnet.promo')==='off')return}catch(e){} /* réservé aux tests automatiques */
@@ -1596,6 +1600,7 @@ setTimeout(maybePromo,2500);
 /* Retour de Stripe après un paiement : on attend que le webhook active l'abonnement */
 (function(){
  const q=new URLSearchParams(location.search);
+ if(q.get('card')==='ok'){history.replaceState(null,'',location.pathname+location.hash);toast('Votre carte est mise à jour.');setTimeout(()=>loadSub(),4000)}
  if(!q.has('pay'))return;
  const ok=q.get('pay')==='ok';history.replaceState(null,'',location.pathname+location.hash);
  if(!ok)return;
@@ -1606,16 +1611,18 @@ setTimeout(maybePromo,2500);
 async function goPay(){
  $('#pdlg').hidden=true;$('#wdlg').hidden=true;
  if(!user){openAuth('signup',trialOK()?'Créez d’abord votre compte gratuit. Ensuite, vous pourrez commencer votre essai gratuit.':'Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
- if(!subChecked)await loadSub(); /* savoir s'il a déjà été abonné, avant de choisir le lien */
+ if(!subChecked)await loadSub();
+ if(payLate()){goPortal('card');return}
+ /* savoir s'il a déjà été abonné, avant de choisir le lien */
  const link=trialOK()?CFG.payLinkTrial:CFG.payLink;
  if(!link){toast('Le paiement en ligne sera offert très bientôt.');return}
  const u=new URL(link);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
-async function goPortal(){
+async function goPortal(flow){
  /* D'abord : ouvrir directement le portail Stripe de la personne connectée (fonction stripe-portal). */
  if(sb&&user){
-  toast('Ouverture de votre abonnement…');
-  try{const {data,error}=await sb.functions.invoke('stripe-portal',{body:{}});if(!error&&data&&data.url){location.href=data.url;return}}catch(e){}
+  toast(flow==='card'?'Ouverture de la page pour changer votre carte…':'Ouverture de votre abonnement…');
+  try{const {data,error}=await sb.functions.invoke('stripe-portal',{body:flow?{flow}:{}});if(!error&&data&&data.url){location.href=data.url;return}}catch(e){}
  }
  /* Sinon : page de connexion du portail (Stripe envoie un lien par courriel). */
  if(!CFG.portalLink){toast('La gestion de l’abonnement sera offerte très bientôt.');return}
@@ -1634,6 +1641,7 @@ document.addEventListener('click',async e=>{
   case 'pw-toggle':setPw($('#a-pass').type==='password');break;
   case 'pay':goPay();break;
   case 'portal':goPortal();break;
+  case 'card':goPortal('card');break;
   case 'logout':
    clearTimeout(pushT);await pushNow();try{await sb.auth.signOut()}catch(x){}
    user=null;sub=null;state=freshState(state.profile.region);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(x){}

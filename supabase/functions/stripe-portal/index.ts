@@ -1,5 +1,5 @@
 // Carnet : fonction « stripe-portal »
-// Appelée par le bouton « Gérer mon abonnement ». Elle ouvre directement le portail client Stripe
+// Appelée par les boutons « Gérer mon abonnement » et « Mettre à jour ma carte » ({ flow: "card" }). Elle ouvre directement le portail client Stripe
 // de la personne connectée, sans lui faire recevoir un lien par courriel.
 //
 // Utilise le même secret que stripe-webhook : STRIPE_SECRET_KEY (Supabase > Edge Functions > Secrets).
@@ -41,6 +41,25 @@ Deno.serve(async (req) => {
   // Son client Stripe, enregistré par stripe-webhook au moment du paiement.
   const { data: sub } = await admin.from("subscriptions").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
   if (!sub?.stripe_customer_id) return json({ error: "no_customer" }, 404);
+
+  // { flow: "card" } (bouton « Mettre à jour ma carte ») : ouvrir directement la page pour changer de carte.
+  const body = await req.json().catch(() => ({}));
+  if (body?.flow === "card") {
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: sub.stripe_customer_id,
+        return_url: SITE,
+        flow_data: {
+          type: "payment_method_update",
+          after_completion: { type: "redirect", redirect: { return_url: SITE + "?card=ok" } },
+        },
+      });
+      return json({ url: session.url });
+    } catch (err) {
+      // Par exemple si la mise à jour de carte n'est pas permise dans le portail : on ouvre le portail normal.
+      console.error("Portail Stripe (carte) :", (err as Error).message);
+    }
+  }
 
   try {
     const session = await stripe.billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: SITE });
