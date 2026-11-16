@@ -34,6 +34,9 @@ Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub �
 - Valeurs par défaut affichées en gris (placeholder) : un champ vide = valeur par défaut. Fonctions `P.*`, `taxEff`, `idEff`, `lq`, `lp`, `ld`, `titleOf`, `notesOf`.
 - Documents d'exemple : marqués `sample:true`, régénérés selon le pays (`sample()`, `cleanSamples()`), jamais envoyés au nuage.
 - `migrate()` convertit les anciennes données (v1, v2) au format v3.
+- Document : rabais `disc`/`discT` (`%` ou `$`)/`discL`, calculé avant taxes ; paiements reçus `pays` [{id,date,a,n}] sur les factures (`totals()` donne `gross`, `disc`, `sub`, `paid`, `bal`) ; photos `photos` [{id,path,url}] ; lien d'acceptation `share` {id,at,synced,viewed} et acceptation `acc` {name,at,sig}.
+- Photos (Pro) : Supabase Storage, bucket public `photos`, dossier `<id utilisateur>/` ; réduites à 1600 px JPEG dans la page (`shrinkPhoto`). Jamais effacées du stockage (une copie de document peut partager la même photo).
+- Acceptation en ligne (Pro) : table `shares` (copie du document dans `data`), page du client `?s=<uuid>` (mode `SHARE` : aucune sauvegarde, aucune connexion, `openShare`/`renderShare`), fonctions SQL `share_view` et `share_accept` (seul accès des visiteurs). `syncShares()` met à jour la copie tant que ce n'est pas accepté ; `checkShares()` va chercher les acceptations (au démarrage, chaque minute, au retour sur l'onglet). Une soumission acceptée ne peut plus être modifiée dans `shares` (règle RLS).
 - Section « Comptes, sauvegarde en ligne et abonnement » : objet `CFG` (URL et clé publique Supabase, `payLink` et `portalLink` Stripe, prix, `freeLimit`). Supabase JS chargé depuis jsDelivr (version fixée).
   - Forfait gratuit : `CFG.freeLimit` documents créés par mois (`counted:true`). Convertir une soumission en facture ne compte pas.
   - Paiement : lien de paiement Stripe avec `client_reference_id` = id de l'utilisateur ; retour sur `?pay=ok`, puis on relit `subscriptions`.
