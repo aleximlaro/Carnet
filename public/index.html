@@ -77,12 +77,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .prov{max-width:760px}
 .pro-logo{display:block;width:84px;height:84px;padding:8px;background:var(--pad);border-radius:20px;margin:0 0 14px}
 .pro-logo.big{width:112px;height:112px;padding:10px;border-radius:26px;margin-bottom:18px}
-.promo{text-align:center;width:min(420px,100%)}
-.promo .pro-logo{margin:4px auto 16px}
-.promo h3{font-size:clamp(24px,6vw,28px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
-.promo-price{margin:0 0 18px;line-height:1.1}
-.promo-price b{display:block;font-weight:800;font-size:44px;letter-spacing:-.02em}
-.promo-price span{font-size:15px;color:var(--muted)}
 .pro-lede{font-size:clamp(18px,2.2vw,22px);line-height:1.4;margin:12px 0 24px;max-width:34em}
 .cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:24px}
 .cmp>div{border:1.5px solid var(--line);border-radius:12px;padding:18px 20px}
@@ -422,21 +416,6 @@ body.client .top,body.client footer{display:none}
   </div>
 </div>
 
-<div class="ov" id="wdlg" hidden>
-  <div class="dlg promo" role="dialog" aria-modal="true" aria-labelledby="wdlg-t">
-    <img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112">
-    <h3 id="wdlg-t">Passez à Carnet Pro</h3>
-    <p id="wdlg-p" style="margin:0 0 14px"></p>
-    <p class="promo-price" id="wdlg-price"></p>
-    <button type="button" class="btn yel big" data-act="pay" id="wdlg-go" style="width:100%">Passer à Pro</button>
-    <p class="sub" id="wdlg-r" style="margin:10px 0 18px">Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement</p>
-    <div class="acts" style="justify-content:space-between;align-items:center">
-      <button type="button" class="linkbtn" data-act="wdlg-pro">Voir ce que Pro inclut</button>
-      <button type="button" class="btn ghost" data-act="wdlg-close">Plus tard</button>
-    </div>
-  </div>
-</div>
-
 <div class="ov" id="pdlg" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="pdlg-t">
     <img class="pro-logo" src="icons/carnet-pro.png" alt="" width="84" height="84">
@@ -521,7 +500,28 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
 const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 /* ---------- Langue de l'interface : français (source), anglais, espagnol. Choisie avec le bouton de langue (localStorage carnet.ui). ---------- */
-const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(v==='fr'||v==='en'||v==='es')return v}catch(e){}const n=String(navigator.language||'fr').slice(0,2).toLowerCase();return n==='en'||n==='es'?n:'fr'})();
+/* Pays de la personne, deviné à la première visite : fuseau horaire de l'appareil (là où elle est), sinon langue du navigateur.
+   GEO = {c: code pays (ex. 'ES', 'CA'), sub: région Carnet pour le Canada (ex. 'CA-BC') ou '', langs: langues du navigateur} */
+const GEO=(()=>{
+ let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+ let langs=[];try{langs=(navigator.languages&&navigator.languages.length?[...navigator.languages]:[navigator.language||'']).map(x=>String(x||''))}catch(e){}
+ const fr=String(langs[0]||'').toLowerCase().startsWith('fr');
+ const CA={'America/Vancouver':'CA-BC','America/Edmonton':'CA-AB','America/Regina':'CA-SK','America/Swift_Current':'CA-SK','America/Winnipeg':'CA-MB','America/Halifax':'CA-NS','America/Glace_Bay':'CA-NS','America/Moncton':'CA-NB','America/St_Johns':'CA-NL','America/Goose_Bay':'CA-NL','America/Whitehorse':'CA-TR','America/Dawson':'CA-TR','America/Yellowknife':'CA-TR','America/Inuvik':'CA-TR','America/Iqaluit':'CA-TR','America/Rankin_Inlet':'CA-TR','America/Cambridge_Bay':'CA-TR','America/Montreal':'CA-QC','America/Blanc-Sablon':'CA-QC','America/Toronto':fr?'CA-QC':'CA-ON','America/Nipigon':'CA-ON','America/Thunder_Bay':'CA-ON','America/Atikokan':'CA-ON'};
+ if(CA[tz])return {c:'CA',sub:CA[tz],langs};
+ const T={'Europe/Madrid':'ES','Atlantic/Canary':'ES','Africa/Ceuta':'ES','Europe/Paris':'FR','Europe/Brussels':'BE','Europe/Luxembourg':'LU','Europe/Zurich':'CH','Europe/London':'GB','Africa/Casablanca':'MA','Africa/El_Aaiun':'MA','Africa/Algiers':'DZ','Africa/Tunis':'TN','Africa/Dakar':'SN','Africa/Abidjan':'CI','Africa/Douala':'CM','America/Port-au-Prince':'HT','America/Sao_Paulo':'BR','Asia/Kolkata':'IN','Asia/Calcutta':'IN','Asia/Tokyo':'JP','Europe/Berlin':'DE','Europe/Rome':'IT','Europe/Amsterdam':'NL','Europe/Vienna':'AT','Europe/Lisbon':'PT','Europe/Dublin':'IE','Europe/Athens':'GR','Europe/Helsinki':'FI','Europe/Tallinn':'EE','Europe/Riga':'LV','Europe/Vilnius':'LT','Europe/Bratislava':'SK','Europe/Ljubljana':'SI','Europe/Zagreb':'HR','Europe/Malta':'MT','Asia/Nicosia':'CY','Europe/Monaco':'MC','Europe/Andorra':'AD','Europe/Bucharest':'RO','Europe/Warsaw':'PL','Europe/Prague':'CZ','Europe/Budapest':'HU','Europe/Stockholm':'SE','Europe/Copenhagen':'DK','Europe/Oslo':'NO','America/Bogota':'CO','America/Lima':'PE','America/Santiago':'CL','America/Argentina/Buenos_Aires':'AR','America/Buenos_Aires':'AR','America/Caracas':'VE','America/Guatemala':'GT','America/Costa_Rica':'CR','America/Panama':'PA','America/Santo_Domingo':'DO','America/Havana':'CU','America/Guayaquil':'EC','America/Montevideo':'UY','America/Asuncion':'PY','America/La_Paz':'BO','America/El_Salvador':'SV','America/Tegucigalpa':'HN','America/Managua':'NI','America/Puerto_Rico':'PR'};
+ if(T[tz])return {c:T[tz],sub:'',langs};
+ if(/^America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana|Ciudad_Juarez)$/.test(tz))return {c:'MX',sub:'',langs};
+ if(/^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+)|Pacific\/Honolulu)$/.test(tz))return {c:'US',sub:'',langs};
+ if(/^Australia\//.test(tz))return {c:'AU',sub:'',langs};
+ for(const l of langs){const c=(l.split('-')[1]||'').toUpperCase();if(/^[A-Z]{2}$/.test(c))return {c,sub:c==='CA'?(fr?'CA-QC':'CA-ON'):'',langs}}
+ return {c:'',sub:'',langs};
+})();
+/* Langue parlée dans chaque pays (pour l'interface quand le navigateur n'est ni en français, ni en anglais, ni en espagnol) */
+const GEO_LANG=c=>['ES','MX','CO','PE','CL','AR','VE','GT','CR','PA','DO','CU','EC','UY','PY','BO','SV','HN','NI','PR'].includes(c)?'es':['FR','BE','LU','CH','MA','DZ','TN','SN','CI','CM','HT','MC'].includes(c)?'fr':['CA','US','GB','IE','AU','IN'].includes(c)?'en':'';
+const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(v==='fr'||v==='en'||v==='es')return v}catch(e){}
+ for(const l of GEO.langs){const n=l.slice(0,2).toLowerCase();if(n==='fr'||n==='en'||n==='es')return n}
+ if(GEO.sub==='CA-QC')return 'fr';
+ return GEO_LANG(GEO.c)||'fr'})();
 const UIX=UIL==='en'?0:1;
 /* _t('texte') ou _t`texte ${valeur}` : la clé est le texte français (avec {} à la place de chaque valeur) ; la traduction peut utiliser {} dans l'ordre ou {0}, {1}… */
 function _t(s,...v){
@@ -995,10 +995,15 @@ const imperial=r=>r.group==='Canada'||r.code==='US';
 const CURS=[['CAD','Dollar canadien'],['USD','Dollar américain'],['EUR','Euro'],['CHF','Franc suisse'],['GBP','Livre sterling'],['MXN','Peso mexicain'],['MAD','Dirham marocain'],['DZD','Dinar algérien'],['TND','Dinar tunisien'],['XOF','Franc CFA (BCEAO)'],['XAF','Franc CFA (BEAC)'],['HTG','Gourde haïtienne'],['BRL','Réal brésilien'],['AUD','Dollar australien'],['INR','Roupie indienne'],['JPY','Yen']];
 const FX={MXN:15,MAD:7,DZD:100,TND:2.5,XOF:450,XAF:450,HTG:100,BRL:4,INR:60,JPY:110};
 function guessRegion(){
- const l=(navigator.language||'fr-CA'),c=(l.split('-')[1]||'').toUpperCase(),fr=l.startsWith('fr');
- const m={FR:'FR',BE:'BE',LU:'LU',CH:'CH',GB:'UK',ES:'ES',MX:'MX',US:'US',MA:'MA',DZ:'DZ',TN:'TN',SN:'SN',CI:'CI',CM:'CM'};
- if(c==='CA')return fr?'CA-QC':'CA-ON';
- return m[c]||(fr&&!c?'CA-QC':'XX');
+ const c=GEO.c,m={FR:'FR',BE:'BE',LU:'LU',CH:'CH',GB:'UK',ES:'ES',MX:'MX',US:'US',MA:'MA',DZ:'DZ',TN:'TN',SN:'SN',CI:'CI',CM:'CM',MC:'FR'};
+ if(c==='CA')return GEO.sub||'CA-QC';
+ return m[c]||(!c&&UIL==='fr'?'CA-QC':'XX');
+}
+/* Devise pour « Autre pays », selon le pays détecté */
+function guessCurrency(){
+ const c=GEO.c;
+ if(['DE','IT','NL','AT','PT','IE','GR','FI','EE','LV','LT','SK','SI','HR','MT','CY','AD'].includes(c))return 'EUR';
+ return {HT:'HTG',BR:'BRL',IN:'INR',JP:'JPY',AU:'AUD'}[c]||'USD';
 }
 
 const loc=(lang,cur)=>lang==='en'?(cur==='USD'?'en-US':cur==='GBP'?'en-GB':'en-CA'):lang==='es'?(cur==='MXN'?'es-MX':'es-ES'):(cur==='CHF'?'fr-CH':cur==='EUR'?'fr-FR':'fr-CA');
@@ -1088,7 +1093,7 @@ function sample(code){
    D({type:'F',num:`F-${y}-008`,clientId:'c2',titleDef:X.ti[4],date:addDays(t,-50),due:addDays(t,-20),status:'envoyee',lines:[Ln(X.door[0],4,'h',85),Ln(X.door[1],1,'u',145)],notesDef:X.nDoor})
  ]};
 }
-function freshState(code){const s=sample(code);return {v:3,profile:BLANK_PROFILE(code),clients:s.clients,docs:s.docs}}
+function freshState(code){const s=sample(code),p=BLANK_PROFILE(code);if(p.region==='XX')p.currency=guessCurrency();return {v:3,profile:p,clients:s.clients,docs:s.docs}}
 
 /* Données des versions précédentes : on les convertit */
 const OLD_DEFAULTS=['Dépôt de 30 % à l’acceptation. Solde payable à la fin des travaux.','Acompte de 30 % à l’acceptation. Solde payable à la fin des travaux.','Payable dans les 30 jours. Merci de votre confiance!'];
@@ -1134,6 +1139,7 @@ const SHARE=(()=>{try{const v=new URLSearchParams(location.search).get('s')||'';
 let state=null;
 try{const raw=localStorage.getItem(KEY);if(raw)state=JSON.parse(raw)}catch(e){}
 try{state=state&&state.profile&&Array.isArray(state.docs)?cleanSamples(migrate(state)):freshState(guessRegion())}catch(e){state=freshState(guessRegion())}
+try{const p=state.profile;if(p.region==='XX'&&!p.name&&!state.docs.some(d=>!d.sample)&&!state.clients.some(c=>!c.sample)&&guessRegion()!=='XX')state=freshState(guessRegion())}catch(e){}
 let saveT=0,cloudPush=()=>{};
 const save=()=>{if(SHARE)return;state.updatedAt=Date.now();clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}cloudPush()},250)};
 
@@ -2043,22 +2049,6 @@ async function acceptShare(e){
  renderShare();window.scrollTo(0,0);toast(L.thanks);
 }
 
-/* Fenêtre d'accueil « Passez à Carnet Pro » : à chaque visite, jamais pour les abonnés Pro */
-const cameFromPay=new URLSearchParams(location.search).has('pay');
-function maybePromo(tries){
- tries=tries||0;
- if(SHARE||embedded||cameFromPay||isPro()||payLate())return;
- if(user&&!subChecked){if(tries<10)setTimeout(()=>maybePromo(tries+1),1000);return}
- if($$('.ov').some(o=>!o.hidden))return;
- try{if(localStorage.getItem('carnet.promo')==='off')return}catch(e){} /* réservé aux tests automatiques */
- const m=CFG.price.match(/^(.*?\$)\s*(.*)$/),tr=trialOK();
- $('#wdlg-p').textContent=_t`Documents illimités, signature en ligne de vos ${uqwP().toLowerCase()} par vos clients, et photos dans vos documents. Le forfait gratuit permet ${freeTxt()}.`;
- $('#wdlg-price').innerHTML=tr?`<b>${_t`${CFG.trialDays} jours gratuits`}</b><span>${_t`puis ${esc(_t(CFG.price))}`}</span>`:m?`<b>${esc(_t(m[1]))}</b><span>${esc(_t(m[2]))}</span>`:`<b>${esc(_t(CFG.price))}</b>`;
- $('#wdlg-go').textContent=tr?'Essayer gratuitement':'Passer à Pro';
- $('#wdlg-r').textContent=tr?_t`Aucuns frais pendant ${CFG.trialDays} jours · Annulable en tout temps, sans engagement`:_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement');
- $('#wdlg').hidden=false;
-}
-setTimeout(maybePromo,2500);
 
 /* Retour de Stripe après un paiement : on attend que le webhook active l'abonnement */
 (function(){
@@ -2072,7 +2062,7 @@ setTimeout(maybePromo,2500);
 })();
 
 async function goPay(){
- $('#pdlg').hidden=true;$('#wdlg').hidden=true;
+ $('#pdlg').hidden=true;
  if(!user){openAuth('signup',trialOK()?'Créez d’abord votre compte gratuit. Ensuite, vous pourrez commencer votre essai gratuit.':'Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
  if(!subChecked)await loadSub();
  if(payLate()){goPortal('card');return}
@@ -2108,8 +2098,6 @@ document.addEventListener('click',async e=>{
   case 'adlg-close':$('#adlg').hidden=true;break;
   case 'pdlg-close':$('#pdlg').hidden=true;break;
   case 'pdlg-pro':$('#pdlg').hidden=true;show('pro');break;
-  case 'wdlg-close':$('#wdlg').hidden=true;break;
-  case 'wdlg-pro':$('#wdlg').hidden=true;show('pro');break;
   case 'pw-toggle':setPw($('#a-pass').type==='password');break;
   case 'pay':goPay();break;
   case 'portal':goPortal();break;
@@ -2122,10 +2110,10 @@ document.addEventListener('click',async e=>{
    show('docs');toast('Déconnecté. Vos documents restent sauvegardés dans votre compte.');break;
  }
 });
-['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
+['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
 document.addEventListener('click',e=>{if(!e.target.closest('#langwrap')&&!$('#langmenu').hidden){$('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#langmenu').hidden){$('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false');$('#lang').focus()}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).hidden=true)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).hidden=true)}});
 
 /* Textes fixes (HTML et textes simples) : traduits à l'affichage quand la langue n'est pas le français. Le document (#paper) et la page du client gardent leur propre langue. */
 const TR_ATTR=['placeholder','title','aria-label','label','alt','data-l'],TR_SKIP='#paper,#share-body,[data-nt]',TR_RAW=/^(TEXTAREA|SCRIPT|STYLE)$/;
