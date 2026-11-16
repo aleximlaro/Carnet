@@ -1,5 +1,5 @@
 /* Carnet : garde l'application disponible sans Internet (au chantier, par exemple). */
-const CACHE = 'carnet-v2';
+const CACHE = 'carnet-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/favicon-48.png'];
 
 self.addEventListener('install', e => {

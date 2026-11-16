@@ -57,6 +57,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sync.err::before{background:var(--red)}
 .pro-tag{display:inline-block;background:var(--pad);color:var(--padink);font-weight:800;font-size:12px;padding:2px 8px;border-radius:6px;margin-left:6px}
 .band{padding:clamp(20px,3vw,40px) max(4vw,16px);max-width:1320px;margin:0 auto}
+.nav .pro-tag{background:var(--padink);color:var(--pad)}
+.nav button[aria-current=true] .pro-tag{background:var(--pad);color:var(--padink)}
 .prov{max-width:760px}
 .pro-lede{font-size:clamp(18px,2.2vw,22px);line-height:1.4;margin:12px 0 24px;max-width:34em}
 .cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:24px}
@@ -1108,7 +1110,7 @@ const CFG={
  sbKey:'sb_publishable_EDJG8SuN8RNMdNDtWrdDDw_9dgn1pPM',
  payLink:'',     /* lien de paiement Stripe (https://buy.stripe.com/...) */
  portalLink:'',  /* lien du portail client Stripe (https://billing.stripe.com/p/login/...) */
- price:'15 $ par mois',
+ price:'11,99 $ CA par mois',
  freeLimit:3
 };
 let sb=null,user=null,sub=null,pushT=0,syncSt='',authMode='login',recovering=false;
