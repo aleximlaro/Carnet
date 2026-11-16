@@ -42,6 +42,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav button[aria-current=true]{background:var(--padink);color:var(--pad)}
 .nav button:focus-visible,.where:focus-visible{outline:3px solid var(--padink);outline-offset:2px}
 .acct{background:var(--padink);color:var(--pad);border-color:var(--padink)}
+.langwrap{position:relative;display:inline-flex}
+.langb{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;background:none;border:1.5px solid var(--padink);border-radius:999px;padding:0 12px 0 9px;min-height:36px;cursor:pointer;color:var(--padink)}
+.langb svg{width:20px;height:20px;flex:none}
+.langb:focus-visible{outline:3px solid var(--padink);outline-offset:2px}
+.langmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:170px;display:flex;flex-direction:column;gap:2px;background:var(--bg);color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:6px;box-shadow:0 10px 28px rgba(0,0,0,.2)}
+.langmenu[hidden]{display:none}
+.langmenu button{background:none;border:0;text-align:left;padding:0 12px;min-height:44px;border-radius:6px;font-weight:600;cursor:pointer;color:inherit}
+.langmenu button:hover{background:var(--soft)}
+.langmenu button[aria-checked=true]{background:var(--pad);color:var(--padink)}
+.langmenu button[aria-checked=true]::after{content:' ✓'}
 .plan{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px;margin:0 0 16px;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px}
 .plan b{font-weight:700}
 .plan .bar{flex:1 1 120px;max-width:200px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
@@ -255,6 +265,14 @@ body.client .top,body.client footer{display:none}
 <body>
 <header class="top">
   <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="3" width="22" height="26" rx="3" fill="#111"/><rect x="8" y="7" width="16" height="2.5" fill="#ffd60a"/><rect x="8" y="12.5" width="12" height="2" fill="#fff"/><rect x="8" y="17" width="14" height="2" fill="#fff"/><rect x="8" y="21.5" width="9" height="2" fill="#fff"/></svg>Carnet</div>
+  <span class="langwrap" id="langwrap" data-nt>
+    <button type="button" class="langb" id="lang" data-act="lang" aria-haspopup="true" aria-expanded="false" aria-controls="langmenu" title="Langue · Language · Idioma" aria-label="Langue · Language · Idioma"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg><span id="lang-cur">FR</span></button>
+    <div class="langmenu" id="langmenu" role="menu" hidden>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="fr" lang="fr">Français</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="en" lang="en">English</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="es" lang="es">Español</button>
+    </div>
+  </span>
   <button class="where" id="where" data-act="where" title="Changer de pays ou de région"></button>
   <button class="where acct" id="acct" data-act="acct">Se connecter</button>
   <nav class="nav" aria-label="Sections">
@@ -487,7 +505,7 @@ body.client .top,body.client footer{display:none}
 
 <footer class="band" style="font-size:14px;color:var(--muted);padding-top:0"><a href="privacy.html" style="color:inherit">Politique de confidentialité</a></footer>
 
-<div class="toast" id="toast" role="status" hidden><span id="toast-t"></span><button id="toast-b" data-act="undo" hidden>Annuler</button></div>
+<div class="toast" id="toast" role="status" hidden><span id="toast-t"></span><button id="toast-b" data-act="undo" data-nt hidden>Annuler</button></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
@@ -502,6 +520,439 @@ const uid=()=>Math.random().toString(36).slice(2,10);
 const clone=o=>JSON.parse(JSON.stringify(o));
 const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
 const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+/* ---------- Langue de l'interface : français (source), anglais, espagnol. Choisie avec le bouton de langue (localStorage carnet.ui). ---------- */
+const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(v==='fr'||v==='en'||v==='es')return v}catch(e){}const n=String(navigator.language||'fr').slice(0,2).toLowerCase();return n==='en'||n==='es'?n:'fr'})();
+const UIX=UIL==='en'?0:1;
+/* _t('texte') ou _t`texte ${valeur}` : la clé est le texte français (avec {} à la place de chaque valeur) ; la traduction peut utiliser {} dans l'ordre ou {0}, {1}… */
+function _t(s,...v){
+ if(Array.isArray(s)&&s.raw){const k=s.join('{}'),x=UIL!=='fr'&&I18N[k];let i=0;return (x?x[UIX]:k).replace(/\{(\d?)\}/g,(m,n)=>{const j=n===''?i++:+n;return v[j]==null?'':String(v[j])})}
+ if(UIL==='fr'||s==null)return s;const x=I18N[s];return x?x[UIX]:s;
+}
+/* Traductions de l'interface : "texte français": ["anglais", "espagnol"]. {} = une valeur (nombre, nom…), dans l'ordre ; {0}, {1}… pour changer l'ordre. */
+const I18N={
+/* Page, barre du haut, navigation */
+"Carnet : soumissions, devis et factures":["Carnet: quotes and invoices","Carnet: presupuestos y facturas"],
+"Changer de pays ou de région":["Change country or region","Cambiar de país o región"],
+"Se connecter":["Sign in","Iniciar sesión"],
+"Se déconnecter":["Sign out","Cerrar sesión"],
+"Mon compte":["My account","Mi cuenta"],
+"Mon compte · Pro":["My account · Pro","Mi cuenta · Pro"],
+"Sections":["Sections","Secciones"],
+"Documents":["Documents","Documentos"],
+"Clients":["Clients","Clientes"],
+"Mon entreprise":["My business","Mi empresa"],
+"Politique de confidentialité":["Privacy policy","Política de privacidad"],
+"Annuler":["Cancel","Cancelar"],
+/* Liste des documents */
+"Soumissions et factures":["Quotes and invoices","Presupuestos y facturas"],
+"{} et factures":["{} and invoices","{} y facturas"],
+"+ Facture":["+ Invoice","+ Factura"],
+"Les documents ci-dessous sont des exemples, adaptés au pays choisi. Ils disparaîtront dès que vous créerez votre premier document ou client. Vous pouvez aussi":["The documents below are examples, adapted to the chosen country. They will disappear as soon as you create your first document or client. You can also","Los documentos de abajo son ejemplos adaptados al país elegido. Desaparecerán en cuanto cree su primer documento o cliente. También puede"],
+"les effacer maintenant":["delete them now","borrarlos ahora"],
+"Tout":["All","Todo"],
+"Soumissions":["Quotes","Presupuestos"],
+"Devis":["Quotes","Presupuestos"],
+"Soumission":["Quote","Presupuesto"],
+"Factures":["Invoices","Facturas"],
+"Facture":["Invoice","Factura"],
+"En retard":["Overdue","Vencidas"],
+"Chercher un client, un numéro, des travaux":["Search a client, a number, a job","Buscar un cliente, un número, un trabajo"],
+"Chercher":["Search","Buscar"],
+"À encaisser":["To collect","Por cobrar"],
+"{} facture{} en attente de paiement":["{} invoice{} awaiting payment","{0} factura{1} pendiente{1} de pago"],
+"{} facture{} après l’échéance":["{} invoice{} past due","{0} factura{1} vencida{1}"],
+"{} en attente":["{} pending","{} pendientes"],
+"{} en attente de réponse":["{} awaiting a reply","{} a la espera de respuesta"],
+"Encaissé ce mois-ci":["Collected this month","Cobrado este mes"],
+"Taux d’acceptation : {} %":["Acceptance rate: {}%","Tasa de aceptación: {} %"],
+"Aucune réponse reçue pour l’instant":["No replies yet","Aún no hay respuestas"],
+"Aucun document pour l’instant. Commencez par un devis : c’est ce document qui deviendra votre facture.":["No documents yet. Start with a quote: it’s the document that will become your invoice.","Aún no hay documentos. Empiece por un presupuesto: es el documento que se convertirá en su factura."],
+"Aucun document pour l’instant. Commencez par une soumission : c’est ce document qui deviendra votre facture.":["No documents yet. Start with a quote: it’s the document that will become your invoice.","Aún no hay documentos. Empiece por un presupuesto: es el documento que se convertirá en su factura."],
+"Aucun document ne correspond à « {} ».":["No document matches “{}”.","Ningún documento coincide con «{}»."],
+"Numéro":["Number","Número"],
+"Client et travaux":["Client and job","Cliente y trabajo"],
+"Date":["Date","Fecha"],
+"Statut":["Status","Estado"],
+"Total":["Total","Total"],
+"Client":["Client","Cliente"],
+"Sans client":["No client","Sin cliente"],
+"Solde {}":["Balance {}","Saldo {}"],
+"Brouillon":["Draft","Borrador"],
+"Envoyée":["Sent","Enviada"],
+"Envoyé":["Sent","Enviado"],
+"Acceptée":["Accepted","Aceptada"],
+"Accepté":["Accepted","Aceptado"],
+"Refusée":["Declined","Rechazada"],
+"Refusé":["Declined","Rechazado"],
+"Payée":["Paid","Pagada"],
+/* Éditeur */
+"← Documents":["← Documents","← Documentos"],
+"Imprimer / PDF":["Print / PDF","Imprimir / PDF"],
+"Envoyer par courriel":["Send by email","Enviar por correo"],
+"Faire accepter en ligne":["Get it accepted online","Hacer aceptar en línea"],
+"Convertir en facture":["Convert to invoice","Convertir en factura"],
+"Dupliquer":["Duplicate","Duplicar"],
+"Supprimer":["Delete","Eliminar"],
+"Modifier":["Edit","Editar"],
+"Aperçu":["Preview","Vista previa"],
+"Le texte gris est une valeur par défaut : tapez simplement par-dessus pour la remplacer.":["Grey text is a default value: just type over it to replace it.","El texto gris es un valor predeterminado: escriba encima para reemplazarlo."],
+"Client et dates":["Client and dates","Cliente y fechas"],
+"Choisir un client":["Choose a client","Elegir un cliente"],
+"+ Nouveau client…":["+ New client…","+ Nuevo cliente…"],
+"Objet des travaux":["Job description","Descripción de la obra"],
+"Ex. : Rénovation de la cuisine":["E.g.: Kitchen renovation","Ej.: Reforma de la cocina"],
+"Valide jusqu’au":["Valid until","Válido hasta"],
+"Échéance":["Due date","Vencimiento"],
+"Langue du document":["Document language","Idioma del documento"],
+"Travaux":["Work","Trabajos"],
+"Description, ligne {}":["Description, line {}","Descripción, línea {}"],
+"Décrivez les travaux":["Describe the work","Describa el trabajo"],
+"Qté":["Qty","Cant."],
+"Unité":["Unit","Unidad"],
+"Prix ({})":["Price ({})","Precio ({})"],
+"Retirer la ligne {}":["Remove line {}","Quitar la línea {}"],
+"Dans ma liste ✓":["In my list ✓","En mi lista ✓"],
+"Garder dans ma liste":["Save to my list","Guardar en mi lista"],
+"+ Ajouter une ligne":["+ Add a line","+ Añadir una línea"],
+"+ De ma liste":["+ From my list","+ De mi lista"],
+"Rabais":["Discount","Descuento"],
+"Type de rabais":["Discount type","Tipo de descuento"],
+"En pourcentage (%)":["Percentage (%)","Porcentaje (%)"],
+"En montant ({})":["Amount ({})","Importe ({})"],
+"Raison du rabais (facultatif)":["Reason for the discount (optional)","Motivo del descuento (opcional)"],
+"Ex. : Client fidèle":["E.g.: Loyal customer","Ej.: Cliente fiel"],
+"Photos":["Photos","Fotos"],
+"+ Ajouter des photos":["+ Add photos","+ Añadir fotos"],
+"Jusqu’à 6 photos par document. Elles s’affichent sur le document, après les conditions.":["Up to 6 photos per document. They appear on the document, after the terms.","Hasta 6 fotos por documento. Aparecen en el documento, después de las condiciones."],
+"Aucune photo. Ajoutez des photos des lieux, du matériel ou des travaux : elles s’afficheront sur le document.":["No photos. Add photos of the site, the materials or the work: they will appear on the document.","No hay fotos. Añada fotos del lugar, de los materiales o de los trabajos: aparecerán en el documento."],
+"Photo {}":["Photo {}","Foto {}"],
+"Retirer la photo {}":["Remove photo {}","Quitar la foto {}"],
+"Taxes et paiement":["Taxes and payment","Impuestos y pago"],
+"Percevoir les taxes":["Charge taxes","Cobrar impuestos"],
+"Aucune taxe configurée. Ajoutez-en dans « Mon entreprise ».":["No taxes set up. Add some in “My business”.","No hay impuestos configurados. Añádalos en «Mi empresa»."],
+"Dépôt requis (%)":["Deposit required (%)","Anticipo requerido (%)"],
+"Acompte requis (%)":["Deposit required (%)","Anticipo requerido (%)"],
+"Conditions":["Terms","Condiciones"],
+"Ex. : Payable dans les 30 jours.":["E.g.: Payable within 30 days.","Ej.: Pago a 30 días."],
+"Paiements reçus":["Payments received","Pagos recibidos"],
+"Aucun paiement inscrit pour l’instant.":["No payments recorded yet.","Aún no hay pagos registrados."],
+"Montant ({})":["Amount ({})","Importe ({})"],
+"Note (facultatif)":["Note (optional)","Nota (opcional)"],
+"Ex. : Virement Interac":["E.g.: Interac e-Transfer","Ej.: Transferencia bancaria"],
+"Retirer le paiement {}":["Remove payment {}","Quitar el pago {}"],
+"Reçu :":["Received:","Recibido:"],
+"· Solde à payer :":["· Balance due:","· Saldo pendiente:"],
+"+ Ajouter un paiement reçu":["+ Add a payment received","+ Añadir un pago recibido"],
+"Inscrivez les acomptes et paiements partiels : la facture montrera le solde à payer.":["Record deposits and partial payments: the invoice will show the balance due.","Registre los anticipos y pagos parciales: la factura mostrará el saldo pendiente."],
+"Total avec taxes":["Total with taxes","Total con impuestos"],
+"Solde à payer":["Balance due","Saldo pendiente"],
+"En retard de {} jour{}.":["{} day{} overdue.","Vencida hace {} día{}."],
+"Dernier rappel envoyé le {}.":["Last reminder sent on {}.","Último recordatorio enviado el {}."],
+"Aucun rappel envoyé pour l’instant.":["No reminder sent yet.","Aún no se ha enviado ningún recordatorio."],
+"Envoyer un rappel":["Send a reminder","Enviar un recordatorio"],
+/* Courriel */
+"Envoyer le lien d’acceptation":["Send the acceptance link","Enviar el enlace de aceptación"],
+"À":["To","Para"],
+"Courriel du client":["Client’s email","Correo del cliente"],
+"Objet":["Subject","Asunto"],
+"Message":["Message","Mensaje"],
+"Le PDF ne se joint pas tout seul :":["The PDF isn’t attached automatically:","El PDF no se adjunta solo:"],
+"enregistrez d’abord le PDF":["save the PDF first","guarde primero el PDF"],
+", puis joignez-le à votre courriel.":[", then attach it to your email.",", y luego adjúntelo a su correo."],
+"Passer le statut à « Envoyée »":["Change the status to “Sent”","Cambiar el estado a «Enviado»"],
+"Passer le statut à « {} »":["Change the status to “{}”","Cambiar el estado a «{}»"],
+"Fermer":["Close","Cerrar"],
+"Copier le message":["Copy the message","Copiar el mensaje"],
+"Ouvrir mon courriel":["Open my email","Abrir mi correo"],
+"Votre application de courriel s’ouvre avec le lien. Rien ne s’ouvre ? Cliquez sur « Copier le message ».":["Your email app is opening with the link. Nothing opens? Click “Copy the message”.","Su aplicación de correo se abre con el enlace. ¿No se abre nada? Haga clic en «Copiar el mensaje»."],
+"Votre application de courriel s’ouvre. Joignez-y le PDF. Rien ne s’ouvre ? Cliquez sur « Copier le message ».":["Your email app is opening. Attach the PDF. Nothing opens? Click “Copy the message”.","Su aplicación de correo se abre. Adjunte el PDF. ¿No se abre nada? Haga clic en «Copiar el mensaje»."],
+"Message copié. Collez-le dans un nouveau courriel.":["Message copied. Paste it into a new email.","Mensaje copiado. Péguelo en un nuevo correo."],
+"Copie refusée par le navigateur.":["The browser blocked copying.","El navegador no permitió copiar."],
+/* Ma liste */
+"Ajouter de ma liste":["Add from my list","Añadir de mi lista"],
+"Chercher dans ma liste":["Search my list","Buscar en mi lista"],
+"Votre liste est vide. Sous une ligne de travaux, cliquez sur « Garder dans ma liste ». Vous pouvez aussi remplir votre liste dans « Mon entreprise ».":["Your list is empty. Under a line of work, click “Save to my list”. You can also fill your list in “My business”.","Su lista está vacía. Debajo de una línea de trabajo, haga clic en «Guardar en mi lista». También puede completar su lista en «Mi empresa»."],
+"Rien ne correspond à « {} ».":["Nothing matches “{}”.","Nada coincide con «{}»."],
+"Ajouté au document : {}":["Added to the document: {}","Añadido al documento: {}"],
+"Écrivez d’abord la description des travaux.":["Write the description of the work first.","Escriba primero la descripción del trabajo."],
+"Gardé dans votre liste : {}":["Saved to your list: {}","Guardado en su lista: {}"],
+"{} retiré de votre liste.":["{} removed from your list.","{} quitado de su lista."],
+"Élément":["Item","Elemento"],
+"cet élément":["this item","este elemento"],
+/* Clients */
+"+ Nouveau client":["+ New client","+ Nuevo cliente"],
+"Aucun client. Ajoutez-en un ici ou directement à partir d’un document.":["No clients. Add one here or directly from a document.","No hay clientes. Añada uno aquí o directamente desde un documento."],
+"{} document{}  ·  facturé {}":["{} document{}  ·  billed {}","{} documento{}  ·  facturado {}"],
+"Nouveau client":["New client","Nuevo cliente"],
+"Modifier le client":["Edit client","Editar el cliente"],
+"Nom du client ou de l'entreprise":["Client or company name","Nombre del cliente o de la empresa"],
+"Ex. : Marie Gagnon":["E.g.: Mary Smith","Ej.: María García"],
+"Personne-ressource":["Contact person","Persona de contacto"],
+"Adresse":["Address","Dirección"],
+"Ex. : 88, rue des Érables":["E.g.: 88 Maple Street","Ej.: Calle de los Arces, 88"],
+"Ville, région, code postal":["City, region, postal code","Ciudad, región, código postal"],
+"Téléphone":["Phone","Teléfono"],
+"Courriel":["Email","Correo electrónico"],
+"Ex. : marie@exemple.com":["E.g.: mary@example.com","Ej.: maria@ejemplo.com"],
+"Enregistrer":["Save","Guardar"],
+"Client ajouté.":["Client added.","Cliente añadido."],
+"Client modifié.":["Client updated.","Cliente modificado."],
+"{} a {} document{}. Supprimez-les d’abord.":["{} has {} document{}. Delete them first.","{} tiene {} documento{}. Elimínelos primero."],
+"{} supprimé.":["{} deleted.","{} eliminado."],
+/* Mon entreprise */
+"Pays et taxes":["Country and taxes","País e impuestos"],
+"Le texte gris est une valeur par défaut : il est utilisé tel quel si vous n'écrivez rien. Tapez simplement par-dessus pour le remplacer.":["Grey text is a default value: it is used as is if you don’t write anything. Just type over it to replace it.","El texto gris es un valor predeterminado: se usa tal cual si no escribe nada. Escriba encima para reemplazarlo."],
+"Pays ou région":["Country or region","País o región"],
+"Devise":["Currency","Moneda"],
+"+ Ajouter une taxe":["+ Add a tax","+ Añadir un impuesto"],
+"Percevoir les taxes sur les nouveaux documents":["Charge taxes on new documents","Cobrar impuestos en los documentos nuevos"],
+"Mention quand les taxes ne sont pas perçues":["Note when taxes are not charged","Mención cuando no se cobran impuestos"],
+"Nom de la taxe":["Tax name","Nombre del impuesto"],
+"Nom en anglais":["Name in English","Nombre en inglés"],
+"Taux (%)":["Rate (%)","Tasa (%)"],
+"Retirer la taxe {}":["Remove tax {}","Quitar el impuesto {}"],
+"Aucune taxe. Vos documents afficheront la mention ci-dessous.":["No taxes. Your documents will show the note below.","Sin impuestos. Sus documentos mostrarán la mención de abajo."],
+"Ex. : Taxes non perçues":["E.g.: Taxes not charged","Ej.: Impuestos no aplicados"],
+"Taxe {} retirée. Les documents déjà créés gardent leurs taxes.":["Tax {} removed. Documents already created keep their taxes.","Impuesto {} quitado. Los documentos ya creados conservan sus impuestos."],
+"Coordonnées":["Contact details","Datos de contacto"],
+"Nom de l'entreprise":["Business name","Nombre de la empresa"],
+"Ex. : Rénovations Tremblay inc.":["E.g.: Smith Renovations Inc.","Ej.: Reformas García S.L."],
+"Ex. : 1250, boulevard Principal":["E.g.: 1250 Main Street","Ej.: Calle Mayor, 1250"],
+"Ex. : Laval (Québec) H7G 2W3":["E.g.: Toronto, ON M5V 2T6","Ej.: 28001 Madrid"],
+"Ex. : 450 555-0142":["E.g.: 450 555-0142","Ej.: 450 555-0142"],
+"Ex. : info@monentreprise.com":["E.g.: info@mybusiness.com","Ej.: info@miempresa.com"],
+"Ajouter un logo":["Add a logo","Añadir un logo"],
+"Retirer":["Remove","Quitar"],
+"Retirer {}":["Remove {}","Quitar {}"],
+"Numéros officiels":["Official numbers","Números oficiales"],
+"Ils s'affichent en haut de chaque document. Laissez vide ce qui ne s'applique pas à vous.":["They appear at the top of each document. Leave blank what doesn’t apply to you.","Aparecen en la parte superior de cada documento. Deje en blanco lo que no se aplique a usted."],
+"Libellé":["Label","Etiqueta"],
+"Laissez vide si ça ne s’applique pas":["Leave blank if it doesn’t apply","Déjelo en blanco si no se aplica"],
+"Ex. : No d’entreprise":["E.g.: Business no.","Ej.: N.º de empresa"],
+"+ Ajouter un numéro":["+ Add a number","+ Añadir un número"],
+"ce numéro":["this number","este número"],
+"{} retiré.":["{} removed.","{} quitado."],
+"Un numéro de licence RBQ compte 10 chiffres (XXXX-XXXX-XX).":["An RBQ licence number has 10 digits (XXXX-XXXX-XX).","Un número de licencia RBQ tiene 10 dígitos (XXXX-XXXX-XX)."],
+"Licence RBQ : obligatoire sur vos estimations, soumissions, contrats, états de compte et factures, sous la forme « Licence RBQ : XXXX-XXXX-XX ».":["RBQ licence: required on your estimates, quotes, contracts, statements and invoices, in the form “Licence RBQ : XXXX-XXXX-XX”.","Licencia RBQ: obligatoria en sus estimaciones, presupuestos, contratos, estados de cuenta y facturas, con la forma «Licence RBQ : XXXX-XXXX-XX»."],
+"Valeurs par défaut":["Default values","Valores predeterminados"],
+"Validité d’une soumission (jours)":["Quote validity (days)","Validez de un presupuesto (días)"],
+"Validité d’un devis (jours)":["Quote validity (days)","Validez de un presupuesto (días)"],
+"Échéance d'une facture (jours)":["Invoice due in (days)","Vencimiento de una factura (días)"],
+"Dépôt demandé sur les soumissions (%)":["Deposit requested on quotes (%)","Anticipo solicitado en los presupuestos (%)"],
+"Acompte demandé sur les devis (%)":["Deposit requested on quotes (%)","Anticipo solicitado en los presupuestos (%)"],
+"Conditions des soumissions":["Terms for quotes","Condiciones de los presupuestos"],
+"Conditions des devis":["Terms for quotes","Condiciones de los presupuestos"],
+"Conditions des factures":["Terms for invoices","Condiciones de las facturas"],
+"Ma liste de travaux et produits":["My list of work and products","Mi lista de trabajos y productos"],
+"Ce que vous facturez souvent. Dans un document, ajoutez-les en un clic avec le bouton « + De ma liste ».":["What you often bill for. In a document, add them in one click with the “+ From my list” button.","Lo que factura a menudo. En un documento, añádalos con un clic con el botón «+ De mi lista»."],
+"+ Ajouter à ma liste":["+ Add to my list","+ Añadir a mi lista"],
+"Description":["Description","Descripción"],
+"Ex. : Pose de céramique":["E.g.: Tile installation","Ej.: Colocación de azulejos"],
+"Votre liste est vide. Ajoutez-y ce que vous facturez souvent, ou cliquez sur « Garder dans ma liste » sous une ligne de travaux, dans un document.":["Your list is empty. Add what you often bill for, or click “Save to my list” under a line of work in a document.","Su lista está vacía. Añada lo que factura a menudo, o haga clic en «Guardar en mi lista» debajo de una línea de trabajo, en un documento."],
+"Votre compte":["Your account","Su cuenta"],
+"Vos données":["Your data","Sus datos"],
+"Sans compte, tout reste dans ce navigateur, sur cet appareil. Avec un compte, tout est aussi sauvegardé en ligne. Vous pouvez quand même garder une copie de sauvegarde.":["Without an account, everything stays in this browser, on this device. With an account, everything is also saved online. You can still keep a backup copy.","Sin cuenta, todo se queda en este navegador, en este dispositivo. Con una cuenta, todo se guarda también en línea. Aun así, puede guardar una copia de seguridad."],
+"Télécharger la sauvegarde":["Download the backup","Descargar la copia de seguridad"],
+"Copier la sauvegarde":["Copy the backup","Copiar la copia de seguridad"],
+"Importer une sauvegarde":["Import a backup","Importar una copia de seguridad"],
+"Pour votre comptable":["For your accountant","Para su contable"],
+"Toutes vos factures de l’année dans un fichier Excel : numéro, dates, client, montants, taxes et paiement.":["All your invoices for the year in an Excel file: number, dates, client, amounts, taxes and payment.","Todas sus facturas del año en un archivo Excel: número, fechas, cliente, importes, impuestos y pago."],
+"Année des factures":["Invoice year","Año de las facturas"],
+"Factures {}":["Invoices {}","Facturas {}"],
+"Toutes les années":["All years","Todos los años"],
+"Télécharger le fichier Excel":["Download the Excel file","Descargar el archivo Excel"],
+"Recommencer à neuf":["Start over","Empezar de cero"],
+"Effacer les exemples":["Delete the examples","Borrar los ejemplos"],
+"Tout effacer":["Delete everything","Borrar todo"],
+"Cliquez encore pour tout effacer : documents, clients et profil, sur tous vos appareils.":["Click again to delete everything: documents, clients and profile, on all your devices.","Haga clic otra vez para borrar todo: documentos, clientes y perfil, en todos sus dispositivos."],
+"Cliquez encore pour tout effacer : documents, clients et profil.":["Click again to delete everything: documents, clients and profile.","Haga clic otra vez para borrar todo: documentos, clientes y perfil."],
+"Cliquez encore pour effacer les documents et les clients d’exemple.":["Click again to delete the example documents and clients.","Haga clic otra vez para borrar los documentos y clientes de ejemplo."],
+"C’est fait. Vous partez à neuf.":["Done. You’re starting fresh.","Hecho. Empieza de cero."],
+"Image trop lourde : choisissez un logo de moins de 400 Ko.":["Image too large: choose a logo under 400 KB.","Imagen demasiado pesada: elija un logo de menos de 400 KB."],
+"Logo ajouté.":["Logo added.","Logo añadido."],
+"Sauvegarde importée : {} documents, {} clients.":["Backup imported: {} documents, {} clients.","Copia importada: {} documentos, {} clientes."],
+"Ce fichier n’est pas une sauvegarde Carnet valide.":["This file is not a valid Carnet backup.","Este archivo no es una copia de seguridad válida de Carnet."],
+"Sauvegarde copiée. Collez-la dans un courriel ou une note.":["Backup copied. Paste it into an email or a note.","Copia copiada. Péguela en un correo o una nota."],
+"L’aperçu de Claude bloque les téléchargements. Utilisez « Copier la sauvegarde » ici.":["Claude’s preview blocks downloads. Use “Copy the backup” here.","La vista previa de Claude bloquea las descargas. Use «Copiar la copia de seguridad» aquí."],
+"L’aperçu de Claude bloque les téléchargements. Essayez sur le site en ligne.":["Claude’s preview blocks downloads. Try on the live site.","La vista previa de Claude bloquea las descargas. Pruebe en el sitio en línea."],
+"L’aperçu de Claude bloque l’impression. Une fois l’outil en ligne, ce bouton ouvre l’impression : choisissez « Enregistrer en PDF ».":["Claude’s preview blocks printing. Once the tool is online, this button opens printing: choose “Save as PDF”.","La vista previa de Claude bloquea la impresión. Cuando la herramienta esté en línea, este botón abre la impresión: elija «Guardar como PDF»."],
+"Aucune facture pour l’instant.":["No invoices yet.","Aún no hay facturas."],
+"Aucune facture en {}.":["No invoices in {}.","No hay facturas en {}."],
+"Fichier Excel téléchargé : {} facture{}.":["Excel file downloaded: {} invoice{}.","Archivo Excel descargado: {} factura{}."],
+"{} facture{}":["{} invoice{}","{} factura{}"],
+"Avant taxes":["Before taxes","Antes de impuestos"],
+"Reçu":["Received","Recibido"],
+"Solde":["Balance","Saldo"],
+"Payée le":["Paid on","Pagada el"],
+"{} : taxes, devise et numéros ajustés. Vérifiez les taux.":["{}: taxes, currency and numbers adjusted. Check the rates.","{}: impuestos, moneda y números ajustados. Verifique las tasas."],
+"{} : taxes, devise, numéros et exemples ajustés. Vérifiez les taux.":["{}: taxes, currency, numbers and examples adjusted. Check the rates.","{}: impuestos, moneda, números y ejemplos ajustados. Verifique las tasas."],
+/* Pays, régions, devises */
+"Canada":["Canada","Canadá"],"Amériques":["Americas","América"],"Europe":["Europe","Europa"],"Afrique":["Africa","África"],"Ailleurs":["Elsewhere","Otros"],
+"Québec":["Quebec","Quebec"],"Ontario":["Ontario","Ontario"],"Colombie-Britannique":["British Columbia","Columbia Británica"],"Alberta":["Alberta","Alberta"],"Saskatchewan":["Saskatchewan","Saskatchewan"],"Manitoba":["Manitoba","Manitoba"],"Nouveau-Brunswick":["New Brunswick","Nuevo Brunswick"],"Nouvelle-Écosse":["Nova Scotia","Nueva Escocia"],"Île-du-Prince-Édouard":["Prince Edward Island","Isla del Príncipe Eduardo"],"Terre-Neuve-et-Labrador":["Newfoundland and Labrador","Terranova y Labrador"],"Yukon, T.N.-O. ou Nunavut":["Yukon, N.W.T. or Nunavut","Yukón, T. N. O. o Nunavut"],
+"États-Unis":["United States","Estados Unidos"],"Mexique":["Mexico","México"],"France":["France","Francia"],"Belgique":["Belgium","Bélgica"],"Luxembourg":["Luxembourg","Luxemburgo"],"Suisse":["Switzerland","Suiza"],"Royaume-Uni":["United Kingdom","Reino Unido"],"Espagne":["Spain","España"],"Maroc":["Morocco","Marruecos"],"Algérie":["Algeria","Argelia"],"Tunisie":["Tunisia","Túnez"],"Sénégal":["Senegal","Senegal"],"Côte d’Ivoire":["Côte d’Ivoire","Costa de Marfil"],"Cameroun":["Cameroon","Camerún"],"Autre pays":["Other country","Otro país"],
+"Dollar canadien":["Canadian dollar","Dólar canadiense"],"Dollar américain":["US dollar","Dólar estadounidense"],"Euro":["Euro","Euro"],"Franc suisse":["Swiss franc","Franco suizo"],"Livre sterling":["Pound sterling","Libra esterlina"],"Peso mexicain":["Mexican peso","Peso mexicano"],"Dirham marocain":["Moroccan dirham","Dírham marroquí"],"Dinar algérien":["Algerian dinar","Dinar argelino"],"Dinar tunisien":["Tunisian dinar","Dinar tunecino"],"Franc CFA (BCEAO)":["CFA franc (BCEAO)","Franco CFA (BCEAO)"],"Franc CFA (BEAC)":["CFA franc (BEAC)","Franco CFA (BEAC)"],"Gourde haïtienne":["Haitian gourde","Gourde haitiano"],"Réal brésilien":["Brazilian real","Real brasileño"],"Dollar australien":["Australian dollar","Dólar australiano"],"Roupie indienne":["Indian rupee","Rupia india"],"Yen":["Yen","Yen"],
+"Petit fournisseur : 30 000 $ de ventes taxables ou moins sur quatre trimestres.":["Small supplier: $30,000 or less in taxable sales over four quarters.","Pequeño proveedor: 30 000 $ o menos de ventas gravables en cuatro trimestres."],
+"La taxe provinciale ne s’applique pas toujours aux services de construction. Vérifiez auprès de votre province et ajustez le taux au besoin.":["Provincial tax doesn’t always apply to construction services. Check with your province and adjust the rate if needed.","El impuesto provincial no siempre se aplica a los servicios de construcción. Consulte con su provincia y ajuste la tasa si es necesario."],
+"Le taux dépend de l’État, du comté et de la ville, et la main-d’œuvre est souvent exemptée. Entrez le taux qui s’applique chez vous.":["The rate depends on the state, county and city, and labor is often exempt. Enter the rate that applies where you are.","La tasa depende del estado, del condado y de la ciudad, y la mano de obra suele estar exenta. Introduzca la tasa que se aplica en su zona."],
+"Rénovation de logement : 10 % pour les logements de plus de 2 ans, 5,5 % pour la rénovation énergétique. Changez le taux sur chaque devis au besoin.":["Home renovation: 10% for homes over 2 years old, 5.5% for energy renovation. Change the rate on each quote if needed.","Reforma de vivienda: 10 % para viviendas de más de 2 años, 5,5 % para la renovación energética. Cambie la tasa en cada presupuesto si es necesario."],
+"Taux réduit de 6 % possible pour la rénovation de logements de plus de 10 ans. Changez le taux sur chaque devis au besoin.":["A reduced 6% rate is possible for renovating homes over 10 years old. Change the rate on each quote if needed.","Es posible una tasa reducida del 6 % para la reforma de viviendas de más de 10 años. Cambie la tasa en cada presupuesto si es necesario."],
+"Entrez les taxes, la devise et les numéros officiels de votre pays. Vous pouvez en ajouter autant qu’il faut.":["Enter your country’s taxes, currency and official numbers. You can add as many as you need.","Introduzca los impuestos, la moneda y los números oficiales de su país. Puede añadir tantos como necesite."],
+/* Unités (si jamais affichées telles quelles) */
+"forfait":["lump sum","global"],"jour":["day","día"],"unité":["unit","ud."],"pi²":["sq ft","pie²"],"pi lin.":["lin ft","pie lin."],"m lin.":["lin. m","m lin."],
+/* Compte et connexion */
+
+"Ex. : vous@exemple.com":["E.g.: you@example.com","Ej.: usted@ejemplo.com"],
+"Mot de passe":["Password","Contraseña"],
+"8 caractères ou plus":["8 characters or more","8 caracteres o más"],
+"Afficher":["Show","Mostrar"],
+"Masquer":["Hide","Ocultar"],
+"Afficher le mot de passe":["Show password","Mostrar la contraseña"],
+"Masquer le mot de passe":["Hide password","Ocultar la contraseña"],
+"Créer un compte":["Create an account","Crear una cuenta"],
+"Créer mon compte":["Create my account","Crear mi cuenta"],
+"Mot de passe oublié":["Forgot password","¿Olvidó su contraseña?"],
+"Recevoir le lien":["Get the link","Recibir el enlace"],
+"Nouveau mot de passe":["New password","Nueva contraseña"],
+"Pas encore de compte ?":["No account yet?","¿Aún no tiene cuenta?"],
+"Déjà un compte ?":["Already have an account?","¿Ya tiene cuenta?"],
+"Courriel ou mot de passe incorrect.":["Incorrect email or password.","Correo o contraseña incorrectos."],
+"Confirmez d’abord votre courriel : cliquez sur le lien reçu (vérifiez aussi les courriels indésirables).":["First confirm your email: click the link you received (also check your spam folder).","Confirme primero su correo: haga clic en el enlace recibido (revise también el correo no deseado)."],
+"Ce courriel a déjà un compte. Connectez-vous plutôt.":["This email already has an account. Sign in instead.","Este correo ya tiene una cuenta. Inicie sesión."],
+"Le mot de passe doit avoir au moins 8 caractères.":["The password must have at least 8 characters.","La contraseña debe tener al menos 8 caracteres."],
+"Trop d’essais en peu de temps. Réessayez dans quelques minutes.":["Too many attempts in a short time. Try again in a few minutes.","Demasiados intentos en poco tiempo. Vuelva a intentarlo en unos minutos."],
+"Pas de connexion Internet. Réessayez quand vous serez en ligne.":["No Internet connection. Try again when you’re online.","Sin conexión a Internet. Vuelva a intentarlo cuando esté en línea."],
+"Une erreur est survenue : {}":["An error occurred: {}","Se produjo un error: {}"],
+"Un instant…":["One moment…","Un momento…"],
+"Presque fini ! Nous avons envoyé un lien de confirmation à {}. Cliquez dessus pour activer votre compte (vérifiez aussi les courriels indésirables).":["Almost done! We sent a confirmation link to {}. Click it to activate your account (also check your spam folder).","¡Casi listo! Enviamos un enlace de confirmación a {}. Haga clic en él para activar su cuenta (revise también el correo no deseado)."],
+"Si un compte existe pour {}, un lien pour choisir un nouveau mot de passe vient d’être envoyé.":["If an account exists for {}, a link to choose a new password has just been sent.","Si existe una cuenta para {}, se acaba de enviar un enlace para elegir una nueva contraseña."],
+"Mot de passe changé.":["Password changed.","Contraseña cambiada."],
+"Compte créé. Bienvenue !":["Account created. Welcome!","Cuenta creada. ¡Bienvenido!"],
+"Connecté. Vos documents se synchronisent.":["Signed in. Your documents are syncing.","Sesión iniciada. Sus documentos se están sincronizando."],
+"Choisissez votre nouveau mot de passe.":["Choose your new password.","Elija su nueva contraseña."],
+"La connexion n’est pas disponible pour l’instant (pas d’Internet ?). Carnet continue de fonctionner sur cet appareil.":["Sign-in isn’t available right now (no Internet?). Carnet keeps working on this device.","El inicio de sesión no está disponible por ahora (¿sin Internet?). Carnet sigue funcionando en este dispositivo."],
+"Créez un compte gratuit pour retrouver vos documents sur votre téléphone et votre ordi, et pour passer à Carnet Pro.":["Create a free account to find your documents on your phone and computer, and to upgrade to Carnet Pro.","Cree una cuenta gratuita para tener sus documentos en su teléfono y su ordenador, y para pasar a Carnet Pro."],
+"Sauvegardé en ligne":["Saved online","Guardado en línea"],
+"Pas de connexion : sauvegardé sur cet appareil":["No connection: saved on this device","Sin conexión: guardado en este dispositivo"],
+"Sauvegarde…":["Saving…","Guardando…"],
+"Sauvegardé sur cet appareil":["Saved on this device","Guardado en este dispositivo"],
+"Forfait gratuit":["Free plan","Plan gratuito"],
+"{} document{} sur {} utilisés ce mois-ci":["{0} of {2} documents used this month","{0} de {2} documentos usados este mes"],
+"Votre abonnement Carnet Pro est terminé.":["Your Carnet Pro subscription has ended.","Su suscripción a Carnet Pro ha terminado."],
+"Votre dernier paiement n’a pas passé. Mettez à jour votre carte pour retrouver Carnet Pro.":["Your last payment didn’t go through. Update your card to get Carnet Pro back.","Su último pago no se pudo cobrar. Actualice su tarjeta para recuperar Carnet Pro."],
+"Votre dernier paiement n’a pas passé (carte expirée ou refusée ?). Mettez à jour votre carte pour retrouver Carnet Pro.":["Your last payment didn’t go through (expired or declined card?). Update your card to get Carnet Pro back.","Su último pago no se pudo cobrar (¿tarjeta caducada o rechazada?). Actualice su tarjeta para recuperar Carnet Pro."],
+"Votre dernier paiement n’a pas passé.":["Your last payment didn’t go through.","Su último pago no se pudo cobrar."],
+"Carnet Pro est en pause.":["Carnet Pro is paused.","Carnet Pro está en pausa."],
+"Mettre à jour ma carte":["Update my card","Actualizar mi tarjeta"],
+"Gérer mon abonnement":["Manage my subscription","Gestionar mi suscripción"],
+"Connexion impossible pour l’instant : vérifiez votre connexion Internet.":["Can’t sign in right now: check your Internet connection.","No se puede iniciar sesión ahora: revise su conexión a Internet."],
+"Déconnecté. Vos documents restent sauvegardés dans votre compte.":["Signed out. Your documents stay saved in your account.","Sesión cerrada. Sus documentos siguen guardados en su cuenta."],
+/* Carnet Pro et paiement */
+"11,99 $ CA par mois":["$11.99 CAD per month","11,99 $ CAD al mes"],
+"11,99 $":["$11.99","11,99 $"],
+"CA par mois":["CAD per month","CAD al mes"],
+"Gratuit :":["Free:","Gratis:"],
+"Gratuit":["Free","Gratis"],
+"{} document{} sur {} ce mois-ci":["{0} of {2} documents this month","{0} de {2} documentos este mes"],
+"Essayer Pro gratuitement {} jours":["Try Pro free for {} days","Pruebe Pro gratis {} días"],
+"Essayer gratuitement {} jours":["Try free for {} days","Pruebe gratis {} días"],
+"Essayer gratuitement":["Try it free","Pruébelo gratis"],
+"Passer à Pro : {}":["Upgrade to Pro: {}","Pasar a Pro: {}"],
+"Passer à Pro":["Upgrade to Pro","Pasar a Pro"],
+"Passez à Carnet Pro":["Upgrade to Carnet Pro","Pase a Carnet Pro"],
+"Réservé à Carnet Pro":["Carnet Pro only","Solo con Carnet Pro"],
+"{} nouveaux documents par mois":["{} new documents per month","{} documentos nuevos al mes"],
+"{} nouveau document par mois":["{} new document per month","{} documento nuevo al mes"],
+"Documents illimités":["Unlimited documents","Documentos ilimitados"],
+"Documents illimités.":["Unlimited documents.","Documentos ilimitados."],
+"Documents illimités, chaque mois":["Unlimited documents, every month","Documentos ilimitados, cada mes"],
+"Acceptation en ligne":["Online acceptance","Aceptación en línea"],
+"Acceptation et signature en ligne par vos clients":["Online acceptance and signature by your clients","Aceptación y firma en línea por sus clientes"],
+"Photos dans vos soumissions et factures":["Photos in your quotes and invoices","Fotos en sus presupuestos y facturas"],
+"Photos dans vos {} et factures":["Photos in your {} and invoices","Fotos en sus {} y facturas"],
+"Annulable en tout temps, sans engagement":["Cancel anytime, no commitment","Cancele cuando quiera, sin compromiso"],
+"Voir ce que Pro inclut":["See what Pro includes","Ver lo que incluye Pro"],
+"Plus tard":["Later","Más tarde"],
+
+"Faites autant de {} et de factures que vous voulez. Essayez gratuitement pendant {} jours, puis {}.":["Make as many {} and invoices as you want. Try it free for {} days, then {}.","Haga todos los {} y facturas que quiera. Pruébelo gratis durante {} días y luego {}."],
+"Faites autant de {} et de factures que vous voulez, pour {}.":["Make as many {} and invoices as you want, for {}.","Haga todos los {} y facturas que quiera, por {}."],
+"Vous êtes sur Carnet Pro":["You’re on Carnet Pro","Tiene Carnet Pro"],
+"Essai gratuit jusqu’au {}":["Free trial until {}","Prueba gratuita hasta el {}"],
+"Essai gratuit en cours":["Free trial in progress","Prueba gratuita en curso"],
+"Renouvellement le {}":["Renews on {}","Se renueva el {}"],
+"Renouvellement":["Renews automatically","Renovación automática"],
+"Aucuns frais pendant {} jours · ":["No charge for {} days · ","Sin cargo durante {} días · "],
+"Aucuns frais pendant {} jours · Annulable en tout temps, sans engagement":["No charge for {} days · Cancel anytime, no commitment","Sin cargo durante {} días · Cancele cuando quiera, sin compromiso"],
+"Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu":["Secure payment by Stripe · Cancel anytime, no commitment · Taxes extra where applicable","Pago seguro con Stripe · Cancele cuando quiera, sin compromiso · Impuestos aparte si corresponde"],
+"Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement":["Secure payment by Stripe · Cancel anytime, no commitment","Pago seguro con Stripe · Cancele cuando quiera, sin compromiso"],
+"{} jours gratuits":["{} days free","{} días gratis"],
+"puis {}":["then {}","luego {}"],
+"Documents illimités, signature en ligne de vos {} par vos clients, et photos dans vos documents. Le forfait gratuit permet {}.":["Unlimited documents, online signing of your {} by your clients, and photos in your documents. The free plan allows {}.","Documentos ilimitados, firma en línea de sus {} por sus clientes y fotos en sus documentos. El plan gratuito permite {}."],
+"Questions fréquentes":["Frequently asked questions","Preguntas frecuentes"],
+"Comment fonctionne l’essai gratuit ?":["How does the free trial work?","¿Cómo funciona la prueba gratuita?"],
+"Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant {} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à {}. L’essai est offert une seule fois par compte.":["You enter your card with Stripe, but nothing is charged for {} days. If you cancel before the trial ends with “Manage my subscription”, you pay nothing. Otherwise, the subscription starts automatically at {}. The trial is offered once per account.","Introduce su tarjeta en Stripe, pero no se cobra nada durante {} días. Si cancela antes del final de la prueba con «Gestionar mi suscripción», no paga nada. Si no, la suscripción empieza sola a {}. La prueba se ofrece una sola vez por cuenta."],
+"Comment mon client accepte-t-il en ligne ?":["How does my client accept online?","¿Cómo acepta mi cliente en línea?"],
+"Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.":["In a quote, click “Get it accepted online”. Your client receives a link: they see the document on their phone or computer, type their name and sign with their finger. The document changes to “Accepted” in Carnet, with their signature.","En un presupuesto, haga clic en «Hacer aceptar en línea». Su cliente recibe un enlace: ve el documento en su teléfono u ordenador, escribe su nombre y firma con el dedo. El documento pasa a «Aceptado» en Carnet, con su firma."],
+"Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.":["In a quote, click “Get it accepted online”. Your client receives a link: they see the document on their phone or computer, type their name and sign with their finger. The document changes to “Accepted” in Carnet, with their signature.","En un presupuesto, haga clic en «Hacer aceptar en línea». Su cliente recibe un enlace: ve el documento en su teléfono u ordenador, escribe su nombre y firma con el dedo. El documento pasa a «Aceptado» en Carnet, con su firma."],
+"Comment j’annule ?":["How do I cancel?","¿Cómo cancelo?"],
+"En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.":["Anytime, with the “Manage my subscription” button. Carnet Pro stays active until the end of the month already paid.","En cualquier momento, con el botón «Gestionar mi suscripción». Carnet Pro sigue activo hasta el final del mes ya pagado."],
+"Comment je change ma carte de crédit ?":["How do I change my credit card?","¿Cómo cambio mi tarjeta de crédito?"],
+"Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.":["With the “Update my card” button (Carnet Pro or My business tab). You go straight to Stripe’s secure page to enter your new card. Your next payments will use it.","Con el botón «Actualizar mi tarjeta» (pestaña Carnet Pro o Mi empresa). Llega directamente a la página segura de Stripe para introducir su nueva tarjeta. Sus próximos pagos se harán con ella."],
+"Qu’est-ce qui arrive à mes documents si j’arrête ?":["What happens to my documents if I stop?","¿Qué pasa con mis documentos si lo dejo?"],
+"Ils restent tous accessibles. Vous revenez simplement à {}.":["They all stay available. You simply go back to {}.","Siguen todos disponibles. Simplemente vuelve a {}."],
+"Est-ce que mes infos de carte sont gardées par Carnet ?":["Does Carnet keep my card details?","¿Carnet guarda los datos de mi tarjeta?"],
+"Non. Le paiement se fait chez Stripe : Carnet ne voit pas et ne garde pas vos infos de carte.":["No. Payment is handled by Stripe: Carnet never sees or keeps your card details.","No. El pago se hace en Stripe: Carnet no ve ni guarda los datos de su tarjeta."],
+"Faut-il un compte ?":["Do I need an account?","¿Hace falta una cuenta?"],
+"Oui, un compte gratuit. Il sert à relier votre abonnement à vos documents.":["Yes, a free account. It links your subscription to your documents.","Sí, una cuenta gratuita. Sirve para vincular su suscripción con sus documentos."],
+"Vous avez utilisé vos {} documents gratuits ce mois-ci. Essayez Carnet Pro gratuitement pendant {} jours : vous en faites autant que vous voulez. Ensuite, c’est {}. Vos documents existants restent toujours accessibles.":["You’ve used your {} free documents this month. Try Carnet Pro free for {} days: make as many as you want. After that, it’s {}. Your existing documents always stay available.","Ha usado sus {} documentos gratuitos de este mes. Pruebe Carnet Pro gratis durante {} días: haga todos los que quiera. Después, cuesta {}. Sus documentos existentes siguen siempre disponibles."],
+"Vous avez utilisé vos {} documents gratuits ce mois-ci. Avec Carnet Pro, à {}, vous en faites autant que vous voulez. Vos documents existants restent toujours accessibles.":["You’ve used your {} free documents this month. With Carnet Pro, at {}, you can make as many as you want. Your existing documents always stay available.","Ha usado sus {} documentos gratuitos de este mes. Con Carnet Pro, por {}, puede hacer todos los que quiera. Sus documentos existentes siguen siempre disponibles."],
+"Essayez Carnet Pro gratuitement pendant {} jours.":["Try Carnet Pro free for {} days.","Pruebe Carnet Pro gratis durante {} días."],
+"Carnet Pro coûte {}.":["Carnet Pro costs {}.","Carnet Pro cuesta {}."],
+"Les photos dans vos documents font partie de Carnet Pro.":["Photos in your documents are part of Carnet Pro.","Las fotos en sus documentos forman parte de Carnet Pro."],
+"L’acceptation et la signature en ligne de vos {} font partie de Carnet Pro.":["Online acceptance and signing of your {} are part of Carnet Pro.","La aceptación y la firma en línea de sus {} forman parte de Carnet Pro."],
+"Créez d’abord votre compte gratuit. Ensuite, vous pourrez commencer votre essai gratuit.":["First create your free account. Then you can start your free trial.","Primero cree su cuenta gratuita. Después podrá empezar su prueba gratuita."],
+"Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.":["First create your free account. Then you can upgrade to Pro.","Primero cree su cuenta gratuita. Después podrá pasar a Pro."],
+"Le paiement en ligne sera offert très bientôt.":["Online payment will be available very soon.","El pago en línea estará disponible muy pronto."],
+"La gestion de l’abonnement sera offerte très bientôt.":["Subscription management will be available very soon.","La gestión de la suscripción estará disponible muy pronto."],
+"Ouverture de la page pour changer votre carte…":["Opening the page to change your card…","Abriendo la página para cambiar su tarjeta…"],
+"Ouverture de votre abonnement…":["Opening your subscription…","Abriendo su suscripción…"],
+"Votre carte est mise à jour.":["Your card has been updated.","Su tarjeta está actualizada."],
+"Paiement reçu. Activation de Carnet Pro…":["Payment received. Activating Carnet Pro…","Pago recibido. Activando Carnet Pro…"],
+"Bienvenue dans Carnet Pro ! Documents illimités.":["Welcome to Carnet Pro! Unlimited documents.","¡Bienvenido a Carnet Pro! Documentos ilimitados."],
+"Le paiement est reçu, l’activation prend plus de temps que prévu. Rechargez la page dans une minute.":["Payment received, but activation is taking longer than expected. Reload the page in a minute.","El pago se recibió, pero la activación tarda más de lo previsto. Vuelva a cargar la página en un minuto."],
+/* Photos */
+"Maximum de {} photos par document.":["Maximum of {} photos per document.","Máximo de {} fotos por documento."],
+"Envoi de {} photo{}…":["Uploading {} photo{}…","Subiendo {} foto{}…"],
+"Une photo n’a pas pu être envoyée. Vérifiez votre connexion Internet et réessayez.":["A photo couldn’t be uploaded. Check your Internet connection and try again.","No se pudo subir una foto. Revise su conexión a Internet y vuelva a intentarlo."],
+"{} photo{} ajoutée{} (maximum de {} par document).":["{0} photo{1} added (maximum of {3} per document).","{0} foto{1} añadida{1} (máximo de {3} por documento)."],
+"{} photo{} ajoutée{}.":["{0} photo{1} added.","{0} foto{1} añadida{1}."],
+/* Acceptation en ligne */
+"C’est un exemple : créez votre propre document pour l’envoyer à un client.":["This is an example: create your own document to send it to a client.","Es un ejemplo: cree su propio documento para enviarlo a un cliente."],
+"Ce document est déjà accepté en ligne.":["This document has already been accepted online.","Este documento ya fue aceptado en línea."],
+"Préparation du lien…":["Preparing the link…","Preparando el enlace…"],
+"Le lien n’a pas pu être créé. Vérifiez votre connexion Internet et réessayez.":["The link couldn’t be created. Check your Internet connection and try again.","No se pudo crear el enlace. Revise su conexión a Internet y vuelva a intentarlo."],
+"Accepté en ligne":["Accepted online","Aceptado en línea"],
+"Acceptée en ligne":["Accepted online","Aceptado en línea"],
+"par {} le {} à {}. Sa signature est sur le document.":["by {} on {} at {}. Their signature is on the document.","por {} el {} a las {}. Su firma está en el documento."],
+"par {}. Sa signature est sur le document.":["by {}. Their signature is on the document.","por {}. Su firma está en el documento."],
+"Lien d’acceptation envoyé le {}.":["Acceptance link sent on {}.","Enlace de aceptación enviado el {}."],
+"Lien d’acceptation envoyé.":["Acceptance link sent.","Enlace de aceptación enviado."],
+"Le client l’a ouvert le {}.":["The client opened it on {}.","El cliente lo abrió el {}."],
+"Pas encore ouvert par le client.":["Not opened by the client yet.","El cliente aún no lo ha abierto."],
+"En attente de sa réponse.":["Waiting for their reply.","A la espera de su respuesta."],
+"Copier le lien":["Copy the link","Copiar el enlace"],
+"Renvoyer":["Send again","Reenviar"],
+"Lien copié. Collez-le dans un texto ou un courriel.":["Link copied. Paste it into a text message or an email.","Enlace copiado. Péguelo en un mensaje de texto o un correo."],
+"votre client":["your client","su cliente"],
+"Bonne nouvelle : {} a accepté le devis {} !":["Good news: {} accepted quote {}!","¡Buenas noticias! {} aceptó el presupuesto {}."],
+"Bonne nouvelle : {} a accepté la soumission {} !":["Good news: {} accepted quote {}!","¡Buenas noticias! {} aceptó el presupuesto {}."],
+"Bonne nouvelle : {} documents acceptés en ligne !":["Good news: {} documents accepted online!","¡Buenas noticias! {} documentos aceptados en línea."],
+/* Documents : créer, copier, supprimer */
+"Les exemples ont été retirés. Place à vos vrais documents !":["The examples have been removed. Time for your real documents!","Se quitaron los ejemplos. ¡Ahora sus documentos reales!"],
+"Tout est reçu : la facture est maintenant « Payée ».":["Everything has been received: the invoice is now “Paid”.","Se recibió todo: la factura está ahora «Pagada»."],
+"Facture {} créée à partir de {}.":["Invoice {} created from {}.","Factura {} creada a partir de {}."],
+"Copie créée : {}.":["Copy created: {}.","Copia creada: {}."],
+
+};
 const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 
 /* Pays et régions : taxes, numéros officiels, devise, mention d'exemption */
@@ -554,7 +1005,7 @@ const loc=(lang,cur)=>lang==='en'?(cur==='USD'?'en-US':cur==='GBP'?'en-GB':'en-C
 const fmts={};
 const money=(n,lang,cur)=>{cur=cur||state.profile.currency||'CAD';const k=loc(lang,cur)+cur;try{fmts[k]=fmts[k]||new Intl.NumberFormat(loc(lang,cur),{style:'currency',currency:cur})}catch(e){fmts[k]=new Intl.NumberFormat(loc(lang,cur),{minimumFractionDigits:2,maximumFractionDigits:2})}return fmts[k].format(+n||0)};
 const fdate=(iso,lang,cur)=>iso?new Date(iso+'T12:00:00').toLocaleDateString(loc(lang,cur),{year:'numeric',month:'long',day:'numeric'}):'—';
-const sdate=iso=>iso?new Date(iso+'T12:00:00').toLocaleDateString('fr-CA',{day:'numeric',month:'short'}):'';
+const sdate=iso=>iso?new Date(iso+'T12:00:00').toLocaleDateString(loc(UIL),{day:'numeric',month:'short'}):'';
 const pct=(r,lang)=>{const s=(+r||0).toLocaleString(loc(lang),{maximumFractionDigits:3});return lang==='fr'?`${s} %`:`${s}%`};
 const tName=(t,lang)=>lang==='fr'?t.n:(lang==='es'?(t.es||t.en||t.n):(t.en||t.n));
 
@@ -562,6 +1013,8 @@ const UNITS=[['f','forfait','lump sum','global'],['h','h','hr','h'],['j','jour',
 const unitName=(u,lang)=>{const x=UNITS.find(a=>a[0]===u)||UNITS[0];return lang==='en'?x[2]:lang==='es'?x[3]:x[1]};
 const ST={S:['brouillon','envoyee','acceptee','refusee'],F:['brouillon','envoyee','payee']};
 const stLabel=(s,type)=>{const f=type==='F'||qw()==='Soumission';return {brouillon:'Brouillon',envoyee:f?'Envoyée':'Envoyé',acceptee:f?'Acceptée':'Accepté',refusee:f?'Refusée':'Refusé',payee:'Payée'}[s]||s};
+/* Statut affiché dans l'interface (liste, éditeur, Excel), dans la langue choisie */
+const uiSt=(s,type)=>UIL==='fr'?(s==='retard'?'En retard':stLabel(s,type)):UIL==='en'?({brouillon:'Draft',envoyee:'Sent',acceptee:'Accepted',refusee:'Declined',payee:'Paid',retard:'Overdue'})[s]||s:({brouillon:'Borrador',envoyee:type==='F'?'Enviada':'Enviado',acceptee:'Aceptado',refusee:'Rechazado',payee:'Pagada',retard:'Vencida'})[s]||s;
 const T={
  fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues',disc:'Rabais',net:'Après rabais',rcv:'Paiement reçu',bal:'Solde à payer',photos:'Photos'},
  en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected',disc:'Discount',net:'After discount',rcv:'Payment received',bal:'Balance due',photos:'Photos'},
@@ -571,6 +1024,8 @@ const qw=()=>state.profile.qw||'Soumission';
 const dv=()=>qw()==='Devis';
 const qwP=()=>dv()?'Devis':'Soumissions';
 const depWord=()=>dv()?'Acompte':'Dépôt';
+const uqw=()=>UIL==='fr'?qw():UIL==='en'?'Quote':'Presupuesto';   /* dans l'interface */
+const uqwP=()=>UIL==='fr'?qwP():UIL==='en'?'Quotes':'Presupuestos';
 function Lx(d){
  const lang=d.lang||'fr',x={...T[lang]};
  if(lang==='fr'){x.S=qw();x.accept=dv()?'Bon pour accord':'Acceptation du client';x.accepted=dv()?'ACCEPTÉ':'ACCEPTÉE';x.dep=`${depWord()} requis`}
@@ -582,10 +1037,10 @@ const P={
  dep:()=>num(state.profile.dep,30),
  validDays:()=>num(state.profile.validDays,30),
  dueDays:()=>num(state.profile.dueDays,30),
- termsDef:()=>`${depWord()} de ${P.dep()} % à l’acceptation. Solde payable à la fin des travaux.`,
- termsFDef:()=>`Payable dans les ${P.dueDays()} jours. Merci de votre confiance!`,
- terms:()=>state.profile.terms||P.termsDef(),
- termsF:()=>state.profile.termsF||P.termsFDef(),
+ termsDef:l=>({en:`${P.dep()}% deposit upon acceptance. Balance due upon completion of the work.`,es:`Anticipo del ${P.dep()} % al aceptar. Saldo a pagar al finalizar la obra.`})[l||UIL]||`${depWord()} de ${P.dep()} % à l’acceptation. Solde payable à la fin des travaux.`,
+ termsFDef:l=>({en:`Payable within ${P.dueDays()} days. Thank you for your business!`,es:`Pago a ${P.dueDays()} días. ¡Gracias por su confianza!`})[l||UIL]||`Payable dans les ${P.dueDays()} jours. Merci de votre confiance!`,
+ terms:l=>state.profile.terms||P.termsDef(l),
+ termsF:l=>state.profile.termsF||P.termsFDef(l),
  exempt:()=>state.profile.exempt||region(state.profile.region).ex
 };
 const taxEff=t=>({n:t.n||t.dn||'Taxe',en:t.en||t.den||t.n||t.dn||'Tax',es:t.es||t.des||t.en||t.den||t.n||t.dn,r:num(t.r,num(t.dr,0))});
@@ -606,26 +1061,31 @@ function applyRegion(p,code){
 }
 const BLANK_PROFILE=code=>applyRegion({name:'',addr:'',city:'',tel:'',email:'',logo:'',terms:'',termsF:'',validDays:'',dueDays:'',dep:'',taxes:true},code);
 
+const SAMPLE_TX={
+ fr:{bath:['Démolition et disposition des débris','Plomberie : déplacement du drain de douche','Céramique murale et plancher, pose','Vanité avec comptoir de quartz, fournie et installée','Peinture et finition'],deck:['Pieux vissés, fournis et installés','Structure et platelage en bois traité','Garde-corps en aluminium','Escalier de 4 marches'],floor:['Removal of existing flooring','Commercial vinyl plank, supplied and installed','Baseboards and transitions'],door:['Main-d’œuvre','Quincaillerie et coupe-froid'],ti:['Rénovation complète de la salle de bain','Terrasse en bois traité de 12 × 16 pi','Terrasse en bois traité de 18 m²','Remplacement du plancher de la salle à manger','Réparation de la porte arrière'],nS:w=>`${w} de 30 % à l’acceptation. Solde payable à la fin des travaux.`,nF:'Payable dans les 30 jours. Merci de votre confiance!',nFloor:'Payable within 30 days. Thank you for your business!',nDoor:'Payable dans les 30 jours.'},
+ en:{bath:['Demolition and debris removal','Plumbing: relocate the shower drain','Wall and floor ceramic tile, installation','Vanity with quartz countertop, supplied and installed','Painting and finishing'],deck:['Screw piles, supplied and installed','Pressure-treated wood framing and decking','Aluminum railing','4-step staircase'],floor:['Removal of existing flooring','Commercial vinyl plank, supplied and installed','Baseboards and transitions'],door:['Labour','Hardware and weatherstripping'],ti:['Complete bathroom renovation','12 × 16 ft pressure-treated wood deck','18 m² pressure-treated wood deck','Dining room floor replacement','Back door repair'],nS:()=>'30% deposit upon acceptance. Balance due upon completion of the work.',nF:'Payable within 30 days. Thank you for your business!',nFloor:'Payable within 30 days. Thank you for your business!',nDoor:'Payable within 30 days.'},
+ es:{bath:['Demolición y retirada de escombros','Fontanería: traslado del desagüe de la ducha','Revestimiento cerámico de paredes y suelo, colocación','Mueble de baño con encimera de cuarzo, suministro e instalación','Pintura y acabados'],deck:['Pilotes de tornillo, suministro e instalación','Estructura y entarimado de madera tratada','Barandilla de aluminio','Escalera de 4 peldaños'],floor:['Retirada del suelo existente','Lamas de vinilo comercial, suministro e instalación','Zócalos y perfiles de transición'],door:['Mano de obra','Herrajes y burletes'],ti:['Reforma completa del baño','Terraza de madera tratada de 12 × 16 pies','Terraza de madera tratada de 18 m²','Cambio del suelo del comedor','Reparación de la puerta trasera'],nS:()=>'Anticipo del 30 % al aceptar. Saldo a pagar al finalizar la obra.',nF:'Pago a 30 días. ¡Gracias por su confianza!',nFloor:'Pago a 30 días. ¡Gracias por su confianza!',nDoor:'Pago a 30 días.'}
+};
 function sample(code){
- const r=region(code),t=todayISO(),y=t.slice(0,4),imp=imperial(r),k=FX[r.cur]||1,S=r.qw==='Devis'?'D':'S',ca=r.group==='Canada';
+ const X=SAMPLE_TX[UIL],SL=UIL,r=region(code),t=todayISO(),y=t.slice(0,4),imp=imperial(r),k=FX[r.cur]||1,S=r.qw==='Devis'?'D':'S',ca=r.group==='Canada';
  const pr=v=>{const x=v*k;return k>=50?Math.round(x/50)*50:k>=5?Math.round(x):r2(x)};
  const Ln=(d,qi,ui,pi,qm,um,pm)=>imp?{d:'',dd:d,q:'',qd:qi,u:ui,p:'',pd:pr(pi)}:{d:'',dd:d,q:'',qd:qm??qi,u:um??ui,p:'',pd:pr(pm??pi)};
- const bath=()=>[Ln('Démolition et disposition des débris',1,'f',1200),Ln('Plomberie : déplacement du drain de douche',14,'h',95),Ln('Céramique murale et plancher, pose',180,'pi2',12.5,17,'m2',135),Ln('Vanité avec comptoir de quartz, fournie et installée',1,'u',2450),Ln('Peinture et finition',1,'f',650)];
+ const bath=()=>[Ln(X.bath[0],1,'f',1200),Ln(X.bath[1],14,'h',95),Ln(X.bath[2],180,'pi2',12.5,17,'m2',135),Ln(X.bath[3],1,'u',2450),Ln(X.bath[4],1,'f',650)];
  const txs=()=>r.taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''}));
  const w=r.qw==='Devis'?'Acompte':'Dépôt';
- const D=o=>({id:uid(),sample:true,title:'',valid:'',due:'',paidDate:'',lang:'fr',taxes:r.taxes.some(x=>x.r>0),tx:txs(),cur:r.cur,dep:'',depDef:0,notes:'',notesDef:'',...o});
- const notesS=`${w} de 30 % à l’acceptation. Solde payable à la fin des travaux.`;
+ const D=o=>({id:uid(),sample:true,title:'',valid:'',due:'',paidDate:'',lang:SL,taxes:r.taxes.some(x=>x.r>0),tx:txs(),cur:r.cur,dep:'',depDef:0,notes:'',notesDef:'',...o});
+ const notesS=X.nS(w);
  return {
   clients:[
    {id:'c1',sample:true,name:'Marie Gagnon',contact:'',addr:'88, rue des Érables',city:ca?'Laval (Québec)  H7N 1A1':'',tel:ca?'514 555-0198':'',email:'marie.gagnon@exemple.com'},
    {id:'c2',sample:true,name:'Restaurant Chez Lucie',contact:'Lucie Bergeron',addr:'402, rue Principale',city:ca?'Saint-Jérôme (Québec)  J7Z 1Y5':'',tel:ca?'450 555-0177':'',email:'lucie@chezlucie.exemple'},
    {id:'c3',sample:true,name:'Daniel Roy',contact:'',addr:'15, rue Champlain',city:ca?'Blainville (Québec)  J7C 3K4':'',tel:'',email:''}],
   docs:[
-   D({type:'S',num:`${S}-${y}-014`,clientId:'c1',titleDef:'Rénovation complète de la salle de bain',date:addDays(t,-21),valid:addDays(t,9),status:'acceptee',lines:bath(),depDef:30,notesDef:notesS}),
-   D({type:'S',num:`${S}-${y}-015`,clientId:'c3',titleDef:imp?'Terrasse en bois traité de 12 × 16 pi':'Terrasse en bois traité de 18 m²',date:addDays(t,-6),valid:addDays(t,24),status:'envoyee',lines:[Ln('Pieux vissés, fournis et installés',9,'u',285),Ln('Structure et platelage en bois traité',192,'pi2',28,18,'m2',300),Ln('Garde-corps en aluminium',40,'pil',85,12,'ml',280),Ln('Escalier de 4 marches',1,'f',950)],depDef:30,notesDef:notesS}),
-   D({type:'F',num:`F-${y}-010`,clientId:'c1',titleDef:'Rénovation complète de la salle de bain',date:addDays(t,-2),due:addDays(t,28),status:'envoyee',lines:bath(),notesDef:'Payable dans les 30 jours. Merci de votre confiance!',from:`${S}-${y}-014`}),
-   D({type:'F',num:`F-${y}-009`,clientId:'c2',titleDef:'Remplacement du plancher de la salle à manger',date:addDays(t,-40),due:addDays(t,-10),status:'payee',lang:'en',lines:[Ln('Removal of existing flooring',640,'pi2',2.25,60,'m2',24),Ln('Commercial vinyl plank, supplied and installed',640,'pi2',7.8,60,'m2',84),Ln('Baseboards and transitions',120,'pil',6.5,36,'ml',21)],notesDef:'Payable within 30 days. Thank you for your business!',paidDate:addDays(t,-3)}),
-   D({type:'F',num:`F-${y}-008`,clientId:'c2',titleDef:'Réparation de la porte arrière',date:addDays(t,-50),due:addDays(t,-20),status:'envoyee',lines:[Ln('Main-d’œuvre',4,'h',85),Ln('Quincaillerie et coupe-froid',1,'u',145)],notesDef:'Payable dans les 30 jours.'})
+   D({type:'S',num:`${S}-${y}-014`,clientId:'c1',titleDef:X.ti[0],date:addDays(t,-21),valid:addDays(t,9),status:'acceptee',lines:bath(),depDef:30,notesDef:notesS}),
+   D({type:'S',num:`${S}-${y}-015`,clientId:'c3',titleDef:imp?X.ti[1]:X.ti[2],date:addDays(t,-6),valid:addDays(t,24),status:'envoyee',lines:[Ln(X.deck[0],9,'u',285),Ln(X.deck[1],192,'pi2',28,18,'m2',300),Ln(X.deck[2],40,'pil',85,12,'ml',280),Ln(X.deck[3],1,'f',950)],depDef:30,notesDef:notesS}),
+   D({type:'F',num:`F-${y}-010`,clientId:'c1',titleDef:X.ti[0],date:addDays(t,-2),due:addDays(t,28),status:'envoyee',lines:bath(),notesDef:X.nF,from:`${S}-${y}-014`}),
+   D({type:'F',num:`F-${y}-009`,clientId:'c2',titleDef:X.ti[3],date:addDays(t,-40),due:addDays(t,-10),status:'payee',lang:SL==='fr'?'en':SL,lines:[Ln(X.floor[0],640,'pi2',2.25,60,'m2',24),Ln(X.floor[1],640,'pi2',7.8,60,'m2',84),Ln(X.floor[2],120,'pil',6.5,36,'ml',21)],notesDef:X.nFloor,paidDate:addDays(t,-3)}),
+   D({type:'F',num:`F-${y}-008`,clientId:'c2',titleDef:X.ti[4],date:addDays(t,-50),due:addDays(t,-20),status:'envoyee',lines:[Ln(X.door[0],4,'h',85),Ln(X.door[1],1,'u',145)],notesDef:X.nDoor})
  ]};
 }
 function freshState(code){const s=sample(code);return {v:3,profile:BLANK_PROFILE(code),clients:s.clients,docs:s.docs}}
@@ -718,11 +1178,12 @@ function toast(msg,undo){
 }
 function chrome(){
  const r=region(state.profile.region);
- $('#where').textContent=`${r.name} · ${state.profile.currency}`;
- $('#docs-h1').textContent=`${qwP()} et factures`;$('#new-s').textContent=`+ ${qw()}`;$('#chip-s').textContent=qwP();
- $('#lbl-valid').textContent=`Validité d’un${dv()?' devis':'e soumission'} (jours)`;
- $('#lbl-dep').textContent=`${depWord()} demandé sur les ${qwP().toLowerCase()} (%)`;
- $('#lbl-terms').textContent=`Conditions des ${qwP().toLowerCase()}`;
+ $('#where').textContent=`${_t(r.name)} · ${state.profile.currency}`;
+ $('#docs-h1').textContent=_t`${uqwP()} et factures`;$('#new-s').textContent=`+ ${uqw()}`;$('#chip-s').textContent=uqwP();
+ $('#lbl-valid').textContent=_t(dv()?'Validité d’un devis (jours)':'Validité d’une soumission (jours)');
+ $('#lbl-dep').textContent=_t(dv()?'Acompte demandé sur les devis (%)':'Dépôt demandé sur les soumissions (%)');
+ $('#lbl-terms').textContent=_t(dv()?'Conditions des devis':'Conditions des soumissions');
+ $('#lang-cur').textContent=UIL.toUpperCase();$$('#langmenu [data-l]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.l===UIL)));
 }
 
 function show(v){
@@ -741,32 +1202,32 @@ function renderDocs(){
  const open=F.filter(d=>d.status==='envoyee'),late=open.filter(overdue),pend=S.filter(d=>d.status==='envoyee');
  const gotM=F.reduce((s,d)=>s+received(d,month),0),due=a=>a.reduce((s,d)=>s+totals(d).bal,0);
  const acc=S.filter(d=>d.status==='acceptee').length,ref=S.filter(d=>d.status==='refusee').length;
- const sum=a=>a.reduce((s,d)=>s+totals(d).total,0),pl=(n,w)=>`${n} ${w}${n>1?'s':''}`;
+ const sum=a=>a.reduce((s,d)=>s+totals(d).total,0),pl=n=>n>1?'s':'';
  $('#kpis').innerHTML=[
-  ['À encaisser',money(due(open),'fr',pc),`${pl(open.length,'facture')} en attente de paiement`,false],
-  ['En retard',money(due(late),'fr',pc),`${pl(late.length,'facture')} après l’échéance`,late.length>0],
-  [`${qwP()} en attente`,money(sum(pend),'fr',pc),`${pend.length} en attente de réponse`,false],
-  ['Encaissé ce mois-ci',money(gotM,'fr',pc),acc+ref?`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
+  ['À encaisser',money(due(open),UIL,pc),_t`${open.length} facture${pl(open.length)} en attente de paiement`,false],
+  ['En retard',money(due(late),UIL,pc),_t`${late.length} facture${pl(late.length)} après l’échéance`,late.length>0],
+  [_t`${uqwP()} en attente`,money(sum(pend),UIL,pc),_t`${pend.length} en attente de réponse`,false],
+  ['Encaissé ce mois-ci',money(gotM,UIL,pc),acc+ref?_t`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
  ].map(([l,v,s,a])=>`<div class="kpi${a?' alert':''}"><div class="l">${l}</div><div class="v">${v}</div><div class="sub">${s}</div></div>`).join('');
  const q=($('#q').value||'').toLowerCase().trim();
  const list=state.docs.filter(d=>flt==='all'||(flt==='late'?overdue(d):d.type===flt)).filter(d=>{if(!q)return true;const c=client(d.clientId);return [d.num,titleOf(d),c&&c.name].join(' ').toLowerCase().includes(q)}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.num.localeCompare(a.num));
- if(!state.docs.length){$('#doclist').innerHTML=`<div class="empty">Aucun document pour l’instant. Commencez par ${dv()?'un devis':'une soumission'} : c’est ce document qui deviendra votre facture.</div>`;return}
- if(!list.length){$('#doclist').innerHTML=`<div class="empty">Aucun document ne correspond à « ${esc(q)} ».</div>`;return}
- $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${st==='retard'?'En retard':stLabel(d.status,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,'fr',d.cur)}</b>${d.type==='F'&&d.status!=='payee'&&totals(d).paid>0?`<div class="sub">Solde ${money(totals(d).bal,'fr',d.cur)}</div>`:''}</td></tr>`}).join('')}</tbody></table>`;
+ if(!state.docs.length){$('#doclist').innerHTML=`<div class="empty">${_t(dv()?'Aucun document pour l’instant. Commencez par un devis : c’est ce document qui deviendra votre facture.':'Aucun document pour l’instant. Commencez par une soumission : c’est ce document qui deviendra votre facture.')}</div>`;return}
+ if(!list.length){$('#doclist').innerHTML=`<div class="empty">${_t`Aucun document ne correspond à « ${esc(q)} ».`}</div>`;return}
+ $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${uiSt(st,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,UIL,d.cur)}</b>${d.type==='F'&&d.status!=='payee'&&totals(d).paid>0?`<div class="sub">${_t`Solde ${money(totals(d).bal,UIL,d.cur)}`}</div>`:''}</td></tr>`}).join('')}</tbody></table>`;
 }
 
 function clientOpts(sel){return `<option value="">Choisir un client</option>`+state.clients.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${esc(c.name)}</option>`).join('')+`<option value="__new">+ Nouveau client…</option>`}
 function curSym(c){try{return new Intl.NumberFormat('fr',{style:'currency',currency:c}).formatToParts(0).find(p=>p.type==='currency').value}catch(e){return c}}
 function linesHTML(d){
  const cs=curSym(d.cur);
- return d.lines.map((l,i)=>`<div class="ln"><textarea rows="2" data-l="${i}" data-k="d" aria-label="Description, ligne ${i+1}" placeholder="${esc(l.dd||'Décrivez les travaux')}">${esc(l.d)}</textarea><div class="lnr"><label>Qté<input type="number" step="any" inputmode="decimal" data-l="${i}" data-k="q" value="${esc(l.q)}" placeholder="${esc(l.qd??1)}"></label><label>Unité<select data-l="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===l.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${esc(cs)})<input type="number" step="0.01" inputmode="decimal" data-l="${i}" data-k="p" value="${esc(l.p)}" placeholder="${esc(l.pd??0)}"></label><output id="lt-${i}">${money(lAmt(l),'fr',d.cur)}</output><button type="button" class="x" data-act="del-line" data-i="${i}" aria-label="Retirer la ligne ${i+1}">×</button></div>${inList(l)?`<button type="button" class="lnsave" disabled>Dans ma liste ✓</button>`:`<button type="button" class="lnsave" data-act="item-save" data-i="${i}">Garder dans ma liste</button>`}</div>`).join('');
+ return d.lines.map((l,i)=>`<div class="ln"><textarea rows="2" data-l="${i}" data-k="d" aria-label="${_t`Description, ligne ${i+1}`}" placeholder="${esc(l.dd||'Décrivez les travaux')}">${esc(l.d)}</textarea><div class="lnr"><label>Qté<input type="number" step="any" inputmode="decimal" data-l="${i}" data-k="q" value="${esc(l.q)}" placeholder="${esc(l.qd??1)}"></label><label>Unité<select data-l="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===l.u?' selected':''}>${unitName(u[0],UIL)}</option>`).join('')}</select></label><label>${_t`Prix (${esc(cs)})`}<input type="number" step="0.01" inputmode="decimal" data-l="${i}" data-k="p" value="${esc(l.p)}" placeholder="${esc(l.pd??0)}"></label><output id="lt-${i}">${money(lAmt(l),UIL,d.cur)}</output><button type="button" class="x" data-act="del-line" data-i="${i}" aria-label="${_t`Retirer la ligne ${i+1}`}">×</button></div>${inList(l)?`<button type="button" class="lnsave" disabled>Dans ma liste ✓</button>`:`<button type="button" class="lnsave" data-act="item-save" data-i="${i}">Garder dans ma liste</button>`}</div>`).join('');
 }
 function paysHTML(d){
  const cs=esc(curSym(d.cur)),ps=d.pays||[],bal=totals(d).bal;
  if(!ps.length)return `<p class="hint" style="margin:0 0 12px">Aucun paiement inscrit pour l’instant.</p>`;
- return ps.map((p,i)=>`<div class="rw"><label>Date<input type="date" data-pay="${i}" data-k="date" value="${esc(p.date)}"></label><label>Montant (${cs})<input type="number" step="0.01" min="0" inputmode="decimal" data-pay="${i}" data-k="a" value="${esc(p.a)}" placeholder="${p.a===''?esc(bal):'0'}"></label><label>Note (facultatif)<input data-pay="${i}" data-k="n" value="${esc(p.n)}" placeholder="Ex. : Virement Interac"></label><button type="button" class="x" data-act="rcv-del" data-i="${i}" aria-label="Retirer le paiement ${i+1}">×</button></div>`).join('')+`<p class="paysum" id="pays-sum">${paySum(d)}</p>`;
+ return ps.map((p,i)=>`<div class="rw"><label>Date<input type="date" data-pay="${i}" data-k="date" value="${esc(p.date)}"></label><label>${_t`Montant (${cs})`}<input type="number" step="0.01" min="0" inputmode="decimal" data-pay="${i}" data-k="a" value="${esc(p.a)}" placeholder="${p.a===''?esc(bal):'0'}"></label><label>Note (facultatif)<input data-pay="${i}" data-k="n" value="${esc(p.n)}" placeholder="Ex. : Virement Interac"></label><button type="button" class="x" data-act="rcv-del" data-i="${i}" aria-label="${_t`Retirer le paiement ${i+1}`}">×</button></div>`).join('')+`<p class="paysum" id="pays-sum">${paySum(d)}</p>`;
 }
-const paySum=d=>{const t=totals(d);return `Reçu : <b>${money(t.paid,'fr',d.cur)}</b> · Solde à payer : <b>${money(t.bal,'fr',d.cur)}</b>`};
+const paySum=d=>{const t=totals(d);return `Reçu : <b>${money(t.paid,UIL,d.cur)}</b> · Solde à payer : <b>${money(t.bal,UIL,d.cur)}</b>`};
 /* Après un changement de paiement : solde, et facture « Payée » quand tout est reçu */
 function afterPays(d){
  const t=totals(d),el=$('#pays-sum');if(el)el.innerHTML=paySum(d);
@@ -784,7 +1245,7 @@ function openEditor(id){
  $('#v-edit').innerHTML=`
  <div class="ehead">
   <button class="btn ghost" data-act="back">← Documents</button>
-  <h2>${S?qw():'Facture'} ${esc(d.num)}</h2>
+  <h2>${S?uqw():_t('Facture')} ${esc(d.num)}</h2>
   <div class="acts">
    <button class="btn yel" data-act="print">Imprimer / PDF</button>
    <button class="btn" data-act="mail">Envoyer par courriel</button>
@@ -804,17 +1265,17 @@ function openEditor(id){
     <label>Client<select id="f-client" data-f="clientId">${clientOpts(d.clientId)}</select></label>
     <label>Objet des travaux<input id="f-title" data-f="title" placeholder="${esc(d.titleDef||'Ex. : Rénovation de la cuisine')}"></label>
     <div class="two"><label>Date<input id="f-date" type="date" data-f="date"></label><label>${S?'Valide jusqu’au':'Échéance'}<input id="f-end" type="date" data-f="${S?'valid':'due'}"></label></div>
-    <div class="two"><label>Statut<select id="f-status" data-f="status">${ST[d.type].map(s=>`<option value="${s}">${stLabel(s,d.type)}</option>`).join('')}</select></label><label>Langue du document<select id="f-lang" data-f="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select></label></div>
+    <div class="two"><label>Statut<select id="f-status" data-f="status">${ST[d.type].map(s=>`<option value="${s}">${uiSt(s,d.type)}</option>`).join('')}</select></label><label>Langue du document<select id="f-lang" data-f="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select></label></div>
    </fieldset>
    <fieldset><legend>Travaux</legend><div id="lines">${linesHTML(d)}</div><div class="acts"><button type="button" class="btn ghost" data-act="add-line">+ Ajouter une ligne</button><button type="button" class="btn ghost" data-act="item-open">+ De ma liste</button></div>
-    <div class="discbox"><div class="two"><label>Rabais<input id="f-disc" type="number" step="0.01" min="0" inputmode="decimal" data-f="disc" placeholder="0"></label><label>Type de rabais<select id="f-discT" data-f="discT"><option value="%">En pourcentage (%)</option><option value="$">En montant (${esc(curSym(d.cur))})</option></select></label></div>
+    <div class="discbox"><div class="two"><label>Rabais<input id="f-disc" type="number" step="0.01" min="0" inputmode="decimal" data-f="disc" placeholder="0"></label><label>Type de rabais<select id="f-discT" data-f="discT"><option value="%">En pourcentage (%)</option><option value="$">${_t`En montant (${esc(curSym(d.cur))})`}</option></select></label></div>
     <label>Raison du rabais (facultatif)<input id="f-discL" data-f="discL" placeholder="Ex. : Client fidèle"></label></div></fieldset>
    <fieldset><legend>Photos<span class="pro-tag" aria-hidden="true">PRO</span></legend><div class="phedit" id="f-photos">${photosHTML(d)}</div><div class="acts" style="align-items:center"><button type="button" class="btn ghost" data-act="ph-add">+ Ajouter des photos</button><span class="sub" id="ph-st"></span></div><input id="ph-in" type="file" accept="image/*" multiple hidden><p class="hint" style="margin:10px 0 0">Jusqu’à 6 photos par document. Elles s’affichent sur le document, après les conditions.</p></fieldset>
    <fieldset><legend>Taxes et paiement</legend>
     <label class="chk"><input id="f-taxes" type="checkbox" data-f="taxes"> Percevoir les taxes</label>
     <div class="txr" id="f-tx">${txHTML(d)}</div>
     <p class="hint">${esc(r.hint)}</p>
-    <label>${S?depWord():'Acompte'} requis (%)<input id="f-dep" type="number" min="0" max="100" step="1" data-f="dep" placeholder="${esc(d.depDef||0)}"></label>
+    <label>${_t(`${S?depWord():'Acompte'} requis (%)`)}<input id="f-dep" type="number" min="0" max="100" step="1" data-f="dep" placeholder="${esc(d.depDef||0)}"></label>
     <label>Conditions<textarea id="f-notes" rows="3" data-f="notes" placeholder="${esc(d.notesDef||'Ex. : Payable dans les 30 jours.')}"></textarea></label>
    </fieldset>
    ${S?'':`<fieldset><legend>Paiements reçus</legend><div class="rows pays" id="pays">${paysHTML(d)}</div><button type="button" class="btn ghost" data-act="rcv-add">+ Ajouter un paiement reçu</button><p class="hint" style="margin:10px 0 0">Inscrivez les acomptes et paiements partiels : la facture montrera le solde à payer.</p></fieldset>`}
@@ -835,15 +1296,15 @@ function renderPreview(){
  const p=state.profile,lang=d.lang||'fr',X=Lx(d),c=client(d.clientId)||{},t=totals(d),m=n=>money(n,lang,d.cur),S=d.type==='S';
  const stamp=d.status==='payee'?X.paid:(S&&d.status==='acceptee'?X.accepted:'');
  const rows=d.lines.filter(l=>ld(l)||lp(l)),notes=notesOf(d);
- const co=p.name||p.addr||p.city||p.tel||p.email?`<b>${esc(p.name)}</b>${p.addr?'<br>'+esc(p.addr):''}${p.city?'<br>'+esc(p.city):''}${p.tel||p.email?'<br>'+[p.tel,p.email].filter(Boolean).map(esc).join('  ·  '):''}`:`<span class="ph-e"><b>Nom de votre entreprise</b><br>Adresse<br>Téléphone · courriel</span>`;
+ const co=p.name||p.addr||p.city||p.tel||p.email?`<b>${esc(p.name)}</b>${p.addr?'<br>'+esc(p.addr):''}${p.city?'<br>'+esc(p.city):''}${p.tel||p.email?'<br>'+[p.tel,p.email].filter(Boolean).map(esc).join('  ·  '):''}`:({fr:`<span class="ph-e"><b>Nom de votre entreprise</b><br>Adresse<br>Téléphone · courriel</span>`,en:`<span class="ph-e"><b>Your business name</b><br>Address<br>Phone · email</span>`,es:`<span class="ph-e"><b>Nombre de su empresa</b><br>Dirección<br>Teléfono · correo</span>`})[lang]||'';
  $('#paper').innerHTML=`
  <div class="ph"><div class="co">${p.logo?`<img src="${p.logo}" alt="">`:''}<div>${co}</div></div>
  <div class="dt"><div class="dtt">${S?X.S:X.F}</div><div>${X.no} <b>${esc(d.num)}</b></div></div></div>
  <div class="legal">${legalLine(d)}</div>
  <div class="pm"><div><div class="lb">${X.client}</div>${c.name?`<b>${esc(c.name)}</b>`:'—'}${c.contact?'<br>'+esc(c.contact):''}${c.addr?'<br>'+esc(c.addr):''}${c.city?'<br>'+esc(c.city):''}${c.tel?'<br>'+esc(c.tel):''}${c.email?'<br>'+esc(c.email):''}</div>
  <div class="dates"><div><span class="lb">${X.date}</span> ${fdate(d.date,lang,d.cur)}</div><div><span class="lb">${S?X.valid:X.due}</span> ${fdate(S?d.valid:d.due,lang,d.cur)}</div>${titleOf(d)?`<div><span class="lb">${X.project}</span> ${esc(titleOf(d))}</div>`:''}</div></div>
- <table class="pt"><thead><tr><th>${X.desc}</th><th class="n">${X.qty}</th><th>${X.unit}</th><th class="n">${X.price}</th><th class="n">${X.amount}</th></tr></thead><tbody>${rows.length?rows.map(l=>`<tr><td>${esc(ld(l))}</td><td class="n">${lq(l).toLocaleString(loc(lang,d.cur))}</td><td>${unitName(l.u,lang)}</td><td class="n">${m(lp(l))}</td><td class="n">${m(lAmt(l))}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#999">Ajoutez une ligne de travaux.</td></tr>`}</tbody></table>
- <div class="tot"><div><span>${X.sub}</span><span>${m(t.gross)}</span></div>${t.disc>0?`<div><span>${X.disc}${d.discL?` – ${esc(d.discL)}`:''}${d.discT!=='$'?` (${pct(Math.min(100,num(d.disc,0)),lang)})`:''}</span><span>−${m(t.disc)}</span></div><div><span>${X.net}</span><span>${m(t.sub)}</span></div>`:''}${d.taxes?t.taxes.map(x=>`<div><span>${esc(tName(x,lang))} (${pct(x.r,lang)})</span><span>${m(x.a)}</span></div>`).join(''):`<div class="nt">${esc(P.exempt()||X.noTax)}</div>`}<div class="gt"><span>${X.total}</span><span>${m(t.total)}</span></div>${t.dep>0?`<div><span>${X.dep} (${pct(t.dp,lang)})</span><span>${m(t.dep)}</span></div>`:''}${!S&&t.paid>0?(d.pays||[]).filter(x=>num(x.a,0)>0).map(x=>`<div><span>${X.rcv}${x.date?` (${fdate(x.date,lang,d.cur)})`:''}</span><span>−${m(num(x.a,0))}</span></div>`).join('')+`<div class="bl"><span>${X.bal}</span><span>${m(t.bal)}</span></div>`:''}</div>
+ <table class="pt"><thead><tr><th>${X.desc}</th><th class="n">${X.qty}</th><th>${X.unit}</th><th class="n">${X.price}</th><th class="n">${X.amount}</th></tr></thead><tbody>${rows.length?rows.map(l=>`<tr><td>${esc(ld(l))}</td><td class="n">${lq(l).toLocaleString(loc(lang,d.cur))}</td><td>${unitName(l.u,lang)}</td><td class="n">${m(lp(l))}</td><td class="n">${m(lAmt(l))}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#999">${({fr:'Ajoutez une ligne de travaux.',en:'Add a line of work.',es:'Añada una línea de trabajo.'})[lang]||''}</td></tr>`}</tbody></table>
+ <div class="tot"><div><span>${X.sub}</span><span>${m(t.gross)}</span></div>${t.disc>0?`<div><span>${X.disc}${d.discL?` – ${esc(d.discL)}`:''}${d.discT!=='$'?` (${pct(Math.min(100,num(d.disc,0)),lang)})`:''}</span><span>−${m(t.disc)}</span></div><div><span>${X.net}</span><span>${m(t.sub)}</span></div>`:''}${d.taxes?t.taxes.map(x=>`<div><span>${esc(tName(x,lang))} (${pct(x.r,lang)})</span><span>${m(x.a)}</span></div>`).join(''):`<div class="nt">${esc(lang==='fr'?(P.exempt()||X.noTax):(state.profile.exempt||X.noTax))}</div>`}<div class="gt"><span>${X.total}</span><span>${m(t.total)}</span></div>${t.dep>0?`<div><span>${X.dep} (${pct(t.dp,lang)})</span><span>${m(t.dep)}</span></div>`:''}${!S&&t.paid>0?(d.pays||[]).filter(x=>num(x.a,0)>0).map(x=>`<div><span>${X.rcv}${x.date?` (${fdate(x.date,lang,d.cur)})`:''}</span><span>−${m(num(x.a,0))}</span></div>`).join('')+`<div class="bl"><span>${X.bal}</span><span>${m(t.bal)}</span></div>`:''}</div>
  ${notes?`<div class="notes"><div class="lb">${X.notes}</div>${esc(notes).replace(/\n/g,'<br>')}</div>`:''}
  ${(d.photos||[]).length?`<div class="phs"><div class="lb">${X.photos}</div><div class="phg">${d.photos.map(x=>`<img src="${esc(x.url)}" alt="">`).join('')}</div></div>`:''}
  ${S?(d.acc?`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><div>${d.acc.sig?`<img class="sig" src="${esc(d.acc.sig)}" alt="">`:''}<span>${esc(d.acc.name)} · ${X.sign}</span></div><div><div class="sgd">${fdate(localISO(d.acc.at),lang,d.cur)}</div><span>${X.date}</span></div></div><div class="lb" style="margin-top:6px">${({fr:dv()?'Accepté en ligne':'Acceptée en ligne',en:'Accepted online',es:'Aceptado en línea'})[lang]}</div></div>`:`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><span>${X.sign}</span><span>${X.date}</span></div></div>`):''}
@@ -858,7 +1319,7 @@ function renderLate(d){
  const el=$('#f-late');if(!el)return;
  if(!overdue(d)){el.hidden=true;el.innerHTML='';return}
  const n=daysLate(d);el.hidden=false;
- el.innerHTML=`<span><b>En retard de ${n} jour${n>1?'s':''}.</b> ${d.reminded?`Dernier rappel envoyé le ${esc(fdate(d.reminded,'fr'))}.`:'Aucun rappel envoyé pour l’instant.'}</span><button type="button" class="btn sm" data-act="remind">Envoyer un rappel</button>`;
+ el.innerHTML=`<span><b>${_t`En retard de ${n} jour${n>1?'s':''}.`}</b> ${d.reminded?_t`Dernier rappel envoyé le ${esc(fdate(d.reminded,UIL))}.`:_t('Aucun rappel envoyé pour l’instant.')}</span><button type="button" class="btn sm" data-act="remind">Envoyer un rappel</button>`;
 }
 
 /* Courriel tout prêt, dans la langue du document */
@@ -908,7 +1369,7 @@ function openMail(mode){
  $('#mdlg-t').textContent=mode==='remind'?'Envoyer un rappel':mode==='accept'?'Envoyer le lien d’acceptation':'Envoyer par courriel';
  $('#m-to').value=c.email||'';$('#m-subj').value=m.subj;$('#m-body').value=m.body;
  const can=mode!=='remind'&&d.status==='brouillon';
- $('#m-mark-l').hidden=!can;$('#m-mark').checked=can;$('#m-mark-t').textContent=`Passer le statut à « ${stLabel('envoyee',d.type)} »`;
+ $('#m-mark-l').hidden=!can;$('#m-mark').checked=can;$('#m-mark-t').textContent=_t`Passer le statut à « ${uiSt('envoyee',d.type)} »`;
  $('#mdlg').hidden=false;if(!c.email)setTimeout(()=>$('#m-to').focus(),30);
 }
 $('#mform').addEventListener('submit',e=>{
@@ -931,11 +1392,12 @@ function onEdit(e){
   if(f==='dep')v=v===''?'':Math.max(0,Math.min(100,+v||0));
   if(f==='disc')v=v===''?'':Math.max(0,+v||0);
   if(f==='status'){if(v==='payee'&&!d.paidDate)d.paidDate=todayISO();if(v!=='payee')d.paidDate=''}
+  if(f==='lang'&&!d.notes&&d.notesDef){const S=d.type==='S',o=d.lang||'fr';if(d.notesDef===(S?P.terms(o):P.termsF(o))){d.notesDef=S?P.terms(v):P.termsF(v);const n=$('#f-notes');if(n)n.placeholder=d.notesDef}} /* conditions par défaut dans la nouvelle langue */
   d[f]=v;if(f==='taxes')$('#f-tx').hidden=!v;
  }else if(t.dataset.k&&t.dataset.l!=null){
   const i=+t.dataset.l,l=d.lines[i],k=t.dataset.k;if(!l)return;
   l[k]=(k==='q'||k==='p')?(t.value===''?'':+t.value):t.value;
-  const o=$('#lt-'+i);if(o)o.textContent=money(lAmt(l),'fr',d.cur);
+  const o=$('#lt-'+i);if(o)o.textContent=money(lAmt(l),UIL,d.cur);
  }else if(t.dataset.tx){const x=d.tx[+t.dataset.tx];if(!x)return;x.r=t.value===''?'':Math.max(0,+t.value||0)}
  else if(t.dataset.pay){const x=(d.pays||[])[+t.dataset.pay];if(!x)return;const k=t.dataset.k;x[k]=k==='a'?(t.value===''?'':Math.max(0,+t.value||0)):t.value;if(e.type==='change'||k!=='a')afterPays(d);else{const el=$('#pays-sum');if(el)el.innerHTML=paySum(d)}}
  else return;
@@ -949,7 +1411,7 @@ document.addEventListener('focusin',e=>{const t=e.target;if(!(t.matches&&t.match
 function newDoc(type,keepSamples){
  if(!keepSamples)dropSamples();
  const p=state.profile,t=todayISO(),S=type==='S',taxes=(p.taxList||[]).map(taxEff);
- const d={id:uid(),type,num:nextNum(type),clientId:'',title:'',date:t,valid:S?addDays(t,P.validDays()):'',due:S?'':addDays(t,P.dueDays()),status:'brouillon',lang:'fr',lines:[{d:'',q:'',u:'f',p:''}],taxes:!!p.taxes&&taxes.length>0,tx:taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''})),cur:p.currency,dep:'',depDef:S?P.dep():0,notes:'',notesDef:S?P.terms():P.termsF(),paidDate:'',updated:Date.now()};
+ const d={id:uid(),type,num:nextNum(type),clientId:'',title:'',date:t,valid:S?addDays(t,P.validDays()):'',due:S?'':addDays(t,P.dueDays()),status:'brouillon',lang:UIL,lines:[{d:'',q:'',u:'f',p:''}],taxes:!!p.taxes&&taxes.length>0,tx:taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''})),cur:p.currency,dep:'',depDef:S?P.dep():0,notes:'',notesDef:S?P.terms():P.termsF(),paidDate:'',updated:Date.now()};
  d.counted=true;d.createdAt=todayISO();state.docs.push(d);save();return d;
 }
 
@@ -979,7 +1441,7 @@ function renderClients(){
  const pc=state.profile.currency;
  $('#clist').innerHTML=state.clients.slice().sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(c=>{
   const ds=state.docs.filter(d=>d.clientId===c.id),billed=ds.filter(d=>d.type==='F'&&(d.cur||pc)===pc).reduce((s,d)=>s+totals(d).total,0);
-  return `<div class="card"><b>${esc(c.name)}</b>${c.contact?`<span class="sub">${esc(c.contact)}</span>`:''}<span class="sub">${esc([c.addr,c.city].filter(Boolean).join(', '))}</span><span class="sub">${esc([c.tel,c.email].filter(Boolean).join('  ·  '))}</span><span>${ds.length} document${ds.length>1?'s':''}  ·  facturé ${money(billed,'fr',pc)}</span><div class="acts"><button class="btn ghost" data-act="client-edit" data-id="${c.id}">Modifier</button><button class="btn ghost danger" data-act="client-del" data-id="${c.id}">Supprimer</button></div></div>`;
+  return `<div class="card"><b>${esc(c.name)}</b>${c.contact?`<span class="sub">${esc(c.contact)}</span>`:''}<span class="sub">${esc([c.addr,c.city].filter(Boolean).join(', '))}</span><span class="sub">${esc([c.tel,c.email].filter(Boolean).join('  ·  '))}</span><span>${_t`${ds.length} document${ds.length>1?'s':''}  ·  facturé ${money(billed,UIL,pc)}`}</span><div class="acts"><button class="btn ghost" data-act="client-edit" data-id="${c.id}">Modifier</button><button class="btn ghost danger" data-act="client-del" data-id="${c.id}">Supprimer</button></div></div>`;
  }).join('');
 }
 
@@ -992,30 +1454,30 @@ function rbqHint(){
 }
 function renderTaxRows(){
  const p=state.profile;
- $('#p-taxes').innerHTML=(p.taxList||[]).map((t,i)=>`<div class="rw"><label>Nom de la taxe<input data-pt="${i}" data-k="n" value="${esc(t.n)}" placeholder="${esc(t.dn||'Ex. : TVA')}"></label><label>Nom en anglais<input data-pt="${i}" data-k="en" value="${esc(t.en)}" placeholder="${esc(t.den||'Ex. : VAT')}"></label><label>Taux (%)<input type="number" step="0.001" min="0" inputmode="decimal" data-pt="${i}" data-k="r" value="${esc(t.r)}" placeholder="${esc(t.dr??0)}"></label><button type="button" class="x" data-act="tax-del" data-i="${i}" aria-label="Retirer la taxe ${esc(taxEff(t).n)}">×</button></div>`).join('')||`<p class="hint" style="margin:0 0 12px">Aucune taxe. Vos documents afficheront la mention ci-dessous.</p>`;
+ $('#p-taxes').innerHTML=(p.taxList||[]).map((t,i)=>`<div class="rw"><label>Nom de la taxe<input data-pt="${i}" data-k="n" value="${esc(t.n)}" placeholder="${esc(t.dn||'Ex. : TVA')}"></label><label>Nom en anglais<input data-pt="${i}" data-k="en" value="${esc(t.en)}" placeholder="${esc(t.den||'Ex. : VAT')}"></label><label>Taux (%)<input type="number" step="0.001" min="0" inputmode="decimal" data-pt="${i}" data-k="r" value="${esc(t.r)}" placeholder="${esc(t.dr??0)}"></label><button type="button" class="x" data-act="tax-del" data-i="${i}" aria-label="${_t`Retirer la taxe ${esc(taxEff(t).n)}`}">×</button></div>`).join('')||`<p class="hint" style="margin:0 0 12px">Aucune taxe. Vos documents afficheront la mention ci-dessous.</p>`;
 }
 function renderIdRows(){
  const p=state.profile;
- $('#p-ids').innerHTML=(p.ids||[]).map((x,i)=>`<div class="rw"><label>Libellé<input data-pi="${i}" data-k="l" value="${esc(x.l)}" placeholder="${esc(x.dl||'Ex. : No d’entreprise')}"${x.fmt==='rbq'?' readonly':''}></label><label>Numéro<input data-pi="${i}" data-k="v" value="${esc(x.v)}" placeholder="${esc(x.ph||'Laissez vide si ça ne s’applique pas')}"${x.fmt==='rbq'?' inputmode="numeric"':''}></label><button type="button" class="x" data-act="id-del" data-i="${i}" aria-label="Retirer ${esc(idEff(x).l||'ce numéro')}">×</button></div>`).join('');
+ $('#p-ids').innerHTML=(p.ids||[]).map((x,i)=>`<div class="rw"><label>Libellé<input data-pi="${i}" data-k="l" value="${esc(x.l)}" placeholder="${esc(x.dl||'Ex. : No d’entreprise')}"${x.fmt==='rbq'?' readonly':''}></label><label>Numéro<input data-pi="${i}" data-k="v" value="${esc(x.v)}" placeholder="${esc(x.ph||'Laissez vide si ça ne s’applique pas')}"${x.fmt==='rbq'?' inputmode="numeric"':''}></label><button type="button" class="x" data-act="id-del" data-i="${i}" aria-label="${_t`Retirer ${esc(idEff(x).l||_t('ce numéro'))}`}">×</button></div>`).join('');
  rbqHint();
 }
 function renderItemRows(){
  const cs=esc(curSym(state.profile.currency));
- $('#p-items').innerHTML=items().map((x,i)=>`<div class="rw"><label>Description<input data-pit="${i}" data-k="d" value="${esc(x.d)}" placeholder="Ex. : Pose de céramique"></label><label>Unité<select data-pit="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===x.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${cs})<input type="number" step="0.01" min="0" inputmode="decimal" data-pit="${i}" data-k="p" value="${esc(x.p)}" placeholder="0"></label><button type="button" class="x" data-act="item-del" data-i="${i}" aria-label="Retirer ${esc(x.d||'cet élément')}">×</button></div>`).join('')||`<p class="hint" style="margin:0 0 12px">Votre liste est vide. Ajoutez-y ce que vous facturez souvent, ou cliquez sur « Garder dans ma liste » sous une ligne de travaux, dans un document.</p>`;
+ $('#p-items').innerHTML=items().map((x,i)=>`<div class="rw"><label>Description<input data-pit="${i}" data-k="d" value="${esc(x.d)}" placeholder="Ex. : Pose de céramique"></label><label>Unité<select data-pit="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===x.u?' selected':''}>${unitName(u[0],UIL)}</option>`).join('')}</select></label><label>${_t`Prix (${cs})`}<input type="number" step="0.01" min="0" inputmode="decimal" data-pit="${i}" data-k="p" value="${esc(x.p)}" placeholder="0"></label><button type="button" class="x" data-act="item-del" data-i="${i}" aria-label="${_t`Retirer ${esc(x.d||_t('cet élément'))}`}">×</button></div>`).join('')||`<p class="hint" style="margin:0 0 12px">Votre liste est vide. Ajoutez-y ce que vous facturez souvent, ou cliquez sur « Garder dans ma liste » sous une ligne de travaux, dans un document.</p>`;
 }
 function renderPick(){
  const q=($('#i-q').value||'').toLowerCase().trim(),d=doc(),cu=d?d.cur:state.profile.currency;
  const all=items().filter(x=>x.d),L=all.filter(x=>x.d.toLowerCase().includes(q)).sort((a,b)=>a.d.localeCompare(b.d,'fr'));
  $('#i-q').hidden=!all.length;
  $('#i-list').innerHTML=!all.length?`<div class="empty" style="padding:24px 16px">Votre liste est vide. Sous une ligne de travaux, cliquez sur « Garder dans ma liste ». Vous pouvez aussi remplir votre liste dans « Mon entreprise ».</div>`
-  :L.length?L.map(x=>`<button type="button" class="pick" data-act="item-pick" data-id="${x.id}"><span>${esc(x.d)}</span><b>${money(num(x.p,0),'fr',cu)} / ${esc(unitName(x.u,'fr'))}</b></button>`).join('')
-  :`<p class="sub">Rien ne correspond à « ${esc(q)} ».</p>`;
+  :L.length?L.map(x=>`<button type="button" class="pick" data-act="item-pick" data-id="${x.id}"><span>${esc(x.d)}</span><b>${money(num(x.p,0),UIL,cu)} / ${esc(unitName(x.u,UIL))}</b></button>`).join('')
+  :`<p class="sub">${_t`Rien ne correspond à « ${esc(q)} ».`}</p>`;
 }
 $('#i-q').addEventListener('input',renderPick);
 function xlYears(){
  const sel=$('#xl-year'),old=sel.value,y=todayISO().slice(0,4);
  const ys=[...new Set(state.docs.filter(d=>d.type==='F'&&!d.sample).map(d=>(d.date||'').slice(0,4)).filter(Boolean).concat(y))].sort().reverse();
- sel.innerHTML=ys.map(v=>`<option value="${v}">Factures ${v}</option>`).join('')+`<option value="all">Toutes les années</option>`;
+ sel.innerHTML=ys.map(v=>`<option value="${v}">${_t`Factures ${v}`}</option>`).join('')+`<option value="all">Toutes les années</option>`;
  if(old&&[...sel.options].some(o=>o.value===old))sel.value=old;
 }
 
@@ -1063,18 +1525,18 @@ function invoiceRows(year){
  const tt=F.map(totals),names=[...new Set(tt.flatMap(t=>t.taxes.map(x=>x.n)))];
  const sumTax=(t,n)=>r2(t.taxes.filter(x=>x.n===n).reduce((s,x)=>s+x.a,0));
  const hasDisc=tt.some(t=>t.disc>0),rcv=(d,t)=>d.status==='payee'?t.total:t.paid;
- const rows=[{bold:true,cells:['Numéro','Date','Échéance','Client','Objet',...(hasDisc?['Rabais']:[]),'Avant taxes',...names,'Total','Reçu','Solde','Devise','Statut','Payée le']}];
- F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),...(hasDisc?[t.disc]:[]),t.sub,...names.map(n=>sumTax(t,n)),t.total,rcv(d,t),r2(t.total-rcv(d,t)),d.cur||pc,overdue(d)?'En retard':stLabel(d.status,'F'),d.paidDate||'']})});
+ const rows=[{bold:true,cells:[...['Numéro','Date','Échéance','Client','Objet',...(hasDisc?['Rabais']:[]),'Avant taxes'].map(x=>_t(x)),...names,...['Total','Reçu','Solde','Devise','Statut','Payée le'].map(x=>_t(x))]}];
+ F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),...(hasDisc?[t.disc]:[]),t.sub,...names.map(n=>sumTax(t,n)),t.total,rcv(d,t),r2(t.total-rcv(d,t)),d.cur||pc,uiSt(overdue(d)?'retard':d.status,'F'),d.paidDate||'']})});
  const curs=new Set(F.map(d=>d.cur||pc));
- if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',`${F.length} facture${F.length>1?'s':''}`,'',...(hasDisc?[r2(tt.reduce((s,t)=>s+t.disc,0))]:[]),r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),r2(F.reduce((s,d,i)=>s+rcv(d,tt[i]),0)),r2(F.reduce((s,d,i)=>s+tt[i].total-rcv(d,tt[i]),0)),[...curs][0],'','']});
+ if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',_t`${F.length} facture${F.length>1?'s':''}`,'',...(hasDisc?[r2(tt.reduce((s,t)=>s+t.disc,0))]:[]),r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),r2(F.reduce((s,d,i)=>s+rcv(d,tt[i]),0)),r2(F.reduce((s,d,i)=>s+tt[i].total-rcv(d,tt[i]),0)),[...curs][0],'','']});
  return {count:F.length,rows,widths:[13,12,12,28,36,...(hasDisc?[12]:[]),14,...names.map(()=>12),14,14,14,8,12,12]};
 }
 function exportXlsx(){
  const year=$('#xl-year').value||todayISO().slice(0,4),x=invoiceRows(year);
- if(!x.count){toast(year==='all'?'Aucune facture pour l’instant.':`Aucune facture en ${year}.`);return}
- const blob=xlsxBlob(year==='all'?'Factures':`Factures ${year}`,x.rows,x.widths),url=URL.createObjectURL(blob);
+ if(!x.count){toast(year==='all'?'Aucune facture pour l’instant.':_t`Aucune facture en ${year}.`);return}
+ const blob=xlsxBlob(year==='all'?_t('Factures'):_t`Factures ${year}`,x.rows,x.widths),url=URL.createObjectURL(blob);
  const l=document.createElement('a');l.href=url;l.download=`carnet-factures-${year==='all'?'toutes':year}.xlsx`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
- toast(embedded?'L’aperçu de Claude bloque les téléchargements. Essayez sur le site en ligne.':`Fichier Excel téléchargé : ${x.count} facture${x.count>1?'s':''}.`);
+ toast(embedded?'L’aperçu de Claude bloque les téléchargements. Essayez sur le site en ligne.':_t`Fichier Excel téléchargé : ${x.count} facture${x.count>1?'s':''}.`);
 }
 
 function renderProfile(){
@@ -1082,7 +1544,7 @@ function renderProfile(){
  const p=state.profile,groups=[...new Set(REGIONS.map(r=>r.group))],r=region(p.region);
  $('#p-region').innerHTML=groups.map(g=>`<optgroup label="${g}">${REGIONS.filter(x=>x.group===g).map(x=>`<option value="${x.code}"${x.code===p.region?' selected':''}>${x.name}</option>`).join('')}</optgroup>`).join('');
  const cs=CURS.some(c=>c[0]===p.currency)?CURS:[[p.currency,p.currency],...CURS];
- $('#p-cur').innerHTML=cs.map(c=>`<option value="${c[0]}"${c[0]===p.currency?' selected':''}>${c[0]} · ${c[1]}</option>`).join('');
+ $('#p-cur').innerHTML=cs.map(c=>`<option value="${c[0]}"${c[0]===p.currency?' selected':''}>${c[0]} · ${_t(c[1])}</option>`).join('');
  $('#region-hint').textContent=r.hint;
  $$('#pform [data-p]').forEach(el=>{const v=p[el.dataset.p];if(el.type==='checkbox')el.checked=!!v;else if(el.tagName!=='SELECT')el.value=v??''});
  $('#p-exempt').placeholder=r.ex||'Ex. : Taxes non perçues';
@@ -1101,7 +1563,7 @@ function refreshSamples(){
 $('#p-region').addEventListener('change',e=>{
  const p=state.profile,r=region(e.target.value);applyRegion(p,r.code);
  const s=refreshSamples();save();renderProfile();chrome();
- toast(`${r.name} : taxes, devise et numéros ajustés${s?', exemples compris':''}. Vérifiez les taux.`);
+ toast(s?_t`${_t(r.name)} : taxes, devise, numéros et exemples ajustés. Vérifiez les taux.`:_t`${_t(r.name)} : taxes, devise et numéros ajustés. Vérifiez les taux.`);
 });
 $('#pform').addEventListener('input',e=>{
  const t=e.target,p=state.profile;
@@ -1122,7 +1584,7 @@ $('#logo-in').addEventListener('change',e=>{
 });
 $('#imp').addEventListener('change',e=>{
  const f=e.target.files[0];if(!f)return;const r=new FileReader();
- r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.profile||!Array.isArray(o.docs)||!Array.isArray(o.clients))throw 0;state=migrate(o);save();renderProfile();chrome();toast(`Sauvegarde importée : ${o.docs.length} documents, ${o.clients.length} clients.`)}catch(x){toast('Ce fichier n’est pas une sauvegarde Carnet valide.')}};
+ r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.profile||!Array.isArray(o.docs)||!Array.isArray(o.clients))throw 0;state=migrate(o);save();renderProfile();chrome();toast(_t`Sauvegarde importée : ${o.docs.length} documents, ${o.clients.length} clients.`)}catch(x){toast('Ce fichier n’est pas une sauvegarde Carnet valide.')}};
  r.readAsText(f);e.target.value='';
 });
 
@@ -1153,13 +1615,13 @@ document.addEventListener('click',e=>{
    break;
   case 'convert':{
    const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num,disc:d.disc??'',discT:d.discT||'%',discL:d.discL||'',photos:clone(d.photos||[])});
-   if(d.status!=='refusee')d.status='acceptee';save();openEditor(f.id);toast(`Facture ${f.num} créée à partir de ${d.num}.`);break}
+   if(d.status!=='refusee')d.status='acceptee';save();openEditor(f.id);toast(_t`Facture ${f.num} créée à partir de ${d.num}.`);break}
   case 'dup':{
    if(!canCreate())break;
    const n={...clone(d),id:uid(),sample:false,counted:true,createdAt:todayISO(),updated:Date.now(),num:nextNum(d.type),date:todayISO(),status:'brouillon',paidDate:'',from:'',pays:[],share:null,acc:null,reminded:''};
    if(n.type==='S')n.valid=addDays(n.date,P.validDays());else n.due=addDays(n.date,P.dueDays());
-   state.docs.push(n);save();openEditor(n.id);toast(`Copie créée : ${n.num}.`);break}
-  case 'del':{const i=state.docs.indexOf(d);state.docs.splice(i,1);lastDel={kind:'doc',item:d,i};save();show('docs');toast(`${d.num} supprimé.`,true);break}
+   state.docs.push(n);save();openEditor(n.id);toast(_t`Copie créée : ${n.num}.`);break}
+  case 'del':{const i=state.docs.indexOf(d);state.docs.splice(i,1);lastDel={kind:'doc',item:d,i};save();show('docs');toast(_t`${d.num} supprimé.`,true);break}
   case 'undo':
    if(lastDel){const arr=lastDel.kind==='doc'?state.docs:lastDel.kind==='client'?state.clients:lastDel.kind==='tax'?p.taxList:lastDel.kind==='item'?items():p.ids;arr.splice(lastDel.i,0,lastDel.item);save();
     if(lastDel.kind==='doc')renderDocs();else if(lastDel.kind==='client')renderClients();else renderProfile();lastDel=null;$('#toast').hidden=true}break;
@@ -1167,12 +1629,12 @@ document.addEventListener('click',e=>{
   case 'client-edit':openClient(b.dataset.id,false);break;
   case 'client-del':{
    const c=client(b.dataset.id),n=state.docs.filter(x=>x.clientId===c.id).length;
-   if(n){toast(`${c.name} a ${n} document${n>1?'s':''}. Supprimez-les d’abord.`);break}
-   const i=state.clients.indexOf(c);state.clients.splice(i,1);lastDel={kind:'client',item:c,i};save();renderClients();toast(`${c.name} supprimé.`,true);break}
+   if(n){toast(_t`${c.name} a ${n} document${n>1?'s':''}. Supprimez-les d’abord.`);break}
+   const i=state.clients.indexOf(c);state.clients.splice(i,1);lastDel={kind:'client',item:c,i};save();renderClients();toast(_t`${c.name} supprimé.`,true);break}
   case 'tax-add':p.taxList=p.taxList||[];p.taxList.push({dn:'',den:'',des:'',dr:0,n:'',en:'',r:''});save();renderTaxRows();$(`[data-pt="${p.taxList.length-1}"][data-k=n]`).focus();break;
-  case 'tax-del':{const i=+b.dataset.i,it=p.taxList.splice(i,1)[0];lastDel={kind:'tax',item:it,i};save();renderTaxRows();toast(`Taxe ${taxEff(it).n} retirée. Les documents déjà créés gardent leurs taxes.`,true);break}
+  case 'tax-del':{const i=+b.dataset.i,it=p.taxList.splice(i,1)[0];lastDel={kind:'tax',item:it,i};save();renderTaxRows();toast(_t`Taxe ${taxEff(it).n} retirée. Les documents déjà créés gardent leurs taxes.`,true);break}
   case 'id-add':p.ids=p.ids||[];p.ids.push({dl:'',den:'',l:'',en:'',v:''});save();renderIdRows();$(`[data-pi="${p.ids.length-1}"][data-k=l]`).focus();break;
-  case 'id-del':{const i=+b.dataset.i,it=p.ids.splice(i,1)[0];lastDel={kind:'id',item:it,i};save();renderIdRows();toast(`${idEff(it).l||'Numéro'} retiré.`,true);break}
+  case 'id-del':{const i=+b.dataset.i,it=p.ids.splice(i,1)[0];lastDel={kind:'id',item:it,i};save();renderIdRows();toast(_t`${idEff(it).l||_t('Numéro')} retiré.`,true);break}
   case 'dlg-close':$('#dlg').hidden=true;break;
   case 'mail':openMail('send');break;
   case 'remind':openMail('remind');break;
@@ -1184,14 +1646,14 @@ document.addEventListener('click',e=>{
    const x=items().find(i=>i.id===b.dataset.id);if(!x||!d)break;
    const l={d:x.d,q:'',u:x.u||'f',p:x.p===''||x.p==null?'':+x.p},f=d.lines[0];
    if(d.lines.length===1&&!ld(f)&&!lp(f)&&(f.q===''||f.q==null))d.lines[0]=l;else d.lines.push(l);
-   d.sample=false;d.updated=Date.now();$('#lines').innerHTML=linesHTML(d);save();renderPreview();toast(`Ajouté au document : ${x.d}`);break}
+   d.sample=false;d.updated=Date.now();$('#lines').innerHTML=linesHTML(d);save();renderPreview();toast(_t`Ajouté au document : ${x.d}`);break}
   case 'item-save':{
    const l=d&&d.lines[+b.dataset.i];if(!l)break;const t=ld(l).trim();
    if(!t){toast('Écrivez d’abord la description des travaux.');break}
    if(!items().some(x=>x.d===t))items().push({id:uid(),d:t,u:l.u||'f',p:lp(l)||'',updated:Date.now()});
-   save();b.textContent='Dans ma liste ✓';b.disabled=true;toast(`Gardé dans votre liste : ${t}`);break}
+   save();b.textContent='Dans ma liste ✓';b.disabled=true;toast(_t`Gardé dans votre liste : ${t}`);break}
   case 'item-add':items().push({id:uid(),d:'',u:'f',p:'',updated:Date.now()});save();renderItemRows();$(`[data-pit="${items().length-1}"][data-k=d]`).focus();break;
-  case 'item-del':{const i=+b.dataset.i,it=items().splice(i,1)[0];if(!it)break;lastDel={kind:'item',item:it,i};save();renderItemRows();toast(`${it.d||'Élément'} retiré de votre liste.`,true);break}
+  case 'item-del':{const i=+b.dataset.i,it=items().splice(i,1)[0];if(!it)break;lastDel={kind:'item',item:it,i};save();renderItemRows();toast(_t`${it.d||_t('Élément')} retiré de votre liste.`,true);break}
   case 'xlsx':exportXlsx();break;
   case 'logo-rm':p.logo='';save();renderProfile();break;
   case 'export':{
@@ -1202,7 +1664,7 @@ document.addEventListener('click',e=>{
    try{navigator.clipboard.writeText(JSON.stringify(state)).then(()=>toast('Sauvegarde copiée. Collez-la dans un courriel ou une note.'),()=>toast('Copie refusée par le navigateur.'))}catch(x){toast('Copie refusée par le navigateur.')}break;
   case 'clear':{
    const mode=b.dataset.mode;
-   if(clearArm!==mode){clearArm=mode;toast(mode==='all'?`Cliquez encore pour tout effacer : documents, clients et profil${user?', sur tous vos appareils':''}.`:'Cliquez encore pour effacer les documents et les clients d’exemple.');break}
+   if(clearArm!==mode){clearArm=mode;toast(mode==='all'?(user?'Cliquez encore pour tout effacer : documents, clients et profil, sur tous vos appareils.':'Cliquez encore pour tout effacer : documents, clients et profil.'):'Cliquez encore pour effacer les documents et les clients d’exemple.');break}
    clearArm='';
    if(mode==='all')state={v:3,profile:BLANK_PROFILE(p.region),clients:[],docs:[]};
    else{state.docs=state.docs.filter(x=>!x.sample);state.clients=state.clients.filter(x=>!x.sample)}
@@ -1228,16 +1690,17 @@ try{if(window.supabase&&window.supabase.createClient)sb=window.supabase.createCl
 const isPro=()=>!!sub&&['active','trialing'].includes(sub.status)&&(!sub.current_period_end||new Date(sub.current_period_end)>new Date());
 /* Essai gratuit : offert seulement à qui n'a jamais été abonné (aucune ligne dans subscriptions) */
 const trialOK=()=>CFG.trialDays>0&&!!CFG.payLinkTrial&&!sub;
-const ctaLabel=()=>trialOK()?`Essayer gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`;
+const ctaLabel=()=>trialOK()?_t`Essayer gratuitement ${CFG.trialDays} jours`:_t`Passer à Pro : ${_t(CFG.price)}`;
+const freeTxt=()=>CFG.freeLimit>1?_t`${CFG.freeLimit} nouveaux documents par mois`:_t`${CFG.freeLimit} nouveau document par mois`;
 const payLate=()=>!!sub&&['past_due','unpaid'].includes(sub.status)&&!isPro(); /* paiement refusé : il faut changer de carte, pas repayer */
-const subLine=end=>sub&&sub.status==='trialing'?`Essai gratuit${end?` jusqu’au ${end}`:' en cours'}`:`Renouvellement${end?` le ${end}`:''}`;
+const subLine=end=>sub&&sub.status==='trialing'?(end?_t`Essai gratuit jusqu’au ${end}`:_t('Essai gratuit en cours')):(end?_t`Renouvellement le ${end}`:_t('Renouvellement'));
 const monthUsed=()=>{const m=todayISO().slice(0,7);return state.docs.filter(d=>d.counted&&!d.sample&&(d.createdAt||'').slice(0,7)===m).length};
 const left=()=>Math.max(0,CFG.freeLimit-monthUsed());
 function canCreate(){
  if(isPro()||left()>0)return true;
  $('#pdlg-p').textContent=trialOK()
-  ?`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Essayez Carnet Pro gratuitement pendant ${CFG.trialDays} jours : vous en faites autant que vous voulez. Ensuite, c’est ${CFG.price}. Vos documents existants restent toujours accessibles.`
-  :`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Avec Carnet Pro, à ${CFG.price}, vous en faites autant que vous voulez. Vos documents existants restent toujours accessibles.`;
+  ?_t`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Essayez Carnet Pro gratuitement pendant ${CFG.trialDays} jours : vous en faites autant que vous voulez. Ensuite, c’est ${_t(CFG.price)}. Vos documents existants restent toujours accessibles.`
+  :_t`Vous avez utilisé vos ${CFG.freeLimit} documents gratuits ce mois-ci. Avec Carnet Pro, à ${_t(CFG.price)}, vous en faites autant que vous voulez. Vos documents existants restent toujours accessibles.`;
  $('#pdlg-t').textContent='Passez à Carnet Pro';
  $('#pdlg-go').textContent=user?(trialOK()?'Essayer gratuitement':'Passer à Pro'):'Créer mon compte';
  $('#pdlg').hidden=false;return false;
@@ -1289,29 +1752,29 @@ function renderPlan(){
  if(isPro()){el.hidden=false;el.innerHTML=`<span><b>Carnet Pro</b><span class="pro-tag">PRO</span> Documents illimités.</span><button class="linkbtn" data-act="portal">Gérer mon abonnement</button>`;return}
  const u=monthUsed(),p=Math.min(100,u/CFG.freeLimit*100);
  el.hidden=false;
- el.innerHTML=`<span><b>Gratuit :</b> ${Math.min(u,CFG.freeLimit)} document${u>1?'s':''} sur ${CFG.freeLimit} ce mois-ci</span><span class="bar" aria-hidden="true"><i style="width:${p}%"${u>=CFG.freeLimit?' class="full"':''}></i></span><button class="linkbtn" data-act="view" data-v="pro">${esc(trialOK()?`Essayer Pro gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`)}</button>`;
+ el.innerHTML=`<span><b>${_t('Gratuit :')}</b> ${_t`${Math.min(u,CFG.freeLimit)} document${u>1?'s':''} sur ${CFG.freeLimit} ce mois-ci`}</span><span class="bar" aria-hidden="true"><i style="width:${p}%"${u>=CFG.freeLimit?' class="full"':''}></i></span><button class="linkbtn" data-act="view" data-v="pro">${esc(trialOK()?_t`Essayer Pro gratuitement ${CFG.trialDays} jours`:_t`Passer à Pro : ${_t(CFG.price)}`)}</button>`;
 }
 function renderPro(){
  const el=$('#pro-body');if(!el)return;
- const n=CFG.freeLimit,free=`${n} nouveau${n>1?'x':''} document${n>1?'s':''} par mois`,pro=isPro(),tr=trialOK(),d=CFG.trialDays;
- const end=pro&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}):'';
+ const free=freeTxt(),pro=isPro(),tr=trialOK(),d=CFG.trialDays;
+ const end=pro&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString(loc(UIL),{day:'numeric',month:'long',year:'numeric'}):'';
  const q=(t,a)=>`<details><summary>${t}</summary><p>${a}</p></details>`;
  el.innerHTML=`<img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112"><h1>Carnet Pro</h1>
- <p class="pro-lede">Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez${tr?`. Essayez gratuitement pendant ${d} jours, puis ${esc(CFG.price)}.`:`, pour ${esc(CFG.price)}.`}</p>
+ <p class="pro-lede">${tr?_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez. Essayez gratuitement pendant ${d} jours, puis ${esc(_t(CFG.price))}.`:_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez, pour ${esc(_t(CFG.price))}.`}</p>
  <div class="cmp">
   <div><div class="k">Gratuit</div><ul class="v"><li>${free}</li><li class="no">Acceptation en ligne</li><li class="no">Photos</li></ul></div>
-  <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>Photos dans vos ${qwP().toLowerCase()} et factures</li></ul></div>
+  <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>${_t`Photos dans vos ${uqwP().toLowerCase()} et factures`}</li></ul></div>
  </div>
  ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><div class="acts"><button class="btn" data-act="portal">Gérer mon abonnement</button><button class="btn" data-act="card">Mettre à jour ma carte</button></div></div>`
   :payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé (carte expirée ou refusée ?). Mettez à jour votre carte pour retrouver Carnet Pro.</p><button class="btn yel big" data-act="card">Mettre à jour ma carte</button>`
   :`<button class="btn yel big" data-act="pay">${esc(ctaLabel())}</button>`}
- <p class="reassure">${tr&&!pro?`Aucuns frais pendant ${d} jours · `:''}Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu</p>
+ <p class="reassure">${tr&&!pro?_t`Aucuns frais pendant ${d} jours · `:''}${_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu')}</p>
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
- ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(CFG.price)}. L’essai est offert une seule fois par compte.`):''}
- ${q('Comment mon client accepte-t-il en ligne ?',`Dans ${dv()?'un devis':'une soumission'}, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « ${dv()?'Accepté':'Acceptée'} » dans Carnet, avec sa signature.`)}
+ ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',_t`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(_t(CFG.price))}. L’essai est offert une seule fois par compte.`):''}
+ ${q('Comment mon client accepte-t-il en ligne ?',_t(dv()?'Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.':'Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.'))}
  ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.')}
  ${q('Comment je change ma carte de crédit ?','Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.')}
- ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
+ ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',_t`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
  ${q('Est-ce que mes infos de carte sont gardées par Carnet ?','Non. Le paiement se fait chez Stripe : Carnet ne voit pas et ne garde pas vos infos de carte.')}
  ${q('Faut-il un compte ?','Oui, un compte gratuit. Il sert à relier votre abonnement à vos documents.')}
  </section>`;
@@ -1320,13 +1783,13 @@ function renderAccount(){
  const el=$('#acct-panel');if(!el)return;
  if(!sb){el.innerHTML=`<h3>Votre compte</h3><p class="sub" style="margin:0">La connexion n’est pas disponible pour l’instant (pas d’Internet ?). Carnet continue de fonctionner sur cet appareil.</p>`;return}
  if(!user){el.innerHTML=`<h3>Votre compte</h3><p class="sub">Créez un compte gratuit pour retrouver vos documents sur votre téléphone et votre ordi, et pour passer à Carnet Pro.</p><div class="acts"><button class="btn pri" data-act="auth" data-m="signup">Créer un compte</button><button class="btn ghost" data-act="auth" data-m="login">Se connecter</button></div>`;return}
- const pro=isPro(),end=sub&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}):'';
+ const pro=isPro(),end=sub&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString(loc(UIL),{day:'numeric',month:'long',year:'numeric'}):'';
  const st=payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé. Mettez à jour votre carte pour retrouver Carnet Pro.</p>`:sub&&!pro&&sub.status&&sub.status!=='inactive'?`<p class="msg err">Votre abonnement Carnet Pro est terminé.</p>`:'';
  el.innerHTML=`<h3>Votre compte</h3>
  <p style="margin:0 0 4px"><b>${esc(user.email)}</b></p>
  <p style="margin:0 0 12px"><span class="sync" id="sync-st"></span></p>
  ${st}
- <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${subLine(end)}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci</span>`}</p>
+ <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${subLine(end)}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${_t`${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci`}</span>`}</p>
  <div class="acts">${payLate()?`<button class="btn yel" data-act="card">Mettre à jour ma carte</button>`:pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}${pro?`<button class="btn ghost" data-act="card">Mettre à jour ma carte</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
  setSync(syncSt||'ok');
 }
@@ -1352,7 +1815,7 @@ const frErr=m=>{m=String(m||'');
  if(/password/i.test(m)&&/(6|8|characters|short)/i.test(m))return 'Le mot de passe doit avoir au moins 8 caractères.';
  if(/rate limit|too many/i.test(m))return 'Trop d’essais en peu de temps. Réessayez dans quelques minutes.';
  if(/fetch|network/i.test(m))return 'Pas de connexion Internet. Réessayez quand vous serez en ligne.';
- return 'Une erreur est survenue : '+m;};
+ return _t`Une erreur est survenue : ${m}`;};
 const here=()=>location.origin+location.pathname;
 $('#aform').addEventListener('submit',async e=>{
  e.preventDefault();if(!sb)return;
@@ -1366,8 +1829,8 @@ $('#aform').addEventListener('submit',async e=>{
   else if(authMode==='reset')r=await sb.auth.resetPasswordForEmail(email,{redirectTo:here()});
   else r=await sb.auth.updateUser({password:pass});
   if(r.error)throw r.error;
-  if(authMode==='signup'&&!r.data.session){msg.textContent=`Presque fini ! Nous avons envoyé un lien de confirmation à ${email}. Cliquez dessus pour activer votre compte (vérifiez aussi les courriels indésirables).`}
-  else if(authMode==='reset'){msg.textContent=`Si un compte existe pour ${email}, un lien pour choisir un nouveau mot de passe vient d’être envoyé.`}
+  if(authMode==='signup'&&!r.data.session){msg.textContent=_t`Presque fini ! Nous avons envoyé un lien de confirmation à ${email}. Cliquez dessus pour activer votre compte (vérifiez aussi les courriels indésirables).`}
+  else if(authMode==='reset'){msg.textContent=_t`Si un compte existe pour ${email}, un lien pour choisir un nouveau mot de passe vient d’être envoyé.`}
   else{$('#adlg').hidden=true;$('#a-pass').value='';setPw(false);toast(authMode==='newpass'?'Mot de passe changé.':authMode==='signup'?'Compte créé. Bienvenue !':'Connecté. Vos documents se synchronisent.');recovering=false}
  }catch(err){msg.className='msg err';msg.textContent=frErr(err.message)}
  btn.disabled=false;
@@ -1390,7 +1853,7 @@ if(sb&&!SHARE){
 /* ---------- Réservé à Carnet Pro : fenêtre d'offre ---------- */
 function upsell(msg){
  $('#pdlg-t').textContent='Réservé à Carnet Pro';
- $('#pdlg-p').textContent=`${msg} ${trialOK()?`Essayez Carnet Pro gratuitement pendant ${CFG.trialDays} jours.`:`Carnet Pro coûte ${CFG.price}.`}`;
+ $('#pdlg-p').textContent=`${_t(msg)} ${trialOK()?_t`Essayez Carnet Pro gratuitement pendant ${CFG.trialDays} jours.`:_t`Carnet Pro coûte ${_t(CFG.price)}.`}`;
  $('#pdlg-go').textContent=user?(trialOK()?'Essayer gratuitement':'Passer à Pro'):'Créer mon compte';
  $('#pdlg').hidden=false;
 }
@@ -1399,7 +1862,7 @@ function upsell(msg){
 const MAXPH=6;
 function photosHTML(d){
  const ps=d.photos||[];
- return ps.length?ps.map((p,i)=>`<div class="phk"><img src="${esc(p.url)}" alt="Photo ${i+1}"><button type="button" class="x" data-act="ph-del" data-i="${i}" aria-label="Retirer la photo ${i+1}">×</button></div>`).join('')
+ return ps.length?ps.map((p,i)=>`<div class="phk"><img src="${esc(p.url)}" alt="${_t`Photo ${i+1}`}"><button type="button" class="x" data-act="ph-del" data-i="${i}" aria-label="${_t`Retirer la photo ${i+1}`}">×</button></div>`).join('')
   :`<p class="hint" style="margin:0;grid-column:1/-1">Aucune photo. Ajoutez des photos des lieux, du matériel ou des travaux : elles s’afficheront sur le document.</p>`;
 }
 /* Réduit la photo (1600 px au plus, JPEG) avant l'envoi : rapide sur un téléphone, légère pour le client */
@@ -1421,9 +1884,9 @@ async function addPhotos(files){
  const d=doc();if(!d||!files||!files.length)return;
  if(!isPro()||!sb||!user){upsell('Les photos dans vos documents font partie de Carnet Pro.');return}
  d.photos=d.photos||[];const room=MAXPH-d.photos.length;
- if(room<=0){toast(`Maximum de ${MAXPH} photos par document.`);return}
+ if(room<=0){toast(_t`Maximum de ${MAXPH} photos par document.`);return}
  const list=[...files].slice(0,room);
- const st=$('#ph-st');if(st)st.textContent=`Envoi de ${list.length} photo${list.length>1?'s':''}…`;
+ const st=$('#ph-st');if(st)st.textContent=_t`Envoi de ${list.length} photo${list.length>1?'s':''}…`;
  let n=0;
  for(const f of list){
   try{
@@ -1436,7 +1899,7 @@ async function addPhotos(files){
   }catch(e){toast('Une photo n’a pas pu être envoyée. Vérifiez votre connexion Internet et réessayez.');break}
  }
  const s2=$('#ph-st');if(s2)s2.textContent='';
- if(n)toast(files.length>room?`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} (maximum de ${MAXPH} par document).`:`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''}.`);
+ if(n)toast(files.length>room?_t`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} (maximum de ${MAXPH} par document).`:_t`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''}.`);
 }
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='ph-in'){addPhotos(e.target.files);e.target.value=''}});
 
@@ -1452,7 +1915,7 @@ function shareSnap(d){
 async function shareDoc(){
  const d=doc();if(!d||d.type!=='S')return;
  if(d.sample){toast('C’est un exemple : créez votre propre document pour l’envoyer à un client.');return}
- if(!isPro()||!sb||!user){upsell(`L’acceptation et la signature en ligne de vos ${qwP().toLowerCase()} font partie de Carnet Pro.`);return}
+ if(!isPro()||!sb||!user){upsell(_t`L’acceptation et la signature en ligne de vos ${uqwP().toLowerCase()} font partie de Carnet Pro.`);return}
  if(d.acc){toast('Ce document est déjà accepté en ligne.');return}
  toast('Préparation du lien…');
  let r=null;
@@ -1468,11 +1931,11 @@ function renderShareState(d){
  el.hidden=false;el.classList.toggle('ok',!!d.acc);
  if(d.acc){
   const at=d.acc.at?new Date(d.acc.at):null;
-  el.innerHTML=`<span><b>${dv()?'Accepté':'Acceptée'} en ligne</b> par ${esc(d.acc.name)}${at&&!isNaN(at)?` le ${esc(at.toLocaleDateString('fr-CA',{day:'numeric',month:'long',year:'numeric'}))} à ${esc(at.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'}))}`:''}. Sa signature est sur le document.</span>`;
+  el.innerHTML=`<span><b>${_t(dv()?'Accepté en ligne':'Acceptée en ligne')}</b> ${at&&!isNaN(at)?_t`par ${esc(d.acc.name)} le ${esc(at.toLocaleDateString(loc(UIL),{day:'numeric',month:'long',year:'numeric'}))} à ${esc(at.toLocaleTimeString(loc(UIL),{hour:'2-digit',minute:'2-digit'}))}. Sa signature est sur le document.`:_t`par ${esc(d.acc.name)}. Sa signature est sur le document.`}</span>`;
   return;
  }
  const v=d.share.viewed?new Date(d.share.viewed):null;
- el.innerHTML=`<span><b>Lien d’acceptation envoyé</b>${d.share.at?` le ${esc(fdate(d.share.at,'fr'))}`:''}. ${v&&!isNaN(v)?`Le client l’a ouvert le ${esc(v.toLocaleDateString('fr-CA',{day:'numeric',month:'long'}))}.`:'Pas encore ouvert par le client.'} En attente de sa réponse.</span><span class="acts"><button type="button" class="btn sm" data-act="share-copy">Copier le lien</button><button type="button" class="btn sm ghost" data-act="share">Renvoyer</button></span>`;
+ el.innerHTML=`<span><b>${d.share.at?_t`Lien d’acceptation envoyé le ${esc(fdate(d.share.at,UIL))}.`:_t('Lien d’acceptation envoyé.')}</b> ${v&&!isNaN(v)?_t`Le client l’a ouvert le ${esc(v.toLocaleDateString(loc(UIL),{day:'numeric',month:'long'}))}.`:_t('Pas encore ouvert par le client.')} ${_t('En attente de sa réponse.')}</span><span class="acts"><button type="button" class="btn sm" data-act="share-copy">Copier le lien</button><button type="button" class="btn sm ghost" data-act="share">Renvoyer</button></span>`;
 }
 /* Si le document change après l'envoi du lien, le client voit la nouvelle version */
 async function syncShares(){
@@ -1501,8 +1964,8 @@ async function checkShares(){
  const ed=doc();
  if(ed&&!$('#v-edit').hidden){renderPreview();renderShareState(ed);const s=$('#f-status');if(s)s.value=ed.status}
  else if(!$('#v-docs').hidden)renderDocs();
- if(news.length===1)toast(`Bonne nouvelle : ${news[0].acc.name||'votre client'} a accepté ${dv()?'le devis':'la soumission'} ${news[0].num} !`);
- else if(news.length>1)toast(`Bonne nouvelle : ${news.length} documents acceptés en ligne !`);
+ if(news.length===1){const w=news[0].acc.name||_t('votre client');toast(dv()?_t`Bonne nouvelle : ${w} a accepté le devis ${news[0].num} !`:_t`Bonne nouvelle : ${w} a accepté la soumission ${news[0].num} !`)}
+ else if(news.length>1)toast(_t`Bonne nouvelle : ${news.length} documents acceptés en ligne !`);
 }
 if(!SHARE){setInterval(checkShares,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkShares()})}
 
@@ -1589,10 +2052,10 @@ function maybePromo(tries){
  if($$('.ov').some(o=>!o.hidden))return;
  try{if(localStorage.getItem('carnet.promo')==='off')return}catch(e){} /* réservé aux tests automatiques */
  const m=CFG.price.match(/^(.*?\$)\s*(.*)$/),tr=trialOK();
- $('#wdlg-p').textContent=`Documents illimités, signature en ligne de vos ${qwP().toLowerCase()} par vos clients, et photos dans vos documents. Le forfait gratuit permet ${CFG.freeLimit} nouveau${CFG.freeLimit>1?'x':''} document${CFG.freeLimit>1?'s':''} par mois.`;
- $('#wdlg-price').innerHTML=tr?`<b>${CFG.trialDays} jours gratuits</b><span>puis ${esc(CFG.price)}</span>`:m?`<b>${esc(m[1])}</b><span>${esc(m[2])}</span>`:`<b>${esc(CFG.price)}</b>`;
+ $('#wdlg-p').textContent=_t`Documents illimités, signature en ligne de vos ${uqwP().toLowerCase()} par vos clients, et photos dans vos documents. Le forfait gratuit permet ${freeTxt()}.`;
+ $('#wdlg-price').innerHTML=tr?`<b>${_t`${CFG.trialDays} jours gratuits`}</b><span>${_t`puis ${esc(_t(CFG.price))}`}</span>`:m?`<b>${esc(_t(m[1]))}</b><span>${esc(_t(m[2]))}</span>`:`<b>${esc(_t(CFG.price))}</b>`;
  $('#wdlg-go').textContent=tr?'Essayer gratuitement':'Passer à Pro';
- $('#wdlg-r').textContent=`${tr?`Aucuns frais pendant ${CFG.trialDays} jours · `:'Paiement sécurisé par Stripe · '}Annulable en tout temps, sans engagement`;
+ $('#wdlg-r').textContent=tr?_t`Aucuns frais pendant ${CFG.trialDays} jours · Annulable en tout temps, sans engagement`:_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement');
  $('#wdlg').hidden=false;
 }
 setTimeout(maybePromo,2500);
@@ -1618,6 +2081,15 @@ async function goPay(){
  if(!link){toast('Le paiement en ligne sera offert très bientôt.');return}
  const u=new URL(link);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
+async function setLang(l){
+ $('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false');
+ if(l===UIL||!['fr','en','es'].includes(l))return;
+ try{localStorage.setItem('carnet.ui',l)}catch(e){}
+ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+ const v=$$('.view').find(x=>!x.hidden);try{sessionStorage.setItem('carnet.back',JSON.stringify({v:v?v.id.slice(2):'docs',id:cur}))}catch(e){}
+ if(user){clearTimeout(pushT);await Promise.race([pushNow(),new Promise(r=>setTimeout(r,3000))])}
+ location.reload();
+}
 async function goPortal(flow){
  /* D'abord : ouvrir directement le portail Stripe de la personne connectée (fonction stripe-portal). */
  if(sb&&user){
@@ -1642,6 +2114,8 @@ document.addEventListener('click',async e=>{
   case 'pay':goPay();break;
   case 'portal':goPortal();break;
   case 'card':goPortal('card');break;
+  case 'lang':{const m=$('#langmenu'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',String(o));if(o){const c=m.querySelector('[aria-checked=true]')||m.querySelector('button');c.focus()}break}
+  case 'lang-set':setLang(b.dataset.l);break;
   case 'logout':
    clearTimeout(pushT);await pushNow();try{await sb.auth.signOut()}catch(x){}
    user=null;sub=null;state=freshState(state.profile.region);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(x){}
@@ -1649,9 +2123,33 @@ document.addEventListener('click',async e=>{
  }
 });
 ['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
+document.addEventListener('click',e=>{if(!e.target.closest('#langwrap')&&!$('#langmenu').hidden){$('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false')}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#langmenu').hidden){$('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false');$('#lang').focus()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).hidden=true)}});
 
-if(SHARE)openShare();else{chrome();renderDocs();}
+/* Textes fixes (HTML et textes simples) : traduits à l'affichage quand la langue n'est pas le français. Le document (#paper) et la page du client gardent leur propre langue. */
+const TR_ATTR=['placeholder','title','aria-label','label','alt','data-l'],TR_SKIP='#paper,#share-body,[data-nt]',TR_RAW=/^(TEXTAREA|SCRIPT|STYLE)$/;
+const trS=s=>{if(!s)return null;const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(s),x=m[2]&&I18N[m[2]];return x?m[1]+x[UIX]+m[3]:null};
+function trAttrs(el){for(const a of TR_ATTR){const v=el.getAttribute(a),r=v&&trS(v);if(r&&r!==v)el.setAttribute(a,r)}}
+function trNode(n){
+ if(n.nodeType===3){const p=n.parentElement;if(!p||TR_RAW.test(p.tagName)||p.closest(TR_SKIP))return;const r=trS(n.data);if(r&&r!==n.data)n.data=r;return}
+ if(n.nodeType!==1||n.closest(TR_SKIP))return;
+ trAttrs(n);if(TR_RAW.test(n.tagName))return;
+ const w=document.createTreeWalker(n,5,{acceptNode:x=>{if(x.nodeType===3)return 1;if(x.matches(TR_SKIP))return 2;trAttrs(x);return TR_RAW.test(x.tagName)?2:1}});
+ let x;while((x=w.nextNode()))if(x.nodeType===3){const r=trS(x.data);if(r&&r!==x.data)x.data=r}
+}
+if(!SHARE){
+ document.documentElement.lang=UIL;
+ if(UIL!=='fr'){
+  document.title=_t(document.title);trNode(document.body);
+  new MutationObserver(ms=>{for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(trNode);else if(m.type==='characterData')trNode(m.target);else if(m.target.nodeType===1&&!m.target.closest(TR_SKIP)){const a=m.attributeName,v=m.target.getAttribute(a),r=v&&trS(v);if(r&&r!==v)m.target.setAttribute(a,r)}}}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:TR_ATTR});
+ }
+}
+if(SHARE)openShare();else{
+ $('#toast-b').textContent=({fr:'Annuler',en:'Undo',es:'Deshacer'})[UIL];
+ chrome();renderDocs();
+ try{const b=JSON.parse(sessionStorage.getItem('carnet.back')||'null');sessionStorage.removeItem('carnet.back');if(b){if(b.v==='edit'&&b.id&&state.docs.some(d=>d.id===b.id))openEditor(b.id);else if(['clients','profil','pro'].includes(b.v))show(b.v)}}catch(e){}
+}
 if('serviceWorker' in navigator&&!embedded&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 }
 </script>

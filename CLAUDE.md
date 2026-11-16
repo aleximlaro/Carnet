@@ -31,6 +31,11 @@ Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub �
 
 - Tout le script est dans un bloc `{ ... }`. État global `state` = `{v:3, profile, clients, docs, updatedAt}` ; sauvegardé dans `localStorage` (clé `carnet.v1`) par `save()`, qui déclenche aussi `cloudPush()`.
 - `REGIONS` : préréglages par pays (taxes, numéros officiels, devise, mot « Soumission » ou « Devis »).
+- Langue de l'interface (fr, en, es) : bouton de traduction dans la barre du haut (`#lang`, `#langmenu`, `setLang` : enregistre `localStorage` `carnet.ui` puis recharge la page en revenant au même écran via `sessionStorage` `carnet.back`). Par défaut : langue du navigateur. `UIL` = langue choisie. Le français est la source ; dictionnaire `I18N` = `"texte français": ["anglais", "espagnol"]`.
+  - Textes fixes (HTML ou chaînes simples affichées) : traduits automatiquement à l'affichage (`trNode` + `MutationObserver`, attributs `placeholder`, `title`, `aria-label`, `label`, `alt`, `data-l`) ; il suffit d'ajouter la phrase française exacte dans `I18N`.
+  - Phrases avec des valeurs : écrire `_t\`Texte ${valeur}\`` ; la clé est le texte avec `{}` pour chaque valeur (la traduction peut utiliser `{0}`, `{1}`… pour changer l'ordre). Mots « Soumission/Devis » dans l'interface : `uqw()`/`uqwP()` ; statuts : `uiSt()` ; montants et dates de l'interface : `money(x,UIL,…)`, `loc(UIL)`.
+  - Jamais traduits : le document (`#paper`, langue du document), la page du client (`?s=`), et tout élément marqué `data-nt`. Les nouveaux documents et les exemples prennent la langue de l'interface ; les conditions par défaut suivent la langue du document (`P.termsDef(lang)`).
+  - **Toute nouvelle phrase de l'interface doit être ajoutée dans `I18N` (anglais et espagnol).**
 - Valeurs par défaut affichées en gris (placeholder) : un champ vide = valeur par défaut. Fonctions `P.*`, `taxEff`, `idEff`, `lq`, `lp`, `ld`, `titleOf`, `notesOf`.
 - Documents d'exemple : marqués `sample:true`, régénérés selon le pays (`sample()`, `cleanSamples()`), jamais envoyés au nuage.
 - `migrate()` convertit les anciennes données (v1, v2) au format v3.
