@@ -67,6 +67,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .prov{max-width:760px}
 .pro-logo{display:block;width:84px;height:84px;padding:8px;background:var(--pad);border-radius:20px;margin:0 0 14px}
 .pro-logo.big{width:112px;height:112px;padding:10px;border-radius:26px;margin-bottom:18px}
+.promo{text-align:center;width:min(420px,100%)}
+.promo .pro-logo{margin:4px auto 16px}
+.promo h3{font-size:clamp(24px,6vw,28px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.promo-price{margin:0 0 18px;line-height:1.1}
+.promo-price b{display:block;font-weight:800;font-size:44px;letter-spacing:-.02em}
+.promo-price span{font-size:15px;color:var(--muted)}
 .pro-lede{font-size:clamp(18px,2.2vw,22px);line-height:1.4;margin:12px 0 24px;max-width:34em}
 .cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:24px}
 .cmp>div{border:1.5px solid var(--line);border-radius:12px;padding:18px 20px}
@@ -360,6 +366,21 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
       </div>
     </form>
     <p class="sub" id="a-links" style="margin:14px 0 0"></p>
+  </div>
+</div>
+
+<div class="ov" id="wdlg" hidden>
+  <div class="dlg promo" role="dialog" aria-modal="true" aria-labelledby="wdlg-t">
+    <img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112">
+    <h3 id="wdlg-t">Passez à Carnet Pro</h3>
+    <p id="wdlg-p" style="margin:0 0 14px"></p>
+    <p class="promo-price" id="wdlg-price"></p>
+    <button type="button" class="btn yel big" data-act="pay" style="width:100%">Passer à Pro</button>
+    <p class="sub" style="margin:10px 0 18px">Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement</p>
+    <div class="acts" style="justify-content:space-between;align-items:center">
+      <button type="button" class="linkbtn" data-act="wdlg-pro">Voir ce que Pro inclut</button>
+      <button type="button" class="btn ghost" data-act="wdlg-close">Plus tard</button>
+    </div>
   </div>
 </div>
 
@@ -1160,9 +1181,11 @@ async function pull(){
   await pushNow();refreshView();
  }catch(e){setSync('err')}
 }
+let subChecked=false;
 async function loadSub(){
- if(!sb||!user){sub=null;return}
+ if(!sb||!user){sub=null;subChecked=true;return}
  try{const {data}=await sb.from('subscriptions').select('status,current_period_end,stripe_customer_id').eq('user_id',user.id).maybeSingle();sub=data||null}catch(e){}
+ subChecked=true;
  refreshView();
 }
 function refreshView(){
@@ -1270,6 +1293,23 @@ if(sb){
  });
 }
 
+/* Fenêtre d'accueil « Passez à Carnet Pro » : au plus une fois par semaine par appareil, jamais pour les abonnés */
+const cameFromPay=new URLSearchParams(location.search).has('pay');
+function maybePromo(tries){
+ tries=tries||0;
+ if(embedded||cameFromPay||isPro())return;
+ if(user&&!subChecked){if(tries<10)setTimeout(()=>maybePromo(tries+1),1000);return}
+ if($$('.ov').some(o=>!o.hidden))return;
+ let last=0;try{last=+localStorage.getItem('carnet.promo')||0}catch(e){}
+ if(Date.now()-last<7*864e5)return;
+ try{localStorage.setItem('carnet.promo',String(Date.now()))}catch(e){}
+ const m=CFG.price.match(/^(.*?\$)\s*(.*)$/);
+ $('#wdlg-p').textContent=`Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez. Le forfait gratuit permet ${CFG.freeLimit} nouveau${CFG.freeLimit>1?'x':''} document${CFG.freeLimit>1?'s':''} par mois.`;
+ $('#wdlg-price').innerHTML=m?`<b>${esc(m[1])}</b><span>${esc(m[2])}</span>`:`<b>${esc(CFG.price)}</b>`;
+ $('#wdlg').hidden=false;
+}
+setTimeout(maybePromo,2500);
+
 /* Retour de Stripe après un paiement : on attend que le webhook active l'abonnement */
 (function(){
  const q=new URLSearchParams(location.search);
@@ -1281,7 +1321,7 @@ if(sb){
 })();
 
 function goPay(){
- $('#pdlg').hidden=true;
+ $('#pdlg').hidden=true;$('#wdlg').hidden=true;
  if(!user){openAuth('signup','Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
  if(!CFG.payLink){toast('Le paiement en ligne sera offert très bientôt.');return}
  const u=new URL(CFG.payLink);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
@@ -1304,6 +1344,8 @@ document.addEventListener('click',async e=>{
   case 'adlg-close':$('#adlg').hidden=true;break;
   case 'pdlg-close':$('#pdlg').hidden=true;break;
   case 'pdlg-pro':$('#pdlg').hidden=true;show('pro');break;
+  case 'wdlg-close':$('#wdlg').hidden=true;break;
+  case 'wdlg-pro':$('#wdlg').hidden=true;show('pro');break;
   case 'pw-toggle':setPw($('#a-pass').type==='password');break;
   case 'pay':goPay();break;
   case 'portal':goPortal();break;
@@ -1313,8 +1355,8 @@ document.addEventListener('click',async e=>{
    show('docs');toast('Déconnecté. Vos documents restent sauvegardés dans votre compte.');break;
  }
 });
-['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg'].forEach(id=>$('#'+id).hidden=true)}});
+['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).addEventListener('click',e=>{if(e.target.id===id)$('#'+id).hidden=true}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdlg','idlg','wdlg'].forEach(id=>$('#'+id).hidden=true)}});
 
 chrome();renderDocs();
 if('serviceWorker' in navigator&&!embedded&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
