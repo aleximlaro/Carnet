@@ -59,6 +59,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .band{padding:clamp(20px,3vw,40px) max(4vw,16px);max-width:1320px;margin:0 auto}
 .nav .pro-tag{background:var(--padink);color:var(--pad)}
 .nav button[aria-current=true] .pro-tag{background:var(--pad);color:var(--padink)}
+.pw{position:relative;display:block;margin-top:4px}
+.pw input{margin-top:0;padding-right:96px}
+.pw input::-ms-reveal{display:none}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);min-height:36px;padding:0 12px;border:0;border-radius:6px;background:none;color:var(--ink);font-size:14px;font-weight:700;text-decoration:underline;cursor:pointer}
+.pw-eye:focus-visible{outline:3px solid var(--pad);outline-offset:0}
 .prov{max-width:760px}
 .pro-logo{display:block;width:84px;height:84px;padding:8px;background:var(--pad);border-radius:20px;margin:0 0 14px}
 .pro-logo.big{width:112px;height:112px;padding:10px;border-radius:26px;margin-bottom:18px}
@@ -348,7 +353,7 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
     <p class="msg" id="a-msg"></p>
     <form id="aform">
       <label id="a-email-l">Courriel<input id="a-email" type="email" autocomplete="email" required placeholder="Ex. : vous@exemple.com"></label>
-      <label id="a-pass-l">Mot de passe<input id="a-pass" type="password" autocomplete="current-password" minlength="8" placeholder="8 caractères ou plus"></label>
+      <label id="a-pass-l">Mot de passe<span class="pw"><input id="a-pass" type="password" autocomplete="current-password" minlength="8" placeholder="8 caractères ou plus"><button type="button" class="pw-eye" data-act="pw-toggle" aria-controls="a-pass" aria-pressed="false" aria-label="Afficher le mot de passe">Afficher</button></span></label>
       <div class="acts" style="justify-content:flex-end">
         <button type="button" class="btn ghost" data-act="adlg-close">Annuler</button>
         <button type="submit" class="btn pri" id="a-submit">Se connecter</button>
@@ -1210,8 +1215,12 @@ function renderAccount(){
  setSync(syncSt||'ok');
 }
 
+function setPw(on){
+ const i=$('#a-pass'),b=$('.pw-eye');i.type=on?'text':'password';
+ b.textContent=on?'Masquer':'Afficher';b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',on?'Masquer le mot de passe':'Afficher le mot de passe');
+}
 function openAuth(mode,note){
- authMode=mode;const t={login:['Se connecter','Se connecter'],signup:['Créer un compte','Créer mon compte'],reset:['Mot de passe oublié','Recevoir le lien'],newpass:['Nouveau mot de passe','Enregistrer']}[mode];
+ authMode=mode;setPw(false);const t={login:['Se connecter','Se connecter'],signup:['Créer un compte','Créer mon compte'],reset:['Mot de passe oublié','Recevoir le lien'],newpass:['Nouveau mot de passe','Enregistrer']}[mode];
  $('#adlg-t').textContent=t[0];$('#a-submit').textContent=t[1];
  $('#a-email-l').hidden=mode==='newpass';$('#a-pass-l').hidden=mode==='reset';
  $('#a-email').required=mode!=='newpass';$('#a-pass').required=mode!=='reset';
@@ -1243,7 +1252,7 @@ $('#aform').addEventListener('submit',async e=>{
   if(r.error)throw r.error;
   if(authMode==='signup'&&!r.data.session){msg.textContent=`Presque fini ! Nous avons envoyé un lien de confirmation à ${email}. Cliquez dessus pour activer votre compte (vérifiez aussi les courriels indésirables).`}
   else if(authMode==='reset'){msg.textContent=`Si un compte existe pour ${email}, un lien pour choisir un nouveau mot de passe vient d’être envoyé.`}
-  else{$('#adlg').hidden=true;$('#a-pass').value='';toast(authMode==='newpass'?'Mot de passe changé.':authMode==='signup'?'Compte créé. Bienvenue !':'Connecté. Vos documents se synchronisent.');recovering=false}
+  else{$('#adlg').hidden=true;$('#a-pass').value='';setPw(false);toast(authMode==='newpass'?'Mot de passe changé.':authMode==='signup'?'Compte créé. Bienvenue !':'Connecté. Vos documents se synchronisent.');recovering=false}
  }catch(err){msg.className='msg err';msg.textContent=frErr(err.message)}
  btn.disabled=false;
 });
@@ -1289,6 +1298,7 @@ document.addEventListener('click',async e=>{
   case 'adlg-close':$('#adlg').hidden=true;break;
   case 'pdlg-close':$('#pdlg').hidden=true;break;
   case 'pdlg-pro':$('#pdlg').hidden=true;show('pro');break;
+  case 'pw-toggle':setPw($('#a-pass').type==='password');break;
   case 'pay':goPay();break;
   case 'portal':goPortal();break;
   case 'logout':
