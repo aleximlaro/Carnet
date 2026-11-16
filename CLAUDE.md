@@ -38,7 +38,7 @@ Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub �
   - Forfait gratuit : `CFG.freeLimit` documents créés par mois (`counted:true`). Convertir une soumission en facture ne compte pas.
   - Paiement : lien de paiement Stripe avec `client_reference_id` = id de l'utilisateur ; retour sur `?pay=ok`, puis on relit `subscriptions`.
   - Essai gratuit : `CFG.payLinkTrial` (essai de `CFG.trialDays` jours) pour qui n'a jamais été abonné (`trialOK()` : aucune ligne dans `subscriptions`) ; sinon `CFG.payLink`, sans essai. Les textes (bouton, barre, page Pro, fenêtres) suivent `trialOK()`.
-  - Fenêtre d'accueil `#wdlg` (`maybePromo`) : au plus une fois par semaine par appareil (`localStorage` `carnet.promo`), jamais pour les abonnés Pro. Pas de faux prix barré (interdit au Canada).
+  - Fenêtre d'accueil `#wdlg` (`maybePromo`) : à chaque visite (demande du propriétaire), jamais pour les abonnés Pro, ni au retour du paiement. `localStorage` `carnet.promo` = `off` la cache (tests automatiques seulement). Pas de faux prix barré (interdit au Canada).
 
 ## Règles
 

@@ -190,6 +190,11 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
 .sign{margin-top:28px}
 .sl{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-top:28px}
 .sl span{border-top:1px solid #111;padding-top:4px;font-size:11.5px;color:#555}
+.tot .bl{font-weight:800;font-size:15px;border-top:1.5px solid #111;margin-top:6px;padding-top:8px}
+.discbox{margin-top:16px}
+.rows.pays .rw{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.2fr) 44px}
+.paysum{font-size:14px;margin:4px 0 12px}
+@media(max-width:560px){.rows.pays .rw{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.rows.pays .rw label:nth-child(3){grid-column:1/3;grid-row:2}.rows.pays .rw{padding-bottom:12px;border-bottom:1px solid var(--line)}}
 .stamp{position:absolute;top:118px;right:34px;border:3px solid #d62828;color:#d62828;font-weight:800;font-size:26px;letter-spacing:.04em;padding:2px 14px;transform:rotate(-11deg);border-radius:6px;opacity:.85;pointer-events:none}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(17em,1fr));gap:12px}
 .card{border:1.5px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px}
@@ -527,9 +532,9 @@ const unitName=(u,lang)=>{const x=UNITS.find(a=>a[0]===u)||UNITS[0];return lang=
 const ST={S:['brouillon','envoyee','acceptee','refusee'],F:['brouillon','envoyee','payee']};
 const stLabel=(s,type)=>{const f=type==='F'||qw()==='Soumission';return {brouillon:'Brouillon',envoyee:f?'Envoyée':'Envoyé',acceptee:f?'Acceptée':'Accepté',refusee:f?'Refusée':'Refusé',payee:'Payée'}[s]||s};
 const T={
- fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues'},
- en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected'},
- es:{S:'Presupuesto',F:'Factura',no:'N.º',date:'Fecha',valid:'Válido hasta',due:'Vencimiento',client:'Cliente',project:'Obra',desc:'Descripción',qty:'Cant.',unit:'Unidad',price:'Precio unitario',amount:'Importe',sub:'Subtotal',total:'Total',dep:'Anticipo requerido',notes:'Condiciones',accept:'Aceptación del cliente',sign:'Firma del cliente',paid:'PAGADA',accepted:'ACEPTADO',noTax:'Impuestos no aplicados'}
+ fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues',disc:'Rabais',net:'Après rabais',rcv:'Paiement reçu',bal:'Solde à payer',photos:'Photos'},
+ en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected',disc:'Discount',net:'After discount',rcv:'Payment received',bal:'Balance due',photos:'Photos'},
+ es:{S:'Presupuesto',F:'Factura',no:'N.º',date:'Fecha',valid:'Válido hasta',due:'Vencimiento',client:'Cliente',project:'Obra',desc:'Descripción',qty:'Cant.',unit:'Unidad',price:'Precio unitario',amount:'Importe',sub:'Subtotal',total:'Total',dep:'Anticipo requerido',notes:'Condiciones',accept:'Aceptación del cliente',sign:'Firma del cliente',paid:'PAGADA',accepted:'ACEPTADO',noTax:'Impuestos no aplicados',disc:'Descuento',net:'Tras el descuento',rcv:'Pago recibido',bal:'Saldo pendiente',photos:'Fotos'}
 };
 const qw=()=>state.profile.qw||'Soumission';
 const dv=()=>qw()==='Devis';
@@ -653,10 +658,18 @@ function dropSamples(){
 const items=()=>state.items||(state.items=[]);
 const inList=l=>{const t=ld(l).trim();return !!t&&items().some(x=>x.d===t)};
 function totals(d){
- const sub=r2(d.lines.reduce((s,l)=>s+lAmt(l),0));
+ const gross=r2(d.lines.reduce((s,l)=>s+lAmt(l),0)),dval=Math.max(0,num(d.disc,0));
+ const disc=r2(Math.min(gross,d.discT==='$'?dval:gross*Math.min(100,dval)/100)),sub=r2(gross-disc);
  const taxes=d.taxes?(d.tx||[]).map(t=>({...t,r:rate(t),a:r2(sub*rate(t)/100)})):[];
  const total=r2(sub+taxes.reduce((s,t)=>s+t.a,0)),dp=num(d.dep,d.depDef||0);
- return {sub,taxes,total,dp,dep:r2(total*dp/100)};
+ const paid=r2((d.pays||[]).reduce((s,p)=>s+num(p.a,0),0));
+ return {gross,disc,sub,taxes,total,dp,dep:r2(total*dp/100),paid,bal:r2(Math.max(0,total-paid))};
+}
+/* Argent reçu pendant un mois donné (paiements inscrits + reste d'une facture marquée payée ce mois-là) */
+function received(d,month){
+ const t=totals(d);let r=(d.pays||[]).filter(p=>(p.date||'').slice(0,7)===month).reduce((s,p)=>s+num(p.a,0),0);
+ if(d.status==='payee'&&(d.paidDate||'').slice(0,7)===month)r+=Math.max(0,t.total-t.paid);
+ return r2(r);
 }
 const notesOf=d=>d.notes||d.notesDef||'';
 const overdue=d=>d.type==='F'&&d.status==='envoyee'&&d.due&&d.due<todayISO();
@@ -693,20 +706,20 @@ function renderDocs(){
  const t=todayISO(),month=t.slice(0,7),pc=state.profile.currency,mine=state.docs.filter(d=>(d.cur||pc)===pc);
  const F=mine.filter(d=>d.type==='F'),S=mine.filter(d=>d.type==='S');
  const open=F.filter(d=>d.status==='envoyee'),late=open.filter(overdue),pend=S.filter(d=>d.status==='envoyee');
- const paidM=F.filter(d=>d.status==='payee'&&(d.paidDate||'').slice(0,7)===month);
+ const gotM=F.reduce((s,d)=>s+received(d,month),0),due=a=>a.reduce((s,d)=>s+totals(d).bal,0);
  const acc=S.filter(d=>d.status==='acceptee').length,ref=S.filter(d=>d.status==='refusee').length;
  const sum=a=>a.reduce((s,d)=>s+totals(d).total,0),pl=(n,w)=>`${n} ${w}${n>1?'s':''}`;
  $('#kpis').innerHTML=[
-  ['À encaisser',money(sum(open),'fr',pc),`${pl(open.length,'facture')} en attente de paiement`,false],
-  ['En retard',money(sum(late),'fr',pc),`${pl(late.length,'facture')} après l’échéance`,late.length>0],
+  ['À encaisser',money(due(open),'fr',pc),`${pl(open.length,'facture')} en attente de paiement`,false],
+  ['En retard',money(due(late),'fr',pc),`${pl(late.length,'facture')} après l’échéance`,late.length>0],
   [`${qwP()} en attente`,money(sum(pend),'fr',pc),`${pend.length} en attente de réponse`,false],
-  ['Encaissé ce mois-ci',money(sum(paidM),'fr',pc),acc+ref?`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
+  ['Encaissé ce mois-ci',money(gotM,'fr',pc),acc+ref?`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
  ].map(([l,v,s,a])=>`<div class="kpi${a?' alert':''}"><div class="l">${l}</div><div class="v">${v}</div><div class="sub">${s}</div></div>`).join('');
  const q=($('#q').value||'').toLowerCase().trim();
  const list=state.docs.filter(d=>flt==='all'||(flt==='late'?overdue(d):d.type===flt)).filter(d=>{if(!q)return true;const c=client(d.clientId);return [d.num,titleOf(d),c&&c.name].join(' ').toLowerCase().includes(q)}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.num.localeCompare(a.num));
  if(!state.docs.length){$('#doclist').innerHTML=`<div class="empty">Aucun document pour l’instant. Commencez par ${dv()?'un devis':'une soumission'} : c’est ce document qui deviendra votre facture.</div>`;return}
  if(!list.length){$('#doclist').innerHTML=`<div class="empty">Aucun document ne correspond à « ${esc(q)} ».</div>`;return}
- $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${st==='retard'?'En retard':stLabel(d.status,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,'fr',d.cur)}</b></td></tr>`}).join('')}</tbody></table>`;
+ $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${st==='retard'?'En retard':stLabel(d.status,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,'fr',d.cur)}</b>${d.type==='F'&&d.status!=='payee'&&totals(d).paid>0?`<div class="sub">Solde ${money(totals(d).bal,'fr',d.cur)}</div>`:''}</td></tr>`}).join('')}</tbody></table>`;
 }
 
 function clientOpts(sel){return `<option value="">Choisir un client</option>`+state.clients.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${esc(c.name)}</option>`).join('')+`<option value="__new">+ Nouveau client…</option>`}
@@ -714,6 +727,20 @@ function curSym(c){try{return new Intl.NumberFormat('fr',{style:'currency',curre
 function linesHTML(d){
  const cs=curSym(d.cur);
  return d.lines.map((l,i)=>`<div class="ln"><textarea rows="2" data-l="${i}" data-k="d" aria-label="Description, ligne ${i+1}" placeholder="${esc(l.dd||'Décrivez les travaux')}">${esc(l.d)}</textarea><div class="lnr"><label>Qté<input type="number" step="any" inputmode="decimal" data-l="${i}" data-k="q" value="${esc(l.q)}" placeholder="${esc(l.qd??1)}"></label><label>Unité<select data-l="${i}" data-k="u">${UNITS.map(u=>`<option value="${u[0]}"${u[0]===l.u?' selected':''}>${u[1]}</option>`).join('')}</select></label><label>Prix (${esc(cs)})<input type="number" step="0.01" inputmode="decimal" data-l="${i}" data-k="p" value="${esc(l.p)}" placeholder="${esc(l.pd??0)}"></label><output id="lt-${i}">${money(lAmt(l),'fr',d.cur)}</output><button type="button" class="x" data-act="del-line" data-i="${i}" aria-label="Retirer la ligne ${i+1}">×</button></div>${inList(l)?`<button type="button" class="lnsave" disabled>Dans ma liste ✓</button>`:`<button type="button" class="lnsave" data-act="item-save" data-i="${i}">Garder dans ma liste</button>`}</div>`).join('');
+}
+function paysHTML(d){
+ const cs=esc(curSym(d.cur)),ps=d.pays||[],bal=totals(d).bal;
+ if(!ps.length)return `<p class="hint" style="margin:0 0 12px">Aucun paiement inscrit pour l’instant.</p>`;
+ return ps.map((p,i)=>`<div class="rw"><label>Date<input type="date" data-pay="${i}" data-k="date" value="${esc(p.date)}"></label><label>Montant (${cs})<input type="number" step="0.01" min="0" inputmode="decimal" data-pay="${i}" data-k="a" value="${esc(p.a)}" placeholder="${p.a===''?esc(bal):'0'}"></label><label>Note (facultatif)<input data-pay="${i}" data-k="n" value="${esc(p.n)}" placeholder="Ex. : Virement Interac"></label><button type="button" class="x" data-act="rcv-del" data-i="${i}" aria-label="Retirer le paiement ${i+1}">×</button></div>`).join('')+`<p class="paysum" id="pays-sum">${paySum(d)}</p>`;
+}
+const paySum=d=>{const t=totals(d);return `Reçu : <b>${money(t.paid,'fr',d.cur)}</b> · Solde à payer : <b>${money(t.bal,'fr',d.cur)}</b>`};
+/* Après un changement de paiement : solde, et facture « Payée » quand tout est reçu */
+function afterPays(d){
+ const t=totals(d),el=$('#pays-sum');if(el)el.innerHTML=paySum(d);
+ if(t.paid>0&&t.bal<=0&&d.status!=='payee'){
+  d.status='payee';d.paidDate=(d.pays||[]).map(p=>p.date).filter(Boolean).sort().pop()||todayISO();
+  const s=$('#f-status');if(s)s.value='payee';toast('Tout est reçu : la facture est maintenant « Payée ».');
+ }
 }
 function txHTML(d){
  if(!d.tx||!d.tx.length)return `<p class="hint" style="margin:0 0 12px">Aucune taxe configurée. Ajoutez-en dans « Mon entreprise ».</p>`;
@@ -744,7 +771,9 @@ function openEditor(id){
     <div class="two"><label>Date<input id="f-date" type="date" data-f="date"></label><label>${S?'Valide jusqu’au':'Échéance'}<input id="f-end" type="date" data-f="${S?'valid':'due'}"></label></div>
     <div class="two"><label>Statut<select id="f-status" data-f="status">${ST[d.type].map(s=>`<option value="${s}">${stLabel(s,d.type)}</option>`).join('')}</select></label><label>Langue du document<select id="f-lang" data-f="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select></label></div>
    </fieldset>
-   <fieldset><legend>Travaux</legend><div id="lines">${linesHTML(d)}</div><div class="acts"><button type="button" class="btn ghost" data-act="add-line">+ Ajouter une ligne</button><button type="button" class="btn ghost" data-act="item-open">+ De ma liste</button></div></fieldset>
+   <fieldset><legend>Travaux</legend><div id="lines">${linesHTML(d)}</div><div class="acts"><button type="button" class="btn ghost" data-act="add-line">+ Ajouter une ligne</button><button type="button" class="btn ghost" data-act="item-open">+ De ma liste</button></div>
+    <div class="discbox"><div class="two"><label>Rabais<input id="f-disc" type="number" step="0.01" min="0" inputmode="decimal" data-f="disc" placeholder="0"></label><label>Type de rabais<select id="f-discT" data-f="discT"><option value="%">En pourcentage (%)</option><option value="$">En montant (${esc(curSym(d.cur))})</option></select></label></div>
+    <label>Raison du rabais (facultatif)<input id="f-discL" data-f="discL" placeholder="Ex. : Client fidèle"></label></div></fieldset>
    <fieldset><legend>Taxes et paiement</legend>
     <label class="chk"><input id="f-taxes" type="checkbox" data-f="taxes"> Percevoir les taxes</label>
     <div class="txr" id="f-tx">${txHTML(d)}</div>
@@ -752,11 +781,12 @@ function openEditor(id){
     <label>${S?depWord():'Acompte'} requis (%)<input id="f-dep" type="number" min="0" max="100" step="1" data-f="dep" placeholder="${esc(d.depDef||0)}"></label>
     <label>Conditions<textarea id="f-notes" rows="3" data-f="notes" placeholder="${esc(d.notesDef||'Ex. : Payable dans les 30 jours.')}"></textarea></label>
    </fieldset>
-   <div class="tbar"><span>Total avec taxes</span><strong id="tb-total"></strong></div>
+   ${S?'':`<fieldset><legend>Paiements reçus</legend><div class="rows pays" id="pays">${paysHTML(d)}</div><button type="button" class="btn ghost" data-act="rcv-add">+ Ajouter un paiement reçu</button><p class="hint" style="margin:10px 0 0">Inscrivez les acomptes et paiements partiels : la facture montrera le solde à payer.</p></fieldset>`}
+   <div class="tbar"><span id="tb-l">Total avec taxes</span><strong id="tb-total"></strong></div>
   </form>
   <div class="pwrap"><div class="paper" id="paper"></div></div>
  </div>`;
- $$('#v-edit [data-f]').forEach(el=>{const v=d[el.dataset.f];if(el.type==='checkbox')el.checked=!!v;else if(el.id!=='f-client')el.value=v??''});
+ $$('#v-edit [data-f]').forEach(el=>{const v=d[el.dataset.f];if(el.type==='checkbox')el.checked=!!v;else if(el.id!=='f-client')el.value=v??(el.tagName==='SELECT'?el.options[0].value:'')});
  $('#f-tx').hidden=!d.taxes;
  show('edit');renderPreview();
 }
@@ -777,11 +807,11 @@ function renderPreview(){
  <div class="pm"><div><div class="lb">${X.client}</div>${c.name?`<b>${esc(c.name)}</b>`:'—'}${c.contact?'<br>'+esc(c.contact):''}${c.addr?'<br>'+esc(c.addr):''}${c.city?'<br>'+esc(c.city):''}${c.tel?'<br>'+esc(c.tel):''}${c.email?'<br>'+esc(c.email):''}</div>
  <div class="dates"><div><span class="lb">${X.date}</span> ${fdate(d.date,lang,d.cur)}</div><div><span class="lb">${S?X.valid:X.due}</span> ${fdate(S?d.valid:d.due,lang,d.cur)}</div>${titleOf(d)?`<div><span class="lb">${X.project}</span> ${esc(titleOf(d))}</div>`:''}</div></div>
  <table class="pt"><thead><tr><th>${X.desc}</th><th class="n">${X.qty}</th><th>${X.unit}</th><th class="n">${X.price}</th><th class="n">${X.amount}</th></tr></thead><tbody>${rows.length?rows.map(l=>`<tr><td>${esc(ld(l))}</td><td class="n">${lq(l).toLocaleString(loc(lang,d.cur))}</td><td>${unitName(l.u,lang)}</td><td class="n">${m(lp(l))}</td><td class="n">${m(lAmt(l))}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#999">Ajoutez une ligne de travaux.</td></tr>`}</tbody></table>
- <div class="tot"><div><span>${X.sub}</span><span>${m(t.sub)}</span></div>${d.taxes?t.taxes.map(x=>`<div><span>${esc(tName(x,lang))} (${pct(x.r,lang)})</span><span>${m(x.a)}</span></div>`).join(''):`<div class="nt">${esc(P.exempt()||X.noTax)}</div>`}<div class="gt"><span>${X.total}</span><span>${m(t.total)}</span></div>${t.dep>0?`<div><span>${X.dep} (${pct(t.dp,lang)})</span><span>${m(t.dep)}</span></div>`:''}</div>
+ <div class="tot"><div><span>${X.sub}</span><span>${m(t.gross)}</span></div>${t.disc>0?`<div><span>${X.disc}${d.discL?` – ${esc(d.discL)}`:''}${d.discT!=='$'?` (${pct(Math.min(100,num(d.disc,0)),lang)})`:''}</span><span>−${m(t.disc)}</span></div><div><span>${X.net}</span><span>${m(t.sub)}</span></div>`:''}${d.taxes?t.taxes.map(x=>`<div><span>${esc(tName(x,lang))} (${pct(x.r,lang)})</span><span>${m(x.a)}</span></div>`).join(''):`<div class="nt">${esc(P.exempt()||X.noTax)}</div>`}<div class="gt"><span>${X.total}</span><span>${m(t.total)}</span></div>${t.dep>0?`<div><span>${X.dep} (${pct(t.dp,lang)})</span><span>${m(t.dep)}</span></div>`:''}${!S&&t.paid>0?(d.pays||[]).filter(x=>num(x.a,0)>0).map(x=>`<div><span>${X.rcv}${x.date?` (${fdate(x.date,lang,d.cur)})`:''}</span><span>−${m(num(x.a,0))}</span></div>`).join('')+`<div class="bl"><span>${X.bal}</span><span>${m(t.bal)}</span></div>`:''}</div>
  ${notes?`<div class="notes"><div class="lb">${X.notes}</div>${esc(notes).replace(/\n/g,'<br>')}</div>`:''}
  ${S?`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><span>${X.sign}</span><span>${X.date}</span></div></div>`:''}
  ${stamp?`<div class="stamp">${stamp}</div>`:''}`;
- $('#tb-total').textContent=m(t.total);
+ const bal=!S&&t.paid>0;$('#tb-l').textContent=bal?'Solde à payer':'Total avec taxes';$('#tb-total').textContent=m(bal?t.bal:t.total);
  renderLate(d);
 }
 
@@ -797,7 +827,7 @@ function renderLate(d){
 /* Courriel tout prêt, dans la langue du document */
 function mailText(d,mode){
  const lang=d.lang||'fr',X=Lx(d),c=client(d.clientId)||{},t=totals(d),m=n=>money(n,lang,d.cur),p=state.profile,S=d.type==='S';
- const who=c.contact||c.name||'',ti=titleOf(d),endIso=S?d.valid:d.due,end=fdate(endIso,lang,d.cur);
+ const who=c.contact||c.name||'',ti=titleOf(d),endIso=S?d.valid:d.due,end=fdate(endIso,lang,d.cur),due=!S&&t.paid>0?t.bal:t.total;
  const W={
   fr:{hi:who?`Bonjour ${who},`:'Bonjour,',for:ti?` pour : ${ti}`:'',bye:'Merci,'},
   en:{hi:who?`Hello ${who},`:'Hello,',for:ti?` for: ${ti}`:'',bye:'Thank you,'},
@@ -808,9 +838,9 @@ function mailText(d,mode){
  if(mode==='remind'){
   subj={fr:`Rappel : facture ${d.num}`,en:`Reminder: invoice ${d.num}`,es:`Recordatorio: factura ${d.num}`}[lang];
   body={
-   fr:`Petit rappel : la facture ${d.num}${W.for}, au montant de ${m(t.total)}, était due le ${end}.\n\nSi le paiement est déjà fait, merci de ne pas tenir compte de ce message. Sinon, je vous remercie de le faire dès que possible. N’hésitez pas à me contacter si vous avez des questions.`,
-   en:`This is a friendly reminder that invoice ${d.num}${W.for}, in the amount of ${m(t.total)}, was due on ${end}.\n\nIf you have already paid, please disregard this message. Otherwise, I would appreciate payment at your earliest convenience. Feel free to contact me if you have any questions.`,
-   es:`Le recordamos amablemente que la factura ${d.num}${W.for}, por un importe de ${m(t.total)}, venció el ${end}.\n\nSi ya realizó el pago, no tenga en cuenta este mensaje. De lo contrario, le agradeceríamos que lo hiciera lo antes posible. No dude en contactarnos si tiene alguna pregunta.`
+   fr:`Petit rappel : la facture ${d.num}${W.for}, au montant de ${m(due)}, était due le ${end}.\n\nSi le paiement est déjà fait, merci de ne pas tenir compte de ce message. Sinon, je vous remercie de le faire dès que possible. N’hésitez pas à me contacter si vous avez des questions.`,
+   en:`This is a friendly reminder that invoice ${d.num}${W.for}, in the amount of ${m(due)}, was due on ${end}.\n\nIf you have already paid, please disregard this message. Otherwise, I would appreciate payment at your earliest convenience. Feel free to contact me if you have any questions.`,
+   es:`Le recordamos amablemente que la factura ${d.num}${W.for}, por un importe de ${m(due)}, venció el ${end}.\n\nSi ya realizó el pago, no tenga en cuenta este mensaje. De lo contrario, le agradeceríamos que lo hiciera lo antes posible. No dude en contactarnos si tiene alguna pregunta.`
   }[lang];
  }else if(S){
   subj=`${X.S} ${d.num}${ti?` – ${ti}`:''}`;
@@ -826,7 +856,7 @@ function mailText(d,mode){
   subj=`${X.F} ${d.num}${ti?` – ${ti}`:''}`;bye='';
   if(d.status==='payee')body={fr:`Voici la facture ${d.num}${W.for}, payée en totalité.\n\nMerci de votre confiance !`,en:`Please find attached invoice ${d.num}${W.for}, paid in full.\n\nThank you for your business!`,es:`Le adjunto la factura ${d.num}${W.for}, pagada en su totalidad.\n\n¡Gracias por su confianza!`}[lang];
   else{
-   const lines=[`${{fr:'Montant à payer',en:'Amount due',es:'Importe a pagar'}[lang]}${sep}${m(t.total)}`];
+   const lines=t.paid>0?[`${X.total}${sep}${m(t.total)}`,`${{fr:'Déjà reçu',en:'Already received',es:'Ya recibido'}[lang]}${sep}${m(t.paid)}`,`${{fr:'Solde à payer',en:'Balance due',es:'Saldo pendiente'}[lang]}${sep}${m(t.bal)}`]:[`${{fr:'Montant à payer',en:'Amount due',es:'Importe a pagar'}[lang]}${sep}${m(t.total)}`];
    if(endIso)lines.push(`${X.due}${sep}${end}`);
    body={fr:`Voici la facture ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nVous trouverez la facture en pièce jointe. Merci de votre confiance !`,en:`Please find attached invoice ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nThank you for your business!`,es:`Le adjunto la factura ${d.num}${W.for}.\n\n${lines.join('\n')}\n\n¡Gracias por su confianza!`}[lang];
   }
@@ -861,13 +891,15 @@ function onEdit(e){
   const f=t.dataset.f;let v=t.type==='checkbox'?t.checked:t.value;
   if(f==='clientId'&&v==='__new'){t.value=d.clientId||'';if($('#dlg').hidden)openClient(null,true);return}
   if(f==='dep')v=v===''?'':Math.max(0,Math.min(100,+v||0));
+  if(f==='disc')v=v===''?'':Math.max(0,+v||0);
   if(f==='status'){if(v==='payee'&&!d.paidDate)d.paidDate=todayISO();if(v!=='payee')d.paidDate=''}
   d[f]=v;if(f==='taxes')$('#f-tx').hidden=!v;
- }else if(t.dataset.k){
+ }else if(t.dataset.k&&t.dataset.l!=null){
   const i=+t.dataset.l,l=d.lines[i],k=t.dataset.k;if(!l)return;
   l[k]=(k==='q'||k==='p')?(t.value===''?'':+t.value):t.value;
   const o=$('#lt-'+i);if(o)o.textContent=money(lAmt(l),'fr',d.cur);
  }else if(t.dataset.tx){const x=d.tx[+t.dataset.tx];if(!x)return;x.r=t.value===''?'':Math.max(0,+t.value||0)}
+ else if(t.dataset.pay){const x=(d.pays||[])[+t.dataset.pay];if(!x)return;const k=t.dataset.k;x[k]=k==='a'?(t.value===''?'':Math.max(0,+t.value||0)):t.value;if(e.type==='change'||k!=='a')afterPays(d);else{const el=$('#pays-sum');if(el)el.innerHTML=paySum(d)}}
  else return;
  d.sample=false;d.updated=Date.now();save();renderPreview();
 }
@@ -992,11 +1024,12 @@ function invoiceRows(year){
  const F=state.docs.filter(d=>d.type==='F'&&!d.sample&&(year==='all'||(d.date||'').slice(0,4)===year)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.num.localeCompare(b.num));
  const tt=F.map(totals),names=[...new Set(tt.flatMap(t=>t.taxes.map(x=>x.n)))];
  const sumTax=(t,n)=>r2(t.taxes.filter(x=>x.n===n).reduce((s,x)=>s+x.a,0));
- const rows=[{bold:true,cells:['Numéro','Date','Échéance','Client','Objet','Sous-total',...names,'Total','Devise','Statut','Payée le']}];
- F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),t.sub,...names.map(n=>sumTax(t,n)),t.total,d.cur||pc,overdue(d)?'En retard':stLabel(d.status,'F'),d.paidDate||'']})});
+ const hasDisc=tt.some(t=>t.disc>0),rcv=(d,t)=>d.status==='payee'?t.total:t.paid;
+ const rows=[{bold:true,cells:['Numéro','Date','Échéance','Client','Objet',...(hasDisc?['Rabais']:[]),'Avant taxes',...names,'Total','Reçu','Solde','Devise','Statut','Payée le']}];
+ F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),...(hasDisc?[t.disc]:[]),t.sub,...names.map(n=>sumTax(t,n)),t.total,rcv(d,t),r2(t.total-rcv(d,t)),d.cur||pc,overdue(d)?'En retard':stLabel(d.status,'F'),d.paidDate||'']})});
  const curs=new Set(F.map(d=>d.cur||pc));
- if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',`${F.length} facture${F.length>1?'s':''}`,'',r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),[...curs][0],'','']});
- return {count:F.length,rows,widths:[13,12,12,28,36,14,...names.map(()=>12),14,8,12,12]};
+ if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',`${F.length} facture${F.length>1?'s':''}`,'',...(hasDisc?[r2(tt.reduce((s,t)=>s+t.disc,0))]:[]),r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),r2(F.reduce((s,d,i)=>s+rcv(d,tt[i]),0)),r2(F.reduce((s,d,i)=>s+tt[i].total-rcv(d,tt[i]),0)),[...curs][0],'','']});
+ return {count:F.length,rows,widths:[13,12,12,28,36,...(hasDisc?[12]:[]),14,...names.map(()=>12),14,14,14,8,12,12]};
 }
 function exportXlsx(){
  const year=$('#xl-year').value||todayISO().slice(0,4),x=invoiceRows(year);
@@ -1067,6 +1100,8 @@ document.addEventListener('click',e=>{
   case 'flt':flt=b.dataset.f;$$('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));renderDocs();break;
   case 'mode':$('#egrid').dataset.m=b.dataset.m;$$('.seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));break;
   case 'add-line':d.lines.push({d:'',q:'',u:'h',p:''});$('#lines').innerHTML=linesHTML(d);save();renderPreview();$(`[data-l="${d.lines.length-1}"][data-k=d]`).focus();break;
+  case 'rcv-add':{d.pays=d.pays||[];const t=totals(d);d.pays.push({id:uid(),date:todayISO(),a:'',n:''});d.sample=false;d.updated=Date.now();$('#pays').innerHTML=paysHTML(d);save();renderPreview();const ins=$$('#pays [data-k=a]');if(ins.length)ins[ins.length-1].focus();break}
+  case 'rcv-del':d.pays.splice(+b.dataset.i,1);d.updated=Date.now();$('#pays').innerHTML=paysHTML(d);save();renderPreview();break;
   case 'del-line':d.lines.splice(+b.dataset.i,1);if(!d.lines.length)d.lines.push({d:'',q:'',u:'f',p:''});$('#lines').innerHTML=linesHTML(d);save();renderPreview();break;
   case 'print':
    if(window.innerWidth<=960)$('#egrid').dataset.m='prev';
@@ -1074,11 +1109,11 @@ document.addEventListener('click',e=>{
    if(embedded)toast('L’aperçu de Claude bloque l’impression. Une fois l’outil en ligne, ce bouton ouvre l’impression : choisissez « Enregistrer en PDF ».');
    break;
   case 'convert':{
-   const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num});
+   const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num,disc:d.disc??'',discT:d.discT||'%',discL:d.discL||'',photos:clone(d.photos||[])});
    if(d.status!=='refusee')d.status='acceptee';save();openEditor(f.id);toast(`Facture ${f.num} créée à partir de ${d.num}.`);break}
   case 'dup':{
    if(!canCreate())break;
-   const n={...clone(d),id:uid(),sample:false,counted:true,createdAt:todayISO(),updated:Date.now(),num:nextNum(d.type),date:todayISO(),status:'brouillon',paidDate:'',from:''};
+   const n={...clone(d),id:uid(),sample:false,counted:true,createdAt:todayISO(),updated:Date.now(),num:nextNum(d.type),date:todayISO(),status:'brouillon',paidDate:'',from:'',pays:[],share:null,acc:null,reminded:''};
    if(n.type==='S')n.valid=addDays(n.date,P.validDays());else n.due=addDays(n.date,P.dueDays());
    state.docs.push(n);save();openEditor(n.id);toast(`Copie créée : ${n.num}.`);break}
   case 'del':{const i=state.docs.indexOf(d);state.docs.splice(i,1);lastDel={kind:'doc',item:d,i};save();show('docs');toast(`${d.num} supprimé.`,true);break}
@@ -1302,16 +1337,14 @@ if(sb){
  });
 }
 
-/* Fenêtre d'accueil « Passez à Carnet Pro » : au plus une fois par semaine par appareil, jamais pour les abonnés */
+/* Fenêtre d'accueil « Passez à Carnet Pro » : à chaque visite, jamais pour les abonnés Pro */
 const cameFromPay=new URLSearchParams(location.search).has('pay');
 function maybePromo(tries){
  tries=tries||0;
  if(embedded||cameFromPay||isPro())return;
  if(user&&!subChecked){if(tries<10)setTimeout(()=>maybePromo(tries+1),1000);return}
  if($$('.ov').some(o=>!o.hidden))return;
- let last=0;try{last=+localStorage.getItem('carnet.promo')||0}catch(e){}
- if(Date.now()-last<7*864e5)return;
- try{localStorage.setItem('carnet.promo',String(Date.now()))}catch(e){}
+ try{if(localStorage.getItem('carnet.promo')==='off')return}catch(e){} /* réservé aux tests automatiques */
  const m=CFG.price.match(/^(.*?\$)\s*(.*)$/),tr=trialOK();
  $('#wdlg-p').textContent=`Faites autant de ${qwP().toLowerCase()} et de factures que vous voulez. Le forfait gratuit permet ${CFG.freeLimit} nouveau${CFG.freeLimit>1?'x':''} document${CFG.freeLimit>1?'s':''} par mois.`;
  $('#wdlg-price').innerHTML=tr?`<b>${CFG.trialDays} jours gratuits</b><span>puis ${esc(CFG.price)}</span>`:m?`<b>${esc(m[1])}</b><span>${esc(m[2])}</span>`:`<b>${esc(CFG.price)}</b>`;
