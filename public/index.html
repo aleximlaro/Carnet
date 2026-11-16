@@ -1286,7 +1286,7 @@ function renderPlan(){
  const el=$('#plan-note');if(!el)return;
  const a=$('#acct');if(a)a.textContent=user?(isPro()?'Mon compte · Pro':'Mon compte'):'Se connecter';
  if(payLate()){el.hidden=false;el.innerHTML=`<span><b>Votre dernier paiement n’a pas passé.</b> Carnet Pro est en pause.</span><button class="linkbtn" data-act="card">Mettre à jour ma carte</button>`;return}
- if(isPro()){el.hidden=false;el.innerHTML=`<span><b>Carnet Pro</b><span class="pro-tag">PRO</span> Documents illimités.</span>`;return}
+ if(isPro()){el.hidden=false;el.innerHTML=`<span><b>Carnet Pro</b><span class="pro-tag">PRO</span> Documents illimités.</span><button class="linkbtn" data-act="portal">Gérer mon abonnement</button>`;return}
  const u=monthUsed(),p=Math.min(100,u/CFG.freeLimit*100);
  el.hidden=false;
  el.innerHTML=`<span><b>Gratuit :</b> ${Math.min(u,CFG.freeLimit)} document${u>1?'s':''} sur ${CFG.freeLimit} ce mois-ci</span><span class="bar" aria-hidden="true"><i style="width:${p}%"${u>=CFG.freeLimit?' class="full"':''}></i></span><button class="linkbtn" data-act="view" data-v="pro">${esc(trialOK()?`Essayer Pro gratuitement ${CFG.trialDays} jours`:`Passer à Pro : ${CFG.price}`)}</button>`;
