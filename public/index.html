@@ -115,6 +115,25 @@ h3{font-size:18px;margin:0 0 12px}
 .kpi .v{font-weight:800;font-size:clamp(20px,2.6vw,30px);letter-spacing:-.02em;white-space:nowrap}
 .kpi .l{font-size:14px;color:var(--muted)}
 .kpi.alert .v{color:var(--red)}
+.dash{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;margin:-8px 0 24px}
+@media (max-width:760px){.dash{grid-template-columns:minmax(0,1fr)}}
+.dpanel{border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.dpanel h3{margin:0 0 6px;font-size:16px}
+.chart{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;height:130px;margin-top:28px;border-bottom:1px solid var(--line)}
+.chart .bc{position:relative;display:flex;align-items:flex-end;justify-content:center;border-radius:4px;cursor:default}
+.chart .bar{display:block;width:min(70%,34px);height:var(--h);background:var(--ink);border-radius:4px 4px 0 0}
+.chart .tip{position:absolute;left:50%;bottom:calc(var(--h) + 4px);transform:translateX(-50%);font-size:12px;font-weight:700;white-space:nowrap;color:var(--ink);opacity:0;transition:opacity .12s;pointer-events:none}
+.chart .bc.on .tip,.chart .bc:hover .tip,.chart .bc:focus-visible .tip{opacity:1}
+.chart:hover .bc.on:not(:hover) .tip{opacity:0}
+.chart .bc:hover .bar,.chart .bc:focus-visible .bar{opacity:.7}
+.chartx{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.dstat{margin:14px 0 0;font-size:14px;line-height:1.6}
+.todo{list-style:none;margin:6px 0 0;padding:0}
+.todo li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.todo li:first-child{border-top:0}
+.todo li>div{min-width:0}
+.todo .sub{font-size:13px}
+.todo .btn{flex:none}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:15px}
 .chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -170,6 +189,10 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
 .tbar strong{font-size:22px;font-weight:800;white-space:nowrap}
 .paper{position:relative;background:#fff;color:#111;max-width:760px;min-width:520px;margin:0 auto;padding:36px 36px 40px;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.08);font-size:13.5px;line-height:1.45;overflow:hidden}
 .paper .lb{font-size:11.5px;color:#666;font-weight:600}
+.paper .payb{margin-top:18px;padding:12px 14px;border:1.5px solid #111;border-radius:8px}
+.paper .payb p{margin:6px 0 0}
+.paper .paybtn{display:inline-block;background:#111;color:#fff;font-weight:700;padding:7px 14px;border-radius:7px;text-decoration:none;margin-right:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .payurl{font-size:12px;color:#444;word-break:break-all}
 .ph{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding-bottom:16px;border-bottom:3px solid #111}
 .co{display:flex;gap:14px;align-items:flex-start}
 .co img{max-width:90px;max-height:70px;object-fit:contain}
@@ -289,6 +312,7 @@ body.client .top,body.client footer{display:none}
     <p class="sample" id="sample-note">Les documents ci-dessous sont des exemples, adaptés au pays choisi. Ils disparaîtront dès que vous créerez votre premier document ou client. Vous pouvez aussi <button data-act="clear" data-mode="sample">les effacer maintenant</button>.</p>
     <div class="plan" id="plan-note" hidden></div>
     <div class="kpis" id="kpis"></div>
+    <div class="dash" id="dash" hidden></div>
     <div class="tools">
       <button class="chip" data-act="flt" data-f="all" aria-pressed="true">Tout</button>
       <button class="chip" data-act="flt" data-f="S" aria-pressed="false" id="chip-s">Soumissions</button>
@@ -362,6 +386,12 @@ body.client .top,body.client footer{display:none}
             <label><span id="lbl-dep">Dépôt demandé sur les soumissions (%)</span><input id="p-dep" data-p="dep" type="number" min="0" max="100" step="1"></label>
             <label><span id="lbl-terms">Conditions des soumissions</span><textarea id="p-terms" data-p="terms" rows="3"></textarea></label>
             <label>Conditions des factures<textarea id="p-termsF" data-p="termsF" rows="3"></textarea></label>
+          </fieldset>
+          <fieldset>
+            <legend>Paiement par vos clients</legend>
+            <label><span>Lien de paiement en ligne<span class="pro-tag" aria-hidden="true">PRO</span></span><input id="p-payurl" data-p="payUrl" type="url" inputmode="url" autocomplete="off" placeholder="Ex. : https://buy.stripe.com/… ou https://paypal.me/…"></label>
+            <p class="hint" id="payurl-hint" style="margin-top:-6px"></p>
+            <label>Autres façons de payer<textarea id="p-payhow" data-p="payHow" rows="2" placeholder="Ex. : Virement Interac à info@monentreprise.com"></textarea></label>
           </fieldset>
         </div>
         <div class="panel" id="p-items-panel" style="margin-top:20px">
@@ -952,6 +982,53 @@ const I18N={
 "Facture {} créée à partir de {}.":["Invoice {} created from {}.","Factura {} creada a partir de {}."],
 "Copie créée : {}.":["Copy created: {}.","Copia creada: {}."],
 
+/* Tableau de bord, dépenses, factures qui reviennent, paiement en ligne, relances */
+"Paiement par vos clients":["Payments from your clients","Pagos de sus clientes"],
+"Lien de paiement en ligne":["Online payment link","Enlace de pago en línea"],
+"Ex. : https://buy.stripe.com/… ou https://paypal.me/…":["E.g.: https://buy.stripe.com/… or https://paypal.me/…","Ej.: https://buy.stripe.com/… o https://paypal.me/…"],
+"Autres façons de payer":["Other ways to pay","Otras formas de pago"],
+"Ex. : Virement Interac à info@monentreprise.com":["E.g.: Interac e-Transfer to info@mybusiness.com","Ej.: Transferencia a info@miempresa.com"],
+"Votre propre lien Stripe, PayPal ou Square. Un bouton « Payer en ligne » s’affiche sur vos factures et dans vos courriels. L’argent va directement dans votre compte.":["Your own Stripe, PayPal or Square link. A “Pay online” button appears on your invoices and in your emails. The money goes straight to your account.","Su propio enlace de Stripe, PayPal o Square. Aparece un botón «Pagar en línea» en sus facturas y correos. El dinero va directamente a su cuenta."],
+"Réservé à Carnet Pro. Collez votre propre lien Stripe, PayPal ou Square : avec Pro, un bouton « Payer en ligne » s’affiche sur vos factures et dans vos courriels.":["Carnet Pro only. Paste your own Stripe, PayPal or Square link: with Pro, a “Pay online” button appears on your invoices and in your emails.","Solo con Carnet Pro. Pegue su propio enlace de Stripe, PayPal o Square: con Pro, aparece un botón «Pagar en línea» en sus facturas y correos."],
+"Facture qui revient":["Recurring invoice","Factura recurrente"],
+"Répéter cette facture":["Repeat this invoice","Repetir esta factura"],
+"Non":["No","No"],
+"Chaque semaine":["Every week","Cada semana"],
+"Chaque mois":["Every month","Cada mes"],
+"Tous les 3 mois":["Every 3 months","Cada 3 meses"],
+"Chaque année":["Every year","Cada año"],
+"Prochaine facture le":["Next invoice on","Próxima factura el"],
+"Pour l’entretien, le déneigement, la location… Carnet refait cette facture tout seul, à la date prévue.":["For maintenance, snow removal, rentals… Carnet makes this invoice again by itself, on the set date.","Para mantenimiento, limpieza de nieve, alquiler… Carnet vuelve a hacer esta factura solo, en la fecha prevista."],
+"Le {}, Carnet créera une copie de cette facture, au brouillon, prête à envoyer. Elle apparaîtra la prochaine fois que vous ouvrirez Carnet, à partir de cette date.":["On {}, Carnet will create a copy of this invoice as a draft, ready to send. It will appear the next time you open Carnet on or after that date.","El {}, Carnet creará una copia de esta factura como borrador, lista para enviar. Aparecerá la próxima vez que abra Carnet a partir de esa fecha."],
+"Cette facture a été créée toute seule à partir de la facture {}.":["This invoice was created automatically from invoice {}.","Esta factura se creó automáticamente a partir de la factura {}."],
+"Dépenses et profit":["Expenses and profit","Gastos y beneficio"],
+"Matériaux, sous-traitants, location d’outils… Pour vous seulement : n’apparaît jamais sur le document ni chez le client.":["Materials, subcontractors, tool rentals… For you only: never shown on the document or to the client.","Materiales, subcontratistas, alquiler de herramientas… Solo para usted: nunca aparece en el documento ni lo ve el cliente."],
+"+ Ajouter une dépense":["+ Add an expense","+ Añadir un gasto"],
+"Aucune dépense inscrite pour l’instant.":["No expenses entered yet.","Aún no hay gastos registrados."],
+"Quoi ?":["What?","¿Qué?"],
+"Ex. : Matériaux, sous-traitant":["E.g.: Materials, subcontractor","Ej.: Materiales, subcontratista"],
+"Retirer la dépense {}":["Remove expense {}","Quitar el gasto {}"],
+"Dépenses : {} · Profit avant taxes : {}":["Expenses: {} · Profit before taxes: {}","Gastos: {} · Beneficio antes de impuestos: {}"],
+"Dépenses":["Expenses","Gastos"],
+"Profit avant taxes":["Profit before taxes","Beneficio antes de impuestos"],
+"Facture {} créée toute seule (facture qui revient). Elle est au brouillon, prête à envoyer.":["Invoice {} was created automatically (recurring invoice). It is a draft, ready to send.","Factura {} creada automáticamente (factura recurrente). Está en borrador, lista para enviar."],
+"{} factures créées toutes seules (factures qui reviennent). Elles sont au brouillon, prêtes à envoyer.":["{} invoices were created automatically (recurring invoices). They are drafts, ready to send.","{} facturas creadas automáticamente (facturas recurrentes). Están en borrador, listas para enviar."],
+"Une facture qui revient n’a pas été créée : vous avez atteint la limite du forfait gratuit ce mois-ci.":["A recurring invoice was not created: you have reached the free plan limit this month.","No se creó una factura recurrente: alcanzó el límite del plan gratuito este mes."],
+"Encaissé par mois":["Received per month","Cobrado por mes"],
+"À relancer":["To follow up","Por dar seguimiento"],
+"Facturé en {} : {}":["Billed in {}: {}","Facturado en {}: {}"],
+"En retard de {} jour{}":["{} day{} overdue","Vencida hace {} día{}"],
+"Sans réponse depuis {} jours":["No answer for {} days","Sin respuesta desde hace {} días"],
+"Facture qui revient, prête à envoyer":["Recurring invoice, ready to send","Factura recurrente, lista para enviar"],
+"Relancer":["Follow up","Dar seguimiento"],
+"Envoyer":["Send","Enviar"],
+"Et {} autre{}.":["And {} more.","Y {} más."],
+"Rien à relancer pour l’instant. Les factures en retard et les {} sans réponse depuis une semaine s’afficheront ici.":["Nothing to follow up for now. Overdue invoices and {} with no answer after a week will show up here.","Nada pendiente por ahora. Las facturas vencidas y los {} sin respuesta después de una semana aparecerán aquí."],
+"Relancer le client":["Follow up with the client","Dar seguimiento al cliente"],
+"Paiement en ligne":["Online payment","Pago en línea"],
+"Bouton « Payer en ligne » sur vos factures":["“Pay online” button on your invoices","Botón «Pagar en línea» en sus facturas"],
+"Comment mes clients paient-ils en ligne ?":["How do my clients pay online?","¿Cómo pagan mis clientes en línea?"],
+"Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":["In “My business”, paste your own payment link (Stripe, PayPal, Square…). A “Pay online” button then appears on your invoices and in your emails. The money goes straight to your account: Carnet takes no commission.","En «Mi empresa», pegue su propio enlace de pago (Stripe, PayPal, Square…). Aparecerá un botón «Pagar en línea» en sus facturas y correos. El dinero va directamente a su cuenta: Carnet no cobra comisión."],
 };
 const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 
@@ -1021,9 +1098,9 @@ const stLabel=(s,type)=>{const f=type==='F'||qw()==='Soumission';return {brouill
 /* Statut affiché dans l'interface (liste, éditeur, Excel), dans la langue choisie */
 const uiSt=(s,type)=>UIL==='fr'?(s==='retard'?'En retard':stLabel(s,type)):UIL==='en'?({brouillon:'Draft',envoyee:'Sent',acceptee:'Accepted',refusee:'Declined',payee:'Paid',retard:'Overdue'})[s]||s:({brouillon:'Borrador',envoyee:type==='F'?'Enviada':'Enviado',acceptee:'Aceptado',refusee:'Rechazado',payee:'Pagada',retard:'Vencida'})[s]||s;
 const T={
- fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues',disc:'Rabais',net:'Après rabais',rcv:'Paiement reçu',bal:'Solde à payer',photos:'Photos'},
- en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected',disc:'Discount',net:'After discount',rcv:'Payment received',bal:'Balance due',photos:'Photos'},
- es:{S:'Presupuesto',F:'Factura',no:'N.º',date:'Fecha',valid:'Válido hasta',due:'Vencimiento',client:'Cliente',project:'Obra',desc:'Descripción',qty:'Cant.',unit:'Unidad',price:'Precio unitario',amount:'Importe',sub:'Subtotal',total:'Total',dep:'Anticipo requerido',notes:'Condiciones',accept:'Aceptación del cliente',sign:'Firma del cliente',paid:'PAGADA',accepted:'ACEPTADO',noTax:'Impuestos no aplicados',disc:'Descuento',net:'Tras el descuento',rcv:'Pago recibido',bal:'Saldo pendiente',photos:'Fotos'}
+ fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues',disc:'Rabais',net:'Après rabais',rcv:'Paiement reçu',bal:'Solde à payer',photos:'Photos',payOnline:'Payer en ligne',howPay:'Comment payer'},
+ en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected',disc:'Discount',net:'After discount',rcv:'Payment received',bal:'Balance due',photos:'Photos',payOnline:'Pay online',howPay:'How to pay'},
+ es:{S:'Presupuesto',F:'Factura',no:'N.º',date:'Fecha',valid:'Válido hasta',due:'Vencimiento',client:'Cliente',project:'Obra',desc:'Descripción',qty:'Cant.',unit:'Unidad',price:'Precio unitario',amount:'Importe',sub:'Subtotal',total:'Total',dep:'Anticipo requerido',notes:'Condiciones',accept:'Aceptación del cliente',sign:'Firma del cliente',paid:'PAGADA',accepted:'ACEPTADO',noTax:'Impuestos no aplicados',disc:'Descuento',net:'Tras el descuento',rcv:'Pago recibido',bal:'Saldo pendiente',photos:'Fotos',payOnline:'Pagar en línea',howPay:'Cómo pagar'}
 };
 const qw=()=>state.profile.qw||'Soumission';
 const dv=()=>qw()==='Devis';
@@ -1215,11 +1292,39 @@ function renderDocs(){
   [_t`${uqwP()} en attente`,money(sum(pend),UIL,pc),_t`${pend.length} en attente de réponse`,false],
   ['Encaissé ce mois-ci',money(gotM,UIL,pc),acc+ref?_t`Taux d’acceptation : ${Math.round(acc/(acc+ref)*100)} %`:'Aucune réponse reçue pour l’instant',false]
  ].map(([l,v,s,a])=>`<div class="kpi${a?' alert':''}"><div class="l">${l}</div><div class="v">${v}</div><div class="sub">${s}</div></div>`).join('');
+ renderDash();
  const q=($('#q').value||'').toLowerCase().trim();
  const list=state.docs.filter(d=>flt==='all'||(flt==='late'?overdue(d):d.type===flt)).filter(d=>{if(!q)return true;const c=client(d.clientId);return [d.num,titleOf(d),c&&c.name].join(' ').toLowerCase().includes(q)}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.num.localeCompare(a.num));
  if(!state.docs.length){$('#doclist').innerHTML=`<div class="empty">${_t(dv()?'Aucun document pour l’instant. Commencez par un devis : c’est ce document qui deviendra votre facture.':'Aucun document pour l’instant. Commencez par une soumission : c’est ce document qui deviendra votre facture.')}</div>`;return}
  if(!list.length){$('#doclist').innerHTML=`<div class="empty">${_t`Aucun document ne correspond à « ${esc(q)} ».`}</div>`;return}
- $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${uiSt(st,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,UIL,d.cur)}</b>${d.type==='F'&&d.status!=='payee'&&totals(d).paid>0?`<div class="sub">${_t`Solde ${money(totals(d).bal,UIL,d.cur)}`}</div>`:''}</td></tr>`}).join('')}</tbody></table>`;
+ $('#doclist').innerHTML=`<table class="list stack"><thead><tr><th>Numéro</th><th>Client et travaux</th><th>Date</th><th>Statut</th><th class="n">Total</th></tr></thead><tbody>${list.map(d=>{const c=client(d.clientId),st=overdue(d)?'retard':d.status;return `<tr tabindex="0" data-act="open" data-id="${d.id}"><td data-l="Numéro"><span class="num">${esc(d.num)}</span></td><td data-l="Client"><div><b>${esc(c?c.name:'Sans client')}</b><div class="sub">${esc(titleOf(d))}${d.rec&&REC[d.rec.every]?` · ↻ ${esc(_t(REC[d.rec.every]))}`:''}</div></div></td><td data-l="Date">${sdate(d.date)}</td><td data-l="Statut"><span class="b ${st}">${uiSt(st,d.type)}</span></td><td data-l="Total" class="n"><b>${money(totals(d).total,UIL,d.cur)}</b>${d.type==='F'&&d.status!=='payee'&&totals(d).paid>0?`<div class="sub">${_t`Solde ${money(totals(d).bal,UIL,d.cur)}`}</div>`:''}</td></tr>`}).join('')}</tbody></table>`;
+}
+
+/* Tableau de bord : argent encaissé par mois (6 derniers mois), l'année en cours, et ce qu'il faut relancer */
+function renderDash(){
+ const el=$('#dash');if(!el)return;
+ if(!state.docs.length){el.hidden=true;el.innerHTML='';return}
+ el.hidden=false;
+ const pc=state.profile.currency,t=todayISO(),y=t.slice(0,4),F=state.docs.filter(d=>d.type==='F'&&(d.cur||pc)===pc);
+ const ms=[];{let yy=+y,mm=+t.slice(5,7);for(let i=0;i<6;i++){ms.unshift(`${yy}-${String(mm).padStart(2,'0')}`);mm--;if(!mm){mm=12;yy--}}}
+ const vals=ms.map(m=>r2(F.reduce((s,d)=>s+received(d,m),0))),max=Math.max(0,...vals);
+ let f0;try{f0=new Intl.NumberFormat(loc(UIL,pc),{style:'currency',currency:pc,maximumFractionDigits:0})}catch(e){f0={format:n=>money(n,UIL,pc)}}
+ const mDate=m=>new Date(+m.slice(0,4),+m.slice(5,7)-1,15);
+ const bars=ms.map((m,i)=>{const h=max>0?Math.max(1.5,vals[i]/max*100):1.5;return `<div class="bc${i===ms.length-1?' on':''}" tabindex="0" style="--h:${h.toFixed(1)}%" aria-label="${esc(mDate(m).toLocaleDateString(loc(UIL,pc),{month:'long',year:'numeric'}))} : ${esc(money(vals[i],UIL,pc))}"><span class="tip" aria-hidden="true">${esc(f0.format(vals[i]))}</span><i class="bar"></i></div>`}).join('');
+ const xs=ms.map(m=>`<span>${esc(mDate(m).toLocaleDateString(loc(UIL,pc),{month:'short'}))}</span>`).join('');
+ const FY=F.filter(d=>(d.date||'').slice(0,4)===y),billed=r2(FY.reduce((s,d)=>s+totals(d).total,0)),ex=r2(FY.reduce((s,d)=>s+expTot(d),0)),prof=r2(FY.reduce((s,d)=>s+totals(d).sub,0)-ex);
+ const yr=`<p class="dstat">${_t`Facturé en ${y} : ${`<b>${money(billed,UIL,pc)}</b>`}`}${ex>0?`<br>${_t`Dépenses : ${`<b>${money(ex,UIL,pc)}</b>`} · Profit avant taxes : ${`<b>${money(prof,UIL,pc)}</b>`}`}`:''}</p>`;
+ const wk=addDays(t,-7),ago=iso=>Math.max(0,Math.round((new Date(t+'T12:00:00')-new Date(iso+'T12:00:00'))/864e5)),todo=[];
+ state.docs.forEach(d=>{
+  const c=client(d.clientId),who=esc(c?c.name:_t('Sans client'));
+  if(overdue(d)&&(!d.reminded||d.reminded<=wk)){const n=daysLate(d);todo.push({k:0,s:d.due,id:d.id,m:'remind',b:'Envoyer un rappel',h:`<b>${esc(d.num)}</b> · ${who}<div class="sub">${_t`En retard de ${n} jour${n>1?'s':''}`} · ${esc(money(totals(d).bal,UIL,d.cur))}</div>`})}
+  else if(d.type==='S'&&d.status==='envoyee'&&!d.acc&&d.date&&d.date<=wk&&(!d.followed||d.followed<=wk)){todo.push({k:1,s:d.date,id:d.id,m:'follow',b:'Relancer',h:`<b>${esc(d.num)}</b> · ${who}<div class="sub">${_t`Sans réponse depuis ${ago(d.followed||d.date)} jours`} · ${esc(money(totals(d).total,UIL,d.cur))}</div>`})}
+  else if(d.type==='F'&&d.recFrom&&d.status==='brouillon'){todo.push({k:2,s:d.date,id:d.id,m:'send',b:'Envoyer',h:`<b>${esc(d.num)}</b> · ${who}<div class="sub">${_t('Facture qui revient, prête à envoyer')} · ${esc(money(totals(d).total,UIL,d.cur))}</div>`})}
+ });
+ const list=todo.sort((a,b)=>a.k-b.k||(a.s||'').localeCompare(b.s||'')).slice(0,6),more=todo.length-list.length;
+ const tl=list.length?`<ul class="todo">${list.map(x=>`<li><div>${x.h}</div><button type="button" class="btn sm" data-act="todo" data-id="${x.id}" data-m="${x.m}">${x.b}</button></li>`).join('')}</ul>${more>0?`<p class="sub" style="margin:4px 0 0">${_t`Et ${more} autre${more>1?'s':''}.`}</p>`:''}`
+  :`<p class="sub" style="margin:8px 0 0">${_t`Rien à relancer pour l’instant. Les factures en retard et les ${uqwP().toLowerCase()} sans réponse depuis une semaine s’afficheront ici.`}</p>`;
+ el.innerHTML=`<section class="dpanel" aria-labelledby="dash-h"><h3 id="dash-h">Encaissé par mois</h3><div class="chart">${bars}</div><div class="chartx" aria-hidden="true">${xs}</div>${yr}</section><section class="dpanel" aria-labelledby="todo-h"><h3 id="todo-h">À relancer</h3>${tl}</section>`;
 }
 
 function clientOpts(sel){return `<option value="">Choisir un client</option>`+state.clients.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${esc(c.name)}</option>`).join('')+`<option value="__new">+ Nouveau client…</option>`}
@@ -1242,6 +1347,31 @@ function afterPays(d){
   const s=$('#f-status');if(s)s.value='payee';toast('Tout est reçu : la facture est maintenant « Payée ».');
  }
 }
+/* Dépenses d'un contrat : exp [{id,date,a,n}]. Pour l'entrepreneur seulement : jamais sur le document ni dans le lien du client */
+const expTot=d=>r2((d.exp||[]).reduce((s,x)=>s+num(x.a,0),0));
+const expSum=d=>{const e=expTot(d);return _t`Dépenses : ${`<b>${money(e,UIL,d.cur)}</b>`} · Profit avant taxes : ${`<b>${money(r2(totals(d).sub-e),UIL,d.cur)}</b>`}`};
+function expsHTML(d){
+ const cs=esc(curSym(d.cur)),xs=d.exp||[];
+ return (xs.length?xs.map((x,i)=>`<div class="rw"><label>Date<input type="date" data-exp="${i}" data-k="date" value="${esc(x.date)}"></label><label>${_t`Montant (${cs})`}<input type="number" step="0.01" min="0" inputmode="decimal" data-exp="${i}" data-k="a" value="${esc(x.a)}" placeholder="0"></label><label>Quoi ?<input data-exp="${i}" data-k="n" value="${esc(x.n)}" placeholder="Ex. : Matériaux, sous-traitant"></label><button type="button" class="x" data-act="exp-del" data-i="${i}" aria-label="${_t`Retirer la dépense ${i+1}`}">×</button></div>`).join(''):`<p class="hint" style="margin:0 0 12px">Aucune dépense inscrite pour l’instant.</p>`)+`<p class="paysum" id="exp-sum">${expSum(d)}</p>`;
+}
+/* Factures qui reviennent : rec {every:'w'|'m'|'q'|'y', next:'AAAA-MM-JJ', day}. À la date prévue, une copie est créée au brouillon (runRecurring) */
+const REC={w:'Chaque semaine',m:'Chaque mois',q:'Tous les 3 mois',y:'Chaque année'};
+function recAdd(iso,every,day){
+ if(every==='w')return addDays(iso,7);
+ const k=every==='q'?3:every==='y'?12:1,y=+iso.slice(0,4),m=+iso.slice(5,7),tm=m-1+k,ny=y+Math.floor(tm/12),nm=tm%12+1,dim=new Date(ny,nm,0).getDate();
+ return `${ny}-${String(nm).padStart(2,'0')}-${String(Math.min(day||+iso.slice(8,10),dim)).padStart(2,'0')}`;
+}
+function recFirst(d,every){const t=todayISO(),s=d.date||t,day=+s.slice(8,10);let n=recAdd(s,every,day),i=0;while(n<=t&&i++<800)n=recAdd(n,every,day);return n}
+function recUI(d){
+ const s=$('#f-rec');if(!s)return;const on=!!(d.rec&&REC[d.rec.every]);
+ s.value=on?d.rec.every:'';$('#f-recn-l').hidden=!on;const n=$('#f-recn');if(n.value!==(on?d.rec.next||'':''))n.value=on?d.rec.next||'':'';
+ const o=!on&&d.recFrom&&state.docs.find(x=>x.id===d.recFrom);
+ $('#rec-hint').textContent=on?_t`Le ${fdate(d.rec.next,UIL)}, Carnet créera une copie de cette facture, au brouillon, prête à envoyer. Elle apparaîtra la prochaine fois que vous ouvrirez Carnet, à partir de cette date.`:o?_t`Cette facture a été créée toute seule à partir de la facture ${o.num}.`:_t('Pour l’entretien, le déneigement, la location… Carnet refait cette facture tout seul, à la date prévue.');
+}
+/* Lien de paiement de l'entrepreneur (Stripe, PayPal, Square…) : bouton « Payer en ligne » sur ses factures, avec Carnet Pro */
+const safeUrl=u=>{u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;try{const x=new URL(u);return /^https?:$/.test(x.protocol)&&x.hostname.includes('.')?x.href:''}catch(e){return ''}};
+const payUrl=()=>isPro()?safeUrl(state.profile.payUrl):'';
+const PAYH=['Votre propre lien Stripe, PayPal ou Square. Un bouton « Payer en ligne » s’affiche sur vos factures et dans vos courriels. L’argent va directement dans votre compte.','Réservé à Carnet Pro. Collez votre propre lien Stripe, PayPal ou Square : avec Pro, un bouton « Payer en ligne » s’affiche sur vos factures et dans vos courriels.'];
 function txHTML(d){
  if(!d.tx||!d.tx.length)return `<p class="hint" style="margin:0 0 12px">Aucune taxe configurée. Ajoutez-en dans « Mon entreprise ».</p>`;
  return d.tx.map((t,i)=>`<label>${esc(t.n)} (%)<input type="number" step="0.001" min="0" inputmode="decimal" data-tx="${i}" value="${esc(t.r)}" placeholder="${esc(t.dr)}"></label>`).join('');
@@ -1285,12 +1415,14 @@ function openEditor(id){
     <label>Conditions<textarea id="f-notes" rows="3" data-f="notes" placeholder="${esc(d.notesDef||'Ex. : Payable dans les 30 jours.')}"></textarea></label>
    </fieldset>
    ${S?'':`<fieldset><legend>Paiements reçus</legend><div class="rows pays" id="pays">${paysHTML(d)}</div><button type="button" class="btn ghost" data-act="rcv-add">+ Ajouter un paiement reçu</button><p class="hint" style="margin:10px 0 0">Inscrivez les acomptes et paiements partiels : la facture montrera le solde à payer.</p></fieldset>`}
+   ${S?'':`<fieldset><legend>Facture qui revient</legend><div class="two"><label>Répéter cette facture<select id="f-rec" data-rec="every"><option value="">Non</option>${Object.entries(REC).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label id="f-recn-l">Prochaine facture le<input id="f-recn" type="date" data-rec="next"></label></div><p class="hint" id="rec-hint" style="margin:0"></p></fieldset>`}
+   <fieldset><legend>Dépenses et profit</legend><p class="hint" style="margin:0 0 12px">Matériaux, sous-traitants, location d’outils… Pour vous seulement : n’apparaît jamais sur le document ni chez le client.</p><div class="rows pays" id="exps">${expsHTML(d)}</div><button type="button" class="btn ghost" data-act="exp-add">+ Ajouter une dépense</button></fieldset>
    <div class="tbar"><span id="tb-l">Total avec taxes</span><strong id="tb-total"></strong></div>
   </form>
   <div class="pwrap"><div class="paper" id="paper"></div></div>
  </div>`;
  $$('#v-edit [data-f]').forEach(el=>{const v=d[el.dataset.f];if(el.type==='checkbox')el.checked=!!v;else if(el.id!=='f-client')el.value=v??(el.tagName==='SELECT'?el.options[0].value:'')});
- $('#f-tx').hidden=!d.taxes;
+ $('#f-tx').hidden=!d.taxes;recUI(d);
  show('edit');renderPreview();renderShareState(d);
 }
 function legalLine(d){
@@ -1301,7 +1433,7 @@ function renderPreview(){
  const d=doc();if(!d)return;
  const p=state.profile,lang=d.lang||'fr',X=Lx(d),c=client(d.clientId)||{},t=totals(d),m=n=>money(n,lang,d.cur),S=d.type==='S';
  const stamp=d.status==='payee'?X.paid:(S&&d.status==='acceptee'?X.accepted:'');
- const rows=d.lines.filter(l=>ld(l)||lp(l)),notes=notesOf(d);
+ const rows=d.lines.filter(l=>ld(l)||lp(l)),notes=notesOf(d),pu=S?'':payUrl(),ph=S?'':String(p.payHow||'').trim();
  const co=p.name||p.addr||p.city||p.tel||p.email?`<b>${esc(p.name)}</b>${p.addr?'<br>'+esc(p.addr):''}${p.city?'<br>'+esc(p.city):''}${p.tel||p.email?'<br>'+[p.tel,p.email].filter(Boolean).map(esc).join('  ·  '):''}`:({fr:`<span class="ph-e"><b>Nom de votre entreprise</b><br>Adresse<br>Téléphone · courriel</span>`,en:`<span class="ph-e"><b>Your business name</b><br>Address<br>Phone · email</span>`,es:`<span class="ph-e"><b>Nombre de su empresa</b><br>Dirección<br>Teléfono · correo</span>`})[lang]||'';
  $('#paper').innerHTML=`
  <div class="ph"><div class="co">${p.logo?`<img src="${p.logo}" alt="">`:''}<div>${co}</div></div>
@@ -1311,10 +1443,12 @@ function renderPreview(){
  <div class="dates"><div><span class="lb">${X.date}</span> ${fdate(d.date,lang,d.cur)}</div><div><span class="lb">${S?X.valid:X.due}</span> ${fdate(S?d.valid:d.due,lang,d.cur)}</div>${titleOf(d)?`<div><span class="lb">${X.project}</span> ${esc(titleOf(d))}</div>`:''}</div></div>
  <table class="pt"><thead><tr><th>${X.desc}</th><th class="n">${X.qty}</th><th>${X.unit}</th><th class="n">${X.price}</th><th class="n">${X.amount}</th></tr></thead><tbody>${rows.length?rows.map(l=>`<tr><td>${esc(ld(l))}</td><td class="n">${lq(l).toLocaleString(loc(lang,d.cur))}</td><td>${unitName(l.u,lang)}</td><td class="n">${m(lp(l))}</td><td class="n">${m(lAmt(l))}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#999">${({fr:'Ajoutez une ligne de travaux.',en:'Add a line of work.',es:'Añada una línea de trabajo.'})[lang]||''}</td></tr>`}</tbody></table>
  <div class="tot"><div><span>${X.sub}</span><span>${m(t.gross)}</span></div>${t.disc>0?`<div><span>${X.disc}${d.discL?` – ${esc(d.discL)}`:''}${d.discT!=='$'?` (${pct(Math.min(100,num(d.disc,0)),lang)})`:''}</span><span>−${m(t.disc)}</span></div><div><span>${X.net}</span><span>${m(t.sub)}</span></div>`:''}${d.taxes?t.taxes.map(x=>`<div><span>${esc(tName(x,lang))} (${pct(x.r,lang)})</span><span>${m(x.a)}</span></div>`).join(''):`<div class="nt">${esc(lang==='fr'?(P.exempt()||X.noTax):(state.profile.exempt||X.noTax))}</div>`}<div class="gt"><span>${X.total}</span><span>${m(t.total)}</span></div>${t.dep>0?`<div><span>${X.dep} (${pct(t.dp,lang)})</span><span>${m(t.dep)}</span></div>`:''}${!S&&t.paid>0?(d.pays||[]).filter(x=>num(x.a,0)>0).map(x=>`<div><span>${X.rcv}${x.date?` (${fdate(x.date,lang,d.cur)})`:''}</span><span>−${m(num(x.a,0))}</span></div>`).join('')+`<div class="bl"><span>${X.bal}</span><span>${m(t.bal)}</span></div>`:''}</div>
+ ${!S&&d.status!=='payee'&&t.bal>0&&(pu||ph)?`<div class="payb"><div class="lb">${X.howPay}</div>${pu?`<p><a class="paybtn" href="${esc(pu)}" target="_blank" rel="noopener">${X.payOnline}</a><span class="payurl">${esc(pu)}</span></p>`:''}${ph?`<p>${esc(ph).replace(/\n/g,'<br>')}</p>`:''}</div>`:''}
  ${notes?`<div class="notes"><div class="lb">${X.notes}</div>${esc(notes).replace(/\n/g,'<br>')}</div>`:''}
  ${(d.photos||[]).length?`<div class="phs"><div class="lb">${X.photos}</div><div class="phg">${d.photos.map(x=>`<img src="${esc(x.url)}" alt="">`).join('')}</div></div>`:''}
  ${S?(d.acc?`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><div>${d.acc.sig?`<img class="sig" src="${esc(d.acc.sig)}" alt="">`:''}<span>${esc(d.acc.name)} · ${X.sign}</span></div><div><div class="sgd">${fdate(localISO(d.acc.at),lang,d.cur)}</div><span>${X.date}</span></div></div><div class="lb" style="margin-top:6px">${({fr:dv()?'Accepté en ligne':'Acceptée en ligne',en:'Accepted online',es:'Aceptado en línea'})[lang]}</div></div>`:`<div class="sign"><div class="lb">${X.accept}</div><div class="sl"><span>${X.sign}</span><span>${X.date}</span></div></div>`):''}
  ${stamp?`<div class="stamp">${stamp}</div>`:''}`;
+ const es=$('#exp-sum');if(es)es.innerHTML=expSum(d);
  const bal=!S&&t.paid>0;if($('#tb-total')){$('#tb-l').textContent=bal?'Solde à payer':'Total avec taxes';$('#tb-total').textContent=m(bal?t.bal:t.total)}
  renderLate(d);
 }
@@ -1346,6 +1480,14 @@ function mailText(d,mode){
    en:`This is a friendly reminder that invoice ${d.num}${W.for}, in the amount of ${m(due)}, was due on ${end}.\n\nIf you have already paid, please disregard this message. Otherwise, I would appreciate payment at your earliest convenience. Feel free to contact me if you have any questions.`,
    es:`Le recordamos amablemente que la factura ${d.num}${W.for}, por un importe de ${m(due)}, venció el ${end}.\n\nSi ya realizó el pago, no tenga en cuenta este mensaje. De lo contrario, le agradeceríamos que lo hiciera lo antes posible. No dude en contactarnos si tiene alguna pregunta.`
   }[lang];
+ }else if(mode==='follow'){
+  const link=d.share&&d.share.id&&!d.acc?shareLink(d.share.id):'';
+  subj={fr:`Suivi : ${X.S} ${d.num}`,en:`Follow-up: quote ${d.num}`,es:`Seguimiento: presupuesto ${d.num}`}[lang];
+  body={
+   fr:`Je fais un petit suivi concernant notre ${X.S.toLowerCase()} ${d.num}${W.for}.\n\nAvez-vous eu le temps d’y jeter un coup d’œil ? Je reste disponible pour en discuter ou l’ajuster au besoin.${link?`\n\nPour voir le document et l’accepter en ligne :\n${link}`:''}`,
+   en:`I’m following up on our quote ${d.num}${W.for}.\n\nHave you had a chance to look it over? I’m happy to discuss it or adjust it if needed.${link?`\n\nTo view it and accept it online:\n${link}`:''}`,
+   es:`Le escribo para dar seguimiento a nuestro presupuesto ${d.num}${W.for}.\n\n¿Ha tenido tiempo de revisarlo? Quedo a su disposición para comentarlo o ajustarlo si es necesario.${link?`\n\nPara verlo y aceptarlo en línea:\n${link}`:''}`
+  }[lang];
  }else if(S){
   subj=`${X.S} ${d.num}${ti?` – ${ti}`:''}`;
   const lines=[`${{fr:'Montant total',en:'Total',es:'Importe total'}[lang]}${sep}${m(t.total)}`];
@@ -1366,15 +1508,21 @@ function mailText(d,mode){
    body={fr:`Voici la facture ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nVous trouverez la facture en pièce jointe. Merci de votre confiance !`,en:`Please find attached invoice ${d.num}${W.for}.\n\n${lines.join('\n')}\n\nThank you for your business!`,es:`Le adjunto la factura ${d.num}${W.for}.\n\n${lines.join('\n')}\n\n¡Gracias por su confianza!`}[lang];
   }
  }
+ /* Facture à payer : lien de paiement et autres façons de payer, après les montants */
+ const pu=payUrl(),ph=String(p.payHow||'').trim();
+ if(!S&&d.status!=='payee'&&t.bal>0&&(pu||ph)){
+  const payX=[pu?`${{fr:'Pour payer en ligne',en:'To pay online',es:'Para pagar en línea'}[lang]}${sep}${pu}`:'',ph?`${{fr:'Comment payer',en:'How to pay',es:'Cómo pagar'}[lang]}${sep}${ph}`:''].filter(Boolean).join('\n');
+  const parts=body.split('\n\n');parts.splice(Math.min(parts.length,mode==='remind'?1:2),0,payX);body=parts.join('\n\n');
+ }
  const sig=[bye,p.name,p.tel,p.email].filter(Boolean).join('\n');
  return {subj,body:`${W.hi}\n\n${body}${sig?'\n\n'+sig:''}`};
 }
 let mailMode='send';
 function openMail(mode){
  const d=doc();if(!d)return;mailMode=mode;const c=client(d.clientId)||{},m=mailText(d,mode);
- $('#mdlg-t').textContent=mode==='remind'?'Envoyer un rappel':mode==='accept'?'Envoyer le lien d’acceptation':'Envoyer par courriel';
+ $('#mdlg-t').textContent=mode==='follow'?'Relancer le client':mode==='remind'?'Envoyer un rappel':mode==='accept'?'Envoyer le lien d’acceptation':'Envoyer par courriel';
  $('#m-to').value=c.email||'';$('#m-subj').value=m.subj;$('#m-body').value=m.body;
- const can=mode!=='remind'&&d.status==='brouillon';
+ const can=(mode==='send'||mode==='accept')&&d.status==='brouillon';
  $('#m-mark-l').hidden=!can;$('#m-mark').checked=can;$('#m-mark-t').textContent=_t`Passer le statut à « ${uiSt('envoyee',d.type)} »`;
  $('#mdlg').hidden=false;if(!c.email)setTimeout(()=>$('#m-to').focus(),30);
 }
@@ -1383,6 +1531,7 @@ $('#mform').addEventListener('submit',e=>{
  const to=$('#m-to').value.replace(/\s+/g,''),c=client(d.clientId);
  if(to&&c&&!c.email&&!c.sample)c.email=to;
  if(mailMode==='remind')d.reminded=todayISO();
+ else if(mailMode==='follow')d.followed=todayISO();
  else if($('#m-mark').checked&&d.status==='brouillon'){d.status='envoyee';const s=$('#f-status');if(s)s.value='envoyee';$('#m-mark-l').hidden=true}
  d.updated=Date.now();save();renderPreview();
  const enc=s=>encodeURIComponent(s.replace(/\r?\n/g,'\r\n'));
@@ -1405,6 +1554,13 @@ function onEdit(e){
   l[k]=(k==='q'||k==='p')?(t.value===''?'':+t.value):t.value;
   const o=$('#lt-'+i);if(o)o.textContent=money(lAmt(l),UIL,d.cur);
  }else if(t.dataset.tx){const x=d.tx[+t.dataset.tx];if(!x)return;x.r=t.value===''?'':Math.max(0,+t.value||0)}
+ else if(t.dataset.exp){const x=(d.exp||[])[+t.dataset.exp];if(!x)return;const k=t.dataset.k;x[k]=k==='a'?(t.value===''?'':Math.max(0,+t.value||0)):t.value}
+ else if(t.dataset.rec){
+  const k=t.dataset.rec,v=t.value;
+  if(k==='every'){if(!REC[v])d.rec=null;else{d.rec={every:v,day:+((d.date||todayISO()).slice(8,10)),next:''};d.rec.next=recFirst(d,v)}}
+  else if(d.rec){if(v){d.rec.next=v;d.rec.day=+v.slice(8,10)}else d.rec.next=recFirst(d,d.rec.every)}
+  recUI(d);
+ }
  else if(t.dataset.pay){const x=(d.pays||[])[+t.dataset.pay];if(!x)return;const k=t.dataset.k;x[k]=k==='a'?(t.value===''?'':Math.max(0,+t.value||0)):t.value;if(e.type==='change'||k!=='a')afterPays(d);else{const el=$('#pays-sum');if(el)el.innerHTML=paySum(d)}}
  else return;
  d.sample=false;d.updated=Date.now();save();renderPreview();
@@ -1530,12 +1686,12 @@ function invoiceRows(year){
  const F=state.docs.filter(d=>d.type==='F'&&!d.sample&&(year==='all'||(d.date||'').slice(0,4)===year)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.num.localeCompare(b.num));
  const tt=F.map(totals),names=[...new Set(tt.flatMap(t=>t.taxes.map(x=>x.n)))];
  const sumTax=(t,n)=>r2(t.taxes.filter(x=>x.n===n).reduce((s,x)=>s+x.a,0));
- const hasDisc=tt.some(t=>t.disc>0),rcv=(d,t)=>d.status==='payee'?t.total:t.paid;
- const rows=[{bold:true,cells:[...['Numéro','Date','Échéance','Client','Objet',...(hasDisc?['Rabais']:[]),'Avant taxes'].map(x=>_t(x)),...names,...['Total','Reçu','Solde','Devise','Statut','Payée le'].map(x=>_t(x))]}];
- F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),...(hasDisc?[t.disc]:[]),t.sub,...names.map(n=>sumTax(t,n)),t.total,rcv(d,t),r2(t.total-rcv(d,t)),d.cur||pc,uiSt(overdue(d)?'retard':d.status,'F'),d.paidDate||'']})});
+ const hasDisc=tt.some(t=>t.disc>0),rcv=(d,t)=>d.status==='payee'?t.total:t.paid,hasExp=F.some(d=>expTot(d)>0),exAll=r2(F.reduce((s,d)=>s+expTot(d),0));
+ const rows=[{bold:true,cells:[...['Numéro','Date','Échéance','Client','Objet',...(hasDisc?['Rabais']:[]),'Avant taxes'].map(x=>_t(x)),...names,...['Total','Reçu','Solde','Devise','Statut','Payée le',...(hasExp?['Dépenses','Profit avant taxes']:[])].map(x=>_t(x))]}];
+ F.forEach((d,i)=>{const t=tt[i],c=client(d.clientId);rows.push({cells:[d.num,d.date||'',d.due||'',c?c.name:'',titleOf(d),...(hasDisc?[t.disc]:[]),t.sub,...names.map(n=>sumTax(t,n)),t.total,rcv(d,t),r2(t.total-rcv(d,t)),d.cur||pc,uiSt(overdue(d)?'retard':d.status,'F'),d.paidDate||'',...(hasExp?[expTot(d),r2(t.sub-expTot(d))]:[])]})});
  const curs=new Set(F.map(d=>d.cur||pc));
- if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',_t`${F.length} facture${F.length>1?'s':''}`,'',...(hasDisc?[r2(tt.reduce((s,t)=>s+t.disc,0))]:[]),r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),r2(F.reduce((s,d,i)=>s+rcv(d,tt[i]),0)),r2(F.reduce((s,d,i)=>s+tt[i].total-rcv(d,tt[i]),0)),[...curs][0],'','']});
- return {count:F.length,rows,widths:[13,12,12,28,36,...(hasDisc?[12]:[]),14,...names.map(()=>12),14,14,14,8,12,12]};
+ if(F.length&&curs.size===1)rows.push({bold:true,cells:['Total','','',_t`${F.length} facture${F.length>1?'s':''}`,'',...(hasDisc?[r2(tt.reduce((s,t)=>s+t.disc,0))]:[]),r2(tt.reduce((s,t)=>s+t.sub,0)),...names.map(n=>r2(tt.reduce((s,t)=>s+sumTax(t,n),0))),r2(tt.reduce((s,t)=>s+t.total,0)),r2(F.reduce((s,d,i)=>s+rcv(d,tt[i]),0)),r2(F.reduce((s,d,i)=>s+tt[i].total-rcv(d,tt[i]),0)),[...curs][0],'','',...(hasExp?[exAll,r2(tt.reduce((s,t)=>s+t.sub,0)-exAll)]:[])]});
+ return {count:F.length,rows,widths:[13,12,12,28,36,...(hasDisc?[12]:[]),14,...names.map(()=>12),14,14,14,8,12,12,...(hasExp?[13,18]:[])]};
 }
 function exportXlsx(){
  const year=$('#xl-year').value||todayISO().slice(0,4),x=invoiceRows(year);
@@ -1557,6 +1713,7 @@ function renderProfile(){
  $('#p-valid').placeholder=30;$('#p-due').placeholder=30;$('#p-dep').placeholder=30;
  $('#p-terms').placeholder=P.termsDef();$('#p-termsF').placeholder=P.termsFDef();
  renderTaxRows();renderIdRows();renderItemRows();xlYears();
+ $('#payurl-hint').textContent=_t(isPro()?PAYH[0]:PAYH[1]);
  $('#logo-img').hidden=!p.logo;if(p.logo)$('#logo-img').src=p.logo;$('#logo-rm').hidden=!p.logo;
 }
 function refreshSamples(){
@@ -1612,6 +1769,9 @@ document.addEventListener('click',e=>{
   case 'ph-del':if(d&&d.photos){d.photos.splice(+b.dataset.i,1);d.updated=Date.now();save();$('#f-photos').innerHTML=photosHTML(d);renderPreview()}break;
   case 'sig-clear':{const c=$('#sh-sig');if(c){const x=c.getContext('2d');x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.restore();sigDirty=false}break}
   case 'rcv-add':{d.pays=d.pays||[];const t=totals(d);d.pays.push({id:uid(),date:todayISO(),a:'',n:''});d.sample=false;d.updated=Date.now();$('#pays').innerHTML=paysHTML(d);save();renderPreview();const ins=$$('#pays [data-k=a]');if(ins.length)ins[ins.length-1].focus();break}
+  case 'exp-add':{d.exp=d.exp||[];d.exp.push({id:uid(),date:todayISO(),a:'',n:''});d.sample=false;d.updated=Date.now();$('#exps').innerHTML=expsHTML(d);save();const ins=$$('#exps [data-k=a]');if(ins.length)ins[ins.length-1].focus();break}
+  case 'exp-del':d.exp.splice(+b.dataset.i,1);d.updated=Date.now();$('#exps').innerHTML=expsHTML(d);save();renderPreview();break;
+  case 'todo':if(state.docs.some(x=>x.id===b.dataset.id)){openEditor(b.dataset.id);openMail(b.dataset.m)}break;
   case 'rcv-del':d.pays.splice(+b.dataset.i,1);d.updated=Date.now();$('#pays').innerHTML=paysHTML(d);save();renderPreview();break;
   case 'del-line':d.lines.splice(+b.dataset.i,1);if(!d.lines.length)d.lines.push({d:'',q:'',u:'f',p:''});$('#lines').innerHTML=linesHTML(d);save();renderPreview();break;
   case 'print':
@@ -1620,11 +1780,11 @@ document.addEventListener('click',e=>{
    if(embedded)toast('L’aperçu de Claude bloque l’impression. Une fois l’outil en ligne, ce bouton ouvre l’impression : choisissez « Enregistrer en PDF ».');
    break;
   case 'convert':{
-   const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num,disc:d.disc??'',discT:d.discT||'%',discL:d.discL||'',photos:clone(d.photos||[])});
+   const f=newDoc('F',true);Object.assign(f,{counted:false,clientId:d.clientId,title:d.title,lang:d.lang,lines:clone(d.lines),taxes:d.taxes,tx:clone(d.tx||[]),cur:d.cur,from:d.num,disc:d.disc??'',discT:d.discT||'%',discL:d.discL||'',photos:clone(d.photos||[]),exp:clone(d.exp||[])});
    if(d.status!=='refusee')d.status='acceptee';save();openEditor(f.id);toast(_t`Facture ${f.num} créée à partir de ${d.num}.`);break}
   case 'dup':{
    if(!canCreate())break;
-   const n={...clone(d),id:uid(),sample:false,counted:true,createdAt:todayISO(),updated:Date.now(),num:nextNum(d.type),date:todayISO(),status:'brouillon',paidDate:'',from:'',pays:[],share:null,acc:null,reminded:''};
+   const n={...clone(d),id:uid(),sample:false,counted:true,createdAt:todayISO(),updated:Date.now(),num:nextNum(d.type),date:todayISO(),status:'brouillon',paidDate:'',from:'',pays:[],share:null,acc:null,reminded:'',followed:'',exp:[],rec:null,recFrom:''};
    if(n.type==='S')n.valid=addDays(n.date,P.validDays());else n.due=addDays(n.date,P.dueDays());
    state.docs.push(n);save();openEditor(n.id);toast(_t`Copie créée : ${n.num}.`);break}
   case 'del':{const i=state.docs.indexOf(d);state.docs.splice(i,1);lastDel={kind:'doc',item:d,i};save();show('docs');toast(_t`${d.num} supprimé.`,true);break}
@@ -1768,8 +1928,8 @@ function renderPro(){
  el.innerHTML=`<img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112"><h1>Carnet Pro</h1>
  <p class="pro-lede">${tr?_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez. Essayez gratuitement pendant ${d} jours, puis ${esc(_t(CFG.price))}.`:_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez, pour ${esc(_t(CFG.price))}.`}</p>
  <div class="cmp">
-  <div><div class="k">Gratuit</div><ul class="v"><li>${free}</li><li class="no">Acceptation en ligne</li><li class="no">Photos</li></ul></div>
-  <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>${_t`Photos dans vos ${uqwP().toLowerCase()} et factures`}</li></ul></div>
+  <div><div class="k">Gratuit</div><ul class="v"><li>${free}</li><li class="no">Acceptation en ligne</li><li class="no">Photos</li><li class="no">Paiement en ligne</li></ul></div>
+  <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>${_t`Photos dans vos ${uqwP().toLowerCase()} et factures`}</li><li>Bouton « Payer en ligne » sur vos factures</li></ul></div>
  </div>
  ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><div class="acts"><button class="btn" data-act="portal">Gérer mon abonnement</button><button class="btn" data-act="card">Mettre à jour ma carte</button></div></div>`
   :payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé (carte expirée ou refusée ?). Mettez à jour votre carte pour retrouver Carnet Pro.</p><button class="btn yel big" data-act="card">Mettre à jour ma carte</button>`
@@ -1778,6 +1938,7 @@ function renderPro(){
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
  ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',_t`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(_t(CFG.price))}. L’essai est offert une seule fois par compte.`):''}
  ${q('Comment mon client accepte-t-il en ligne ?',_t(dv()?'Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.':'Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.'))}
+ ${q('Comment mes clients paient-ils en ligne ?','Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.')}
  ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.')}
  ${q('Comment je change ma carte de crédit ?','Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.')}
  ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',_t`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
@@ -1847,6 +2008,7 @@ async function setUser(u){
  if(user&&user.id!==was){await pull();await loadSub();checkShares()}
  if(!user){sub=null}
  refreshView();
+ recReady=true;runRecurring();
 }
 if(sb&&!SHARE){
  sb.auth.onAuthStateChange((ev,session)=>{
@@ -1914,7 +2076,7 @@ const shareLink=id=>`${location.origin}${location.pathname}?s=${id}`;
 const localISO=at=>{const x=new Date(at);return isNaN(x)?'':new Date(x.getTime()-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 /* Ce que le client voit : le document, le client et les coordonnées de l'entreprise */
 function shareSnap(d){
- const x=clone(d);['share','acc','pays','reminded','counted','createdAt','sample'].forEach(k=>delete x[k]);
+ const x=clone(d);['share','acc','pays','reminded','counted','createdAt','sample','exp','rec','recFrom','followed'].forEach(k=>delete x[k]);
  const c=client(d.clientId);
  return {v:1,doc:x,client:c?clone(c):null,profile:clone(state.profile)};
 }
@@ -1923,6 +2085,7 @@ async function shareDoc(){
  if(d.sample){toast('C’est un exemple : créez votre propre document pour l’envoyer à un client.');return}
  if(!isPro()||!sb||!user){upsell(_t`L’acceptation et la signature en ligne de vos ${uqwP().toLowerCase()} font partie de Carnet Pro.`);return}
  if(d.acc){toast('Ce document est déjà accepté en ligne.');return}
+ askNotify();
  toast('Préparation du lien…');
  let r=null;
  try{r=await sb.from('shares').upsert({user_id:user.id,doc_id:d.id,data:shareSnap(d),updated_at:new Date().toISOString()},{onConflict:'user_id,doc_id'}).select('id,status').single()}catch(e){}
@@ -1970,10 +2133,48 @@ async function checkShares(){
  const ed=doc();
  if(ed&&!$('#v-edit').hidden){renderPreview();renderShareState(ed);const s=$('#f-status');if(s)s.value=ed.status}
  else if(!$('#v-docs').hidden)renderDocs();
- if(news.length===1){const w=news[0].acc.name||_t('votre client');toast(dv()?_t`Bonne nouvelle : ${w} a accepté le devis ${news[0].num} !`:_t`Bonne nouvelle : ${w} a accepté la soumission ${news[0].num} !`)}
- else if(news.length>1)toast(_t`Bonne nouvelle : ${news.length} documents acceptés en ligne !`);
+ let nm='';
+ if(news.length===1){const w=news[0].acc.name||_t('votre client');nm=dv()?_t`Bonne nouvelle : ${w} a accepté le devis ${news[0].num} !`:_t`Bonne nouvelle : ${w} a accepté la soumission ${news[0].num} !`}
+ else if(news.length>1)nm=_t`Bonne nouvelle : ${news.length} documents acceptés en ligne !`;
+ if(nm){toast(nm);notify('Carnet',nm)}
 }
 if(!SHARE){setInterval(checkShares,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkShares()})}
+
+/* Avis du navigateur (client qui accepte) quand Carnet est ouvert mais pas à l'écran. La permission est demandée à l'envoi d'un lien d'acceptation. */
+function notify(title,body){
+ try{
+  if(!('Notification' in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
+  const o={body,icon:'icons/icon-192.png',tag:'carnet',lang:UIL};
+  if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(title,o)).catch(()=>{});
+  else new Notification(title,o);
+ }catch(e){}
+}
+function askNotify(){try{if('Notification' in window&&Notification.permission==='default'){const p=Notification.requestPermission();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+
+/* ---------- Factures qui reviennent : copies créées à l'ouverture de Carnet (après la connexion et la lecture de l'abonnement) ---------- */
+let recReady=false,recWarned=false;
+function runRecurring(){
+ if(SHARE||!recReady||!state)return;
+ const t=todayISO(),made=[];let blocked=false;
+ for(const d of state.docs.slice()){
+  if(d.type!=='F'||d.sample||!d.rec||!REC[d.rec.every]||!d.rec.next)continue;
+  const off=d.date&&d.due?Math.max(0,Math.round((new Date(d.due+'T12:00:00')-new Date(d.date+'T12:00:00'))/864e5)):P.dueDays();
+  let i=0;
+  while(d.rec.next<=t&&i<24){
+   if(!isPro()&&left()<=0){blocked=true;break}
+   const date=d.rec.next;
+   const c={...clone(d),id:uid(),sample:false,counted:true,createdAt:t,updated:Date.now(),num:nextNum('F'),date,due:addDays(date,off),status:'brouillon',paidDate:'',from:'',pays:[],exp:[],share:null,acc:null,reminded:'',followed:'',rec:null,recFrom:d.id};
+   state.docs.push(c);made.push(c);
+   d.rec.next=recAdd(date,d.rec.every,d.rec.day);d.updated=Date.now();i++;
+  }
+ }
+ if(made.length){
+  save();
+  if($('#v-edit').hidden)refreshView();else{const ed=doc();if(ed)recUI(ed)}
+  toast(made.length===1?_t`Facture ${made[0].num} créée toute seule (facture qui revient). Elle est au brouillon, prête à envoyer.`:_t`${made.length} factures créées toutes seules (factures qui reviennent). Elles sont au brouillon, prêtes à envoyer.`);
+ }
+ if(blocked&&!recWarned){recWarned=true;setTimeout(()=>toast('Une facture qui revient n’a pas été créée : vous avez atteint la limite du forfait gratuit ce mois-ci.'),made.length?6000:0)}
+}
 
 /* ---------- Page du client (lien ?s=…) : voir le document, l'accepter et le signer ---------- */
 let sigDirty=false;
@@ -2136,6 +2337,8 @@ if(!SHARE){
 if(SHARE)openShare();else{
  $('#toast-b').textContent=({fr:'Annuler',en:'Undo',es:'Deshacer'})[UIL];
  chrome();renderDocs();
+ if(!sb){recReady=true;runRecurring()}
+ setInterval(runRecurring,36e5);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')runRecurring()});
  try{const b=JSON.parse(sessionStorage.getItem('carnet.back')||'null');sessionStorage.removeItem('carnet.back');if(b){if(b.v==='edit'&&b.id&&state.docs.some(d=>d.id===b.id))openEditor(b.id);else if(['clients','profil','pro'].includes(b.v))show(b.v)}}catch(e){}
 }
 if('serviceWorker' in navigator&&!embedded&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}

@@ -1,5 +1,5 @@
 /* Carnet : garde l'application disponible sans Internet (au chantier, par exemple). */
-const CACHE = 'carnet-v3';
+const CACHE = 'carnet-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/favicon-48.png'];
 
 self.addEventListener('install', e => {
@@ -35,4 +35,13 @@ self.addEventListener('fetch', e => {
       })
     );
   }
+});
+
+// Clic sur un avis (ex. : un client a accepté une soumission) : on ouvre Carnet, ou on revient sur l'onglet déjà ouvert.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
 });
