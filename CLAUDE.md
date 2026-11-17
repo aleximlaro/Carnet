@@ -54,6 +54,7 @@ Pas de build. Le `git push` ne met **pas** le site à jour (aucun lien GitHub �
 - Section « Comptes, sauvegarde en ligne et abonnement » : objet `CFG` (URL et clé publique Supabase, `payLink` et `portalLink` Stripe, prix, `freeLimit`). Supabase JS chargé depuis jsDelivr (version fixée).
   - Forfait gratuit : `CFG.freeLimit` documents créés par mois (`counted:true`). Convertir une soumission en facture ne compte pas.
   - Paiement : lien de paiement Stripe avec `client_reference_id` = id de l'utilisateur ; retour sur `?pay=ok`, puis on relit `subscriptions`.
+  - Forfait à l’année : `CFG.payLinkYear` (sans essai) et `CFG.payLinkYearTrial` (avec essai), prix `CFG.priceYear` (119,90 $ CA par année, 17 % de moins que 12 mois, `CFG.yearSave`). Sur la page Carnet Pro, choix « Au mois / À l’année » (`payPlan`, l’année cochée par défaut, `priceOf()`, `hasYear()`) ; les autres boutons « Passer à Pro » mènent d’abord à cette page (`goPay(here)`). Le portail Stripe permet de passer du mois à l’année (et l’inverse), avec ajustement du prix. Le webhook ne dépend pas du prix.
   - Essai gratuit : `CFG.payLinkTrial` (essai de `CFG.trialDays` jours) pour qui n'a jamais été abonné (`trialOK()` : aucune ligne dans `subscriptions`) ; sinon `CFG.payLink`, sans essai. Les textes (bouton, barre, page Pro, fenêtres) suivent `trialOK()`.
   - Plus de fenêtre d'accueil « Passez à Carnet Pro » : retirée à la demande du propriétaire (16 nov. 2026). Pas de faux prix barré (interdit au Canada).
 

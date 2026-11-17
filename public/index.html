@@ -89,12 +89,22 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pro-on p{margin:0 0 14px}
 .pro-on .btn{background:var(--bg);color:var(--ink);border-color:var(--padink)}
 .reassure{font-size:14px;color:var(--muted);margin:10px 0 36px}
+.tiers{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin:0 0 16px;max-width:620px}
+.tier{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;cursor:pointer;min-height:44px}
+.tier[aria-checked=true]{border:3px solid var(--ink);padding:14.5px 16.5px}
+.tier:focus-visible{outline:3px solid var(--pad);outline-offset:2px}
+.tier .pk{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tier b{font-size:clamp(19px,2.4vw,23px);line-height:1.2;letter-spacing:-.01em}
+.tier .ps{font-size:14px;color:var(--muted)}
+.tier .save{position:absolute;top:-11px;inset-inline-end:12px;background:var(--pad);color:var(--padink);font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px}
+.tier .dot{position:absolute;top:16px;inset-inline-end:16px;width:20px;height:20px;border-radius:50%;border:2px solid var(--muted)}
+.tier[aria-checked=true] .dot{border:6px solid var(--ink)}
 .faq h2{margin-bottom:8px}
 .faq details{border-bottom:1px solid var(--line)}
 .faq summary{padding:14px 0;min-height:44px;font-weight:700;cursor:pointer}
 .faq summary:focus-visible{outline:3px solid var(--pad);outline-offset:2px}
 .faq details p{margin:0 0 16px;color:var(--muted)}
-@media(max-width:560px){.cmp{grid-template-columns:minmax(0,1fr)}.btn.big{width:100%}}
+@media(max-width:560px){.cmp,.tiers{grid-template-columns:minmax(0,1fr)}.btn.big{width:100%}.tiers{gap:18px}}
 h1{font-weight:800;font-size:clamp(30px,4vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
 h2{font-weight:800;font-size:clamp(24px,3vw,32px);line-height:1.1;letter-spacing:-.02em;margin:0}
 h3{font-size:18px;margin:0 0 12px}
@@ -557,7 +567,7 @@ const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(LANGS.includes(
 /* Langue des nouveaux documents : seulement fr, en ou es (celle de l'interface si possible, sinon celle du pays, sinon l'anglais) */
 const gl=GEO_LANG(GEO.c),UDL=['fr','en','es'].includes(UIL)?UIL:gl==='fr'||gl==='es'?gl:'en';
 window.CARNET_LANGS=LANGS;window.CARNET_GEO=GEO;window.CARNET_UIL=UIL;window.CARNET_UDL=UDL;
-if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=2"><\/script>');
+if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=3"><\/script>');
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
@@ -903,6 +913,15 @@ const I18N={
 "Déconnecté. Vos documents restent sauvegardés dans votre compte.":["Signed out. Your documents stay saved in your account.","Sesión cerrada. Sus documentos siguen guardados en su cuenta."],
 /* Carnet Pro et paiement */
 "11,99 $ CA par mois":["$11.99 CAD per month","11,99 $ CAD al mes"],
+"119,90 $ CA par année":["$119.90 CAD per year","119,90 $ CAD al año"],
+"Au mois":["Monthly","Mensual"],
+"À l’année":["Yearly","Anual"],
+"Économisez {} %":["Save {}%","Ahorre un {} %"],
+"2 mois gratuits : revient à {} par mois":["2 months free: works out to {} per month","2 meses gratis: sale a {} al mes"],
+"Annulable en tout temps":["Cancel anytime","Cancele cuando quiera"],
+"Choisissez votre forfait":["Choose your plan","Elija su plan"],
+"Puis-je passer du mois à l’année ?":["Can I switch from monthly to yearly?","¿Puedo pasar de mensual a anual?"],
+"Oui, en tout temps, avec le bouton « Gérer mon abonnement ». Stripe tient compte de ce que vous avez déjà payé.":["Yes, anytime, with the “Manage my subscription” button. Stripe takes into account what you have already paid.","Sí, en cualquier momento, con el botón «Gestionar mi suscripción». Stripe tiene en cuenta lo que ya pagó."],
 "11,99 $":["$11.99","11,99 $"],
 "CA par mois":["CAD per month","CAD al mes"],
 "Gratuit :":["Free:","Gratis:"],
@@ -949,7 +968,7 @@ const I18N={
 "Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.":["In a quote, click “Get it accepted online”. Your client receives a link: they see the document on their phone or computer, type their name and sign with their finger. The document changes to “Accepted” in Carnet, with their signature.","En un presupuesto, haga clic en «Hacer aceptar en línea». Su cliente recibe un enlace: ve el documento en su teléfono u ordenador, escribe su nombre y firma con el dedo. El documento pasa a «Aceptado» en Carnet, con su firma."],
 "Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.":["In a quote, click “Get it accepted online”. Your client receives a link: they see the document on their phone or computer, type their name and sign with their finger. The document changes to “Accepted” in Carnet, with their signature.","En un presupuesto, haga clic en «Hacer aceptar en línea». Su cliente recibe un enlace: ve el documento en su teléfono u ordenador, escribe su nombre y firma con el dedo. El documento pasa a «Aceptado» en Carnet, con su firma."],
 "Comment j’annule ?":["How do I cancel?","¿Cómo cancelo?"],
-"En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.":["Anytime, with the “Manage my subscription” button. Carnet Pro stays active until the end of the month already paid.","En cualquier momento, con el botón «Gestionar mi suscripción». Carnet Pro sigue activo hasta el final del mes ya pagado."],
+"En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin de la période déjà payée (le mois ou l’année).":["Anytime, with the “Manage my subscription” button. Carnet Pro stays active until the end of the period already paid (month or year).","En cualquier momento, con el botón «Gestionar mi suscripción». Carnet Pro sigue activo hasta el final del período ya pagado (mes o año)."],
 "Comment je change ma carte de crédit ?":["How do I change my credit card?","¿Cómo cambio mi tarjeta de crédito?"],
 "Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.":["With the “Update my card” button (Carnet Pro or My business tab). You go straight to Stripe’s secure page to enter your new card. Your next payments will use it.","Con el botón «Actualizar mi tarjeta» (pestaña Carnet Pro o Mi empresa). Llega directamente a la página segura de Stripe para introducir su nueva tarjeta. Sus próximos pagos se harán con ella."],
 "Qu’est-ce qui arrive à mes documents si j’arrête ?":["What happens to my documents if I stop?","¿Qué pasa con mis documentos si lo dejo?"],
@@ -1890,6 +1909,9 @@ const CFG={
  trialDays:7,
  portalLink:'https://billing.stripe.com/p/login/3cI4gAdckfYEdJj1KX1ZS00', /* portail client Stripe (mode réel) */
  price:'11,99 $ CA par mois',
+ payLinkYear:'https://buy.stripe.com/aFaaEYego4fW34Fblx1ZS02',                                                 /* forfait annuel (sans essai) ; vide = pas de choix annuel */
+ payLinkYearTrial:'https://buy.stripe.com/5kQeVe6NW6o4eNn4X91ZS03',                                       /* forfait annuel avec essai gratuit */
+ priceYear:'119,90 $ CA par année', yearMonth:9.99, yearSave:17,        /* 10 mois au lieu de 12 : 17 % de moins que 12 × 11,99 $ */
  freeLimit:3,
  vapid:'BNEgRN4J1MF4O6Zv_He2h2kz-PLt6w2un_alXdMGj2wmaG9D2-3yzs33vuysLMvf_kTJK7TZlv28PI_yZM0tPwc' /* clé publique des avis (VAPID) ; la clé privée est seulement dans les secrets Supabase */
 };
@@ -1899,7 +1921,12 @@ try{if(window.supabase&&window.supabase.createClient)sb=window.supabase.createCl
 const isPro=()=>!!sub&&['active','trialing'].includes(sub.status)&&(!sub.current_period_end||new Date(sub.current_period_end)>new Date());
 /* Essai gratuit : offert seulement à qui n'a jamais été abonné (aucune ligne dans subscriptions) */
 const trialOK=()=>CFG.trialDays>0&&!!CFG.payLinkTrial&&!sub;
-const ctaLabel=()=>trialOK()?_t`Essayer gratuitement ${CFG.trialDays} jours`:_t`Passer à Pro : ${_t(CFG.price)}`;
+/* Forfait choisi sur la page Carnet Pro : 'y' (à l'année, par défaut) ou 'm' (au mois) */
+let payPlan='y';
+const hasYear=()=>!!CFG.payLinkYear&&CFG.payLinkYear.startsWith('https://');
+const yearOn=()=>payPlan==='y'&&hasYear();
+const priceOf=()=>yearOn()?CFG.priceYear:CFG.price;
+const ctaLabel=()=>trialOK()?_t`Essayer gratuitement ${CFG.trialDays} jours`:_t`Passer à Pro : ${_t(priceOf())}`;
 const freeTxt=()=>CFG.freeLimit>1?_t`${CFG.freeLimit} nouveaux documents par mois`:_t`${CFG.freeLimit} nouveau document par mois`;
 const payLate=()=>!!sub&&['past_due','unpaid'].includes(sub.status)&&!isPro(); /* paiement refusé : il faut changer de carte, pas repayer */
 const subLine=end=>sub&&sub.status==='trialing'?(end?_t`Essai gratuit jusqu’au ${end}`:_t('Essai gratuit en cours')):(end?_t`Renouvellement le ${end}`:_t('Renouvellement'));
@@ -1969,20 +1996,24 @@ function renderPro(){
  const end=pro&&sub.current_period_end?new Date(sub.current_period_end).toLocaleDateString(loc(UIL),{day:'numeric',month:'long',year:'numeric'}):'';
  const q=(t,a)=>`<details><summary>${t}</summary><p>${a}</p></details>`;
  el.innerHTML=`<img class="pro-logo big" src="icons/carnet-pro.png" alt="" width="112" height="112"><h1>Carnet Pro</h1>
- <p class="pro-lede">${tr?_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez. Essayez gratuitement pendant ${d} jours, puis ${esc(_t(CFG.price))}.`:_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez, pour ${esc(_t(CFG.price))}.`}</p>
+ <p class="pro-lede">${tr?_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez. Essayez gratuitement pendant ${d} jours, puis ${esc(_t(priceOf()))}.`:_t`Faites autant de ${uqwP().toLowerCase()} et de factures que vous voulez, pour ${esc(_t(priceOf()))}.`}</p>
  <div class="cmp">
   <div><div class="k">Gratuit</div><ul class="v"><li>${free}</li><li class="no">Acceptation en ligne</li><li class="no">Photos</li><li class="no">Paiement en ligne</li></ul></div>
   <div class="pro"><div class="k">Carnet Pro<span class="pro-tag" style="background:var(--padink);color:var(--pad)">PRO</span></div><ul class="v"><li>Documents illimités</li><li>Acceptation et signature en ligne par vos clients</li><li>${_t`Photos dans vos ${uqwP().toLowerCase()} et factures`}</li><li>Bouton « Payer en ligne » sur vos factures</li></ul></div>
  </div>
  ${pro?`<div class="pro-on"><p><b>Vous êtes sur Carnet Pro</b><br>${subLine(end)}</p><div class="acts"><button class="btn" data-act="portal">Gérer mon abonnement</button><button class="btn" data-act="card">Mettre à jour ma carte</button></div></div>`
   :payLate()?`<p class="msg err">Votre dernier paiement n’a pas passé (carte expirée ou refusée ?). Mettez à jour votre carte pour retrouver Carnet Pro.</p><button class="btn yel big" data-act="card">Mettre à jour ma carte</button>`
-  :`<button class="btn yel big" data-act="pay">${esc(ctaLabel())}</button>`}
+  :`${hasYear()?`<div class="tiers" role="radiogroup" aria-label="Choisissez votre forfait">
+   <button type="button" class="tier" role="radio" aria-checked="${payPlan==='m'}" data-act="plan" data-p="m"><span class="dot" aria-hidden="true"></span><span class="pk">Au mois</span><b>${esc(_t(CFG.price))}</b><span class="ps">Annulable en tout temps</span></button>
+   <button type="button" class="tier" role="radio" aria-checked="${payPlan==='y'}" data-act="plan" data-p="y"><span class="dot" aria-hidden="true"></span><span class="save">${esc(_t`Économisez ${CFG.yearSave} %`)}</span><span class="pk">À l’année</span><b>${esc(_t(CFG.priceYear))}</b><span class="ps">${esc(_t`2 mois gratuits : revient à ${money(CFG.yearMonth,UIL,'CAD')} par mois`)}</span></button>
+  </div>`:''}<button class="btn yel big" data-act="pay" data-here="1">${esc(ctaLabel())}</button>`}
  <p class="reassure">${tr&&!pro?_t`Aucuns frais pendant ${d} jours · `:''}${_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu')}</p>
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
- ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',_t`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(_t(CFG.price))}. L’essai est offert une seule fois par compte.`):''}
+ ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',_t`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(_t(priceOf()))}. L’essai est offert une seule fois par compte.`):''}
  ${q('Comment mon client accepte-t-il en ligne ?',_t(dv()?'Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.':'Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.'))}
  ${q('Comment mes clients paient-ils en ligne ?','Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.')}
- ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin du mois déjà payé.')}
+ ${q('Comment j’annule ?','En tout temps, avec le bouton « Gérer mon abonnement ». Carnet Pro reste actif jusqu’à la fin de la période déjà payée (le mois ou l’année).')}
+ ${hasYear()?q('Puis-je passer du mois à l’année ?','Oui, en tout temps, avec le bouton « Gérer mon abonnement ». Stripe tient compte de ce que vous avez déjà payé.'):''}
  ${q('Comment je change ma carte de crédit ?','Avec le bouton « Mettre à jour ma carte » (onglet Carnet Pro ou Mon entreprise). Vous arrivez directement sur la page sécurisée de Stripe pour entrer votre nouvelle carte. Vos prochains paiements se feront avec elle.')}
  ${q('Qu’est-ce qui arrive à mes documents si j’arrête ?',_t`Ils restent tous accessibles. Vous revenez simplement à ${free}.`)}
  ${q('Est-ce que mes infos de carte sont gardées par Carnet ?','Non. Le paiement se fait chez Stripe : Carnet ne voit pas et ne garde pas vos infos de carte.')}
@@ -2346,13 +2377,15 @@ async function acceptShare(e){
  let n=0;const t=setInterval(async()=>{n++;await loadSub();if(isPro()){clearInterval(t);toast('Bienvenue dans Carnet Pro ! Documents illimités.')}else if(n>=15){clearInterval(t);toast('Le paiement est reçu, l’activation prend plus de temps que prévu. Rechargez la page dans une minute.')}},3000);
 })();
 
-async function goPay(){
+async function goPay(here){
  $('#pdlg').hidden=true;
  if(!user){openAuth('signup',trialOK()?'Créez d’abord votre compte gratuit. Ensuite, vous pourrez commencer votre essai gratuit.':'Créez d’abord votre compte gratuit. Ensuite, vous pourrez passer à Pro.');return}
  if(!subChecked)await loadSub();
  if(payLate()){goPortal('card');return}
  /* savoir s'il a déjà été abonné, avant de choisir le lien */
- const link=trialOK()?CFG.payLinkTrial:CFG.payLink;
+ /* ailleurs que sur la page Carnet Pro : y aller d'abord pour choisir entre le mois et l'année */
+ if(!here&&hasYear()){show('pro');return}
+ const link=yearOn()?(trialOK()&&CFG.payLinkYearTrial?CFG.payLinkYearTrial:CFG.payLinkYear):(trialOK()?CFG.payLinkTrial:CFG.payLink);
  if(!link){toast('Le paiement en ligne sera offert très bientôt.');return}
  const u=new URL(link);u.searchParams.set('client_reference_id',user.id);u.searchParams.set('prefilled_email',user.email);location.href=u.toString();
 }
@@ -2384,7 +2417,8 @@ document.addEventListener('click',async e=>{
   case 'pdlg-close':$('#pdlg').hidden=true;break;
   case 'pdlg-pro':$('#pdlg').hidden=true;show('pro');break;
   case 'pw-toggle':setPw($('#a-pass').type==='password');break;
-  case 'pay':goPay();break;
+  case 'pay':goPay(!!b.dataset.here);break;
+  case 'plan':payPlan=b.dataset.p==='m'?'m':'y';renderPro();{const p=document.querySelector('.tier[data-p="'+payPlan+'"]');if(p)p.focus()}break;
   case 'portal':goPortal();break;
   case 'card':goPortal('card');break;
   case 'lang':{const m=$('#langmenu'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',String(o));if(o){const c=m.querySelector('[aria-checked=true]')||m.querySelector('button');c.focus()}break}
