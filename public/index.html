@@ -1240,6 +1240,10 @@ let state=null;
 try{const raw=localStorage.getItem(KEY);if(raw)state=JSON.parse(raw)}catch(e){}
 try{state=state&&state.profile&&Array.isArray(state.docs)?cleanSamples(migrate(state)):freshState(guessRegion())}catch(e){state=freshState(guessRegion())}
 try{const p=state.profile;if(p.region==='XX'&&!p.name&&!state.docs.some(d=>!d.sample)&&!state.clients.some(c=>!c.sample)&&guessRegion()!=='XX')state=freshState(guessRegion())}catch(e){}
+/* Exemples : seulement pour qui n'est pas connecté. Une session Supabase enregistrée sur cet appareil = connecté : on les retire dès l'ouverture (sans attendre la connexion) */
+const noSamples=()=>{const n=state.docs.length+state.clients.length;state.docs=state.docs.filter(d=>!d.sample);state.clients=state.clients.filter(c=>!c.sample);return state.docs.length+state.clients.length!==n};
+const hadSession=!SHARE&&(()=>{try{return !!localStorage.getItem('sb-ebfjdefiklftqfikffwv-auth-token')}catch(e){return false}})();
+if(hadSession)noSamples();
 let saveT=0,cloudPush=()=>{};
 const save=()=>{if(SHARE)return;state.updatedAt=Date.now();clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}cloudPush()},250)};
 
@@ -1909,7 +1913,7 @@ function mergeState(local,remote){
  const byId=(a,b)=>{const m=new Map();[...a,...b].forEach(x=>{const o=m.get(x.id);if(!o||(x.updated||0)>(o.updated||0))m.set(x.id,x)});return [...m.values()]};
  const r=realOnly(remote),l=realOnly(local);
  const out={v:3,profile:(remote.updatedAt||0)>=(local.updatedAt||0)?remote.profile:local.profile,docs:byId(r.docs,l.docs),clients:byId(r.clients,l.clients),items:byId(remote.items||[],local.items||[]),updatedAt:Math.max(remote.updatedAt||0,local.updatedAt||0)};
- if(!out.docs.length&&!out.clients.length){const f=sample(out.profile.region);out.docs=f.docs;out.clients=f.clients}
+ /* Connecté : jamais d'exemples, même si le compte est vide */
  return out;
 }
 async function pull(){
@@ -2029,7 +2033,8 @@ $('#aform').addEventListener('submit',async e=>{
 async function setUser(u){
  const was=user&&user.id;user=u||null;
  if(user&&user.id!==was){await pull();await loadSub();checkShares()}
- if(!user){sub=null}
+ if(user){if(noSamples()){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}if(!$('#v-edit').hidden&&!doc())show('docs')}
+ if(!user){sub=null;if(hadSession&&!state.docs.length&&!state.clients.length){const f=sample(state.profile.region);state.docs=f.docs;state.clients=f.clients}} /* session expirée : on remet les exemples */
  refreshView();
  recReady=true;runRecurring();
 }
