@@ -189,6 +189,7 @@ input::placeholder,textarea::placeholder{color:light-dark(#9a9a9a,#6e6e6e);opaci
 .tbar strong{font-size:22px;font-weight:800;white-space:nowrap}
 .paper{position:relative;background:#fff;color:#111;max-width:760px;min-width:520px;margin:0 auto;padding:36px 36px 40px;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.08);font-size:13.5px;line-height:1.45;overflow:hidden}
 .paper .lb{font-size:11.5px;color:#666;font-weight:600}
+[dir=rtl] .paper,[dir=rtl] #paper{direction:ltr;text-align:left}
 .paper .payb{margin-top:18px;padding:12px 14px;border:1.5px solid #111;border-radius:8px}
 .paper .payb p{margin:6px 0 0}
 .paper .paybtn{display:inline-block;background:#111;color:#fff;font-weight:700;padding:7px 14px;border-radius:7px;text-decoration:none;margin-right:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -288,6 +289,13 @@ body.client .top,body.client footer{display:none}
       <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="fr" lang="fr">Français</button>
       <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="en" lang="en">English</button>
       <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="es" lang="es">Español</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="ar" lang="ar" dir="rtl">العربية</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="pt" lang="pt">Português</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="de" lang="de">Deutsch</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="it" lang="it">Italiano</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="nl" lang="nl">Nederlands</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="zh" lang="zh">中文</button>
+      <button type="button" role="menuitemradio" aria-checked="false" data-act="lang-set" data-l="hi" lang="hi">हिन्दी</button>
     </div>
   </span>
   <button class="where" id="where" data-act="where" title="Changer de pays ou de région"></button>
@@ -516,20 +524,11 @@ body.client .top,body.client footer{display:none}
 
 <div class="toast" id="toast" role="status" hidden><span id="toast-t"></span><button id="toast-b" data-act="undo" data-nt hidden>Annuler</button></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
-{
-const KEY='carnet.v1';
-const $=s=>document.querySelector(s);
-const $$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const r2=n=>Math.round((+n||0)*100)/100;
-const num=(v,d)=>v===''||v==null||isNaN(+v)?d:+v;
-const uid=()=>Math.random().toString(36).slice(2,10);
-const clone=o=>JSON.parse(JSON.stringify(o));
-const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
-const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-/* ---------- Langue de l'interface : français (source), anglais, espagnol. Choisie avec le bouton de langue (localStorage carnet.ui). ---------- */
+/* Langue de l'interface et pays de la personne, calculés avant tout le reste : la traduction (i18n/<langue>.js) doit être chargée avant le script principal.
+   Langues : fr (source), en et es (dans I18N de index.html), et ar, pt, de, it, nl, zh, hi (fichiers public/i18n/, ?v= à augmenter quand on les change). */
+(function(){
+const LANGS=['fr','en','es','ar','pt','de','it','nl','zh','hi'];
 /* Pays de la personne, deviné à la première visite : fuseau horaire de l'appareil (là où elle est), sinon langue du navigateur.
    GEO = {c: code pays (ex. 'ES', 'CA'), sub: région Carnet pour le Canada (ex. 'CA-BC') ou '', langs: langues du navigateur} */
 const GEO=(()=>{
@@ -546,17 +545,40 @@ const GEO=(()=>{
  for(const l of langs){const c=(l.split('-')[1]||'').toUpperCase();if(/^[A-Z]{2}$/.test(c))return {c,sub:c==='CA'?(fr?'CA-QC':'CA-ON'):'',langs}}
  return {c:'',sub:'',langs};
 })();
-/* Langue parlée dans chaque pays (pour l'interface quand le navigateur n'est ni en français, ni en anglais, ni en espagnol) */
-const GEO_LANG=c=>['ES','MX','CO','PE','CL','AR','VE','GT','CR','PA','DO','CU','EC','UY','PY','BO','SV','HN','NI','PR'].includes(c)?'es':['FR','BE','LU','CH','MA','DZ','TN','SN','CI','CM','HT','MC'].includes(c)?'fr':['CA','US','GB','IE','AU','IN'].includes(c)?'en':'';
-const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(v==='fr'||v==='en'||v==='es')return v}catch(e){}
- for(const l of GEO.langs){const n=l.slice(0,2).toLowerCase();if(n==='fr'||n==='en'||n==='es')return n}
+/* Langue parlée dans chaque pays (pour l'interface quand aucune langue du navigateur n'est offerte) */
+const GEO_LANG=c=>['ES','MX','CO','PE','CL','AR','VE','GT','CR','PA','DO','CU','EC','UY','PY','BO','SV','HN','NI','PR'].includes(c)?'es':['FR','BE','LU','CH','MA','DZ','TN','SN','CI','CM','HT','MC'].includes(c)?'fr':['DE','AT','LI'].includes(c)?'de':['IT','SM'].includes(c)?'it':['NL','SR'].includes(c)?'nl':['BR','PT','AO','MZ'].includes(c)?'pt':['CN','TW','HK','SG'].includes(c)?'zh':['EG','SA','AE','QA','KW','JO','LB','IQ','SY','OM','YE','BH','LY','SD'].includes(c)?'ar':['CA','US','GB','IE','AU','IN'].includes(c)?'en':'';
+const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(LANGS.includes(v))return v}catch(e){}
+ for(const l of GEO.langs){const n=l.slice(0,2).toLowerCase();if(LANGS.includes(n))return n}
  if(GEO.sub==='CA-QC')return 'fr';
  return GEO_LANG(GEO.c)||'fr'})();
-const UIX=UIL==='en'?0:1;
+/* Langue des nouveaux documents : seulement fr, en ou es (celle de l'interface si possible, sinon celle du pays, sinon l'anglais) */
+const gl=GEO_LANG(GEO.c),UDL=['fr','en','es'].includes(UIL)?UIL:gl==='fr'||gl==='es'?gl:'en';
+window.CARNET_LANGS=LANGS;window.CARNET_GEO=GEO;window.CARNET_UIL=UIL;window.CARNET_UDL=UDL;
+if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=1"><\/script>');
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script>
+{
+const KEY='carnet.v1';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2=n=>Math.round((+n||0)*100)/100;
+const num=(v,d)=>v===''||v==null||isNaN(+v)?d:+v;
+const uid=()=>Math.random().toString(36).slice(2,10);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+/* ---------- Langue de l'interface (10 langues) et pays : calculés par le petit script placé avant celui-ci (window.CARNET_*) ---------- */
+const LANGS=window.CARNET_LANGS||['fr','en','es'],GEO=window.CARNET_GEO||{c:'',sub:'',langs:[]},UIL=window.CARNET_UIL||'fr',UDL=window.CARNET_UDL||'fr';
+const UIX=UIL==='es'?1:0,XL=window.CARNET_I18N||{};
+/* Traduction d'une clé (texte français) : null en français ; anglais et espagnol dans I18N ; autres langues dans i18n/<langue>.js, sinon l'anglais */
+const trK=k=>UIL==='fr'?null:XL[k]!=null?XL[k]:I18N[k]?I18N[k][UIX]:null;
 /* _t('texte') ou _t`texte ${valeur}` : la clé est le texte français (avec {} à la place de chaque valeur) ; la traduction peut utiliser {} dans l'ordre ou {0}, {1}… */
 function _t(s,...v){
- if(Array.isArray(s)&&s.raw){const k=s.join('{}'),x=UIL!=='fr'&&I18N[k];let i=0;return (x?x[UIX]:k).replace(/\{(\d?)\}/g,(m,n)=>{const j=n===''?i++:+n;return v[j]==null?'':String(v[j])})}
- if(UIL==='fr'||s==null)return s;const x=I18N[s];return x?x[UIX]:s;
+ if(Array.isArray(s)&&s.raw){const k=s.join('{}'),x=trK(k);let i=0;return (x??k).replace(/\{(\d?)\}/g,(m,n)=>{const j=n===''?i++:+n;return v[j]==null?'':String(v[j])})}
+ if(UIL==='fr'||s==null)return s;const x=trK(s);return x??s;
 }
 /* Traductions de l'interface : "texte français": ["anglais", "espagnol"]. {} = une valeur (nombre, nom…), dans l'ordre ; {0}, {1}… pour changer l'ordre. */
 const I18N={
@@ -1083,7 +1105,8 @@ function guessCurrency(){
  return {HT:'HTG',BR:'BRL',IN:'INR',JP:'JPY',AU:'AUD'}[c]||'USD';
 }
 
-const loc=(lang,cur)=>lang==='en'?(cur==='USD'?'en-US':cur==='GBP'?'en-GB':'en-CA'):lang==='es'?(cur==='MXN'?'es-MX':'es-ES'):(cur==='CHF'?'fr-CH':cur==='EUR'?'fr-FR':'fr-CA');
+const LOCS={ar:'ar-u-nu-latn',pt:'pt-BR',de:'de-DE',it:'it-IT',nl:'nl-NL',zh:'zh-CN',hi:'hi-IN'};
+const loc=(lang,cur)=>LOCS[lang]?((lang==='de'||lang==='it')&&cur==='CHF'?lang+'-CH':LOCS[lang]):lang==='en'?(cur==='USD'?'en-US':cur==='GBP'?'en-GB':'en-CA'):lang==='es'?(cur==='MXN'?'es-MX':'es-ES'):(cur==='CHF'?'fr-CH':cur==='EUR'?'fr-FR':'fr-CA');
 const fmts={};
 const money=(n,lang,cur)=>{cur=cur||state.profile.currency||'CAD';const k=loc(lang,cur)+cur;try{fmts[k]=fmts[k]||new Intl.NumberFormat(loc(lang,cur),{style:'currency',currency:cur})}catch(e){fmts[k]=new Intl.NumberFormat(loc(lang,cur),{minimumFractionDigits:2,maximumFractionDigits:2})}return fmts[k].format(+n||0)};
 const fdate=(iso,lang,cur)=>iso?new Date(iso+'T12:00:00').toLocaleDateString(loc(lang,cur),{year:'numeric',month:'long',day:'numeric'}):'—';
@@ -1092,11 +1115,11 @@ const pct=(r,lang)=>{const s=(+r||0).toLocaleString(loc(lang),{maximumFractionDi
 const tName=(t,lang)=>lang==='fr'?t.n:(lang==='es'?(t.es||t.en||t.n):(t.en||t.n));
 
 const UNITS=[['f','forfait','lump sum','global'],['h','h','hr','h'],['j','jour','day','día'],['u','unité','unit','ud.'],['m2','m²','m²','m²'],['ml','m lin.','lin. m','m lin.'],['pi2','pi²','sq ft','pie²'],['pil','pi lin.','lin ft','pie lin.']];
-const unitName=(u,lang)=>{const x=UNITS.find(a=>a[0]===u)||UNITS[0];return lang==='en'?x[2]:lang==='es'?x[3]:x[1]};
+const unitName=(u,lang)=>{const x=UNITS.find(a=>a[0]===u)||UNITS[0];return lang==='en'?x[2]:lang==='es'?x[3]:lang==='fr'?x[1]:_t(x[1])};
 const ST={S:['brouillon','envoyee','acceptee','refusee'],F:['brouillon','envoyee','payee']};
 const stLabel=(s,type)=>{const f=type==='F'||qw()==='Soumission';return {brouillon:'Brouillon',envoyee:f?'Envoyée':'Envoyé',acceptee:f?'Acceptée':'Accepté',refusee:f?'Refusée':'Refusé',payee:'Payée'}[s]||s};
 /* Statut affiché dans l'interface (liste, éditeur, Excel), dans la langue choisie */
-const uiSt=(s,type)=>UIL==='fr'?(s==='retard'?'En retard':stLabel(s,type)):UIL==='en'?({brouillon:'Draft',envoyee:'Sent',acceptee:'Accepted',refusee:'Declined',payee:'Paid',retard:'Overdue'})[s]||s:({brouillon:'Borrador',envoyee:type==='F'?'Enviada':'Enviado',acceptee:'Aceptado',refusee:'Rechazado',payee:'Pagada',retard:'Vencida'})[s]||s;
+const uiSt=(s,type)=>!['fr','en','es'].includes(UIL)?_t(s==='retard'?'En retard':stLabel(s,type)):UIL==='fr'?(s==='retard'?'En retard':stLabel(s,type)):UIL==='en'?({brouillon:'Draft',envoyee:'Sent',acceptee:'Accepted',refusee:'Declined',payee:'Paid',retard:'Overdue'})[s]||s:({brouillon:'Borrador',envoyee:type==='F'?'Enviada':'Enviado',acceptee:'Aceptado',refusee:'Rechazado',payee:'Pagada',retard:'Vencida'})[s]||s;
 const T={
  fr:{F:'Facture',no:'No',date:'Date',valid:'Valide jusqu’au',due:'Échéance',client:'Client',project:'Objet',desc:'Description',qty:'Qté',unit:'Unité',price:'Prix unitaire',amount:'Montant',sub:'Sous-total',total:'Total',notes:'Conditions',sign:'Signature du client',paid:'PAYÉE',noTax:'Taxes non perçues',disc:'Rabais',net:'Après rabais',rcv:'Paiement reçu',bal:'Solde à payer',photos:'Photos',payOnline:'Payer en ligne',howPay:'Comment payer'},
  en:{S:'Quote',F:'Invoice',no:'No.',date:'Date',valid:'Valid until',due:'Due date',client:'Bill to',project:'Project',desc:'Description',qty:'Qty',unit:'Unit',price:'Unit price',amount:'Amount',sub:'Subtotal',total:'Total',dep:'Deposit required',notes:'Terms',accept:'Client acceptance',sign:'Client signature',paid:'PAID',accepted:'ACCEPTED',noTax:'Sales taxes not collected',disc:'Discount',net:'After discount',rcv:'Payment received',bal:'Balance due',photos:'Photos',payOnline:'Pay online',howPay:'How to pay'},
@@ -1106,8 +1129,8 @@ const qw=()=>state.profile.qw||'Soumission';
 const dv=()=>qw()==='Devis';
 const qwP=()=>dv()?'Devis':'Soumissions';
 const depWord=()=>dv()?'Acompte':'Dépôt';
-const uqw=()=>UIL==='fr'?qw():UIL==='en'?'Quote':'Presupuesto';   /* dans l'interface */
-const uqwP=()=>UIL==='fr'?qwP():UIL==='en'?'Quotes':'Presupuestos';
+const uqw=()=>UIL==='fr'?qw():UIL==='en'?'Quote':UIL==='es'?'Presupuesto':XL['@quote']||'Quote';   /* dans l'interface */
+const uqwP=()=>UIL==='fr'?qwP():UIL==='en'?'Quotes':UIL==='es'?'Presupuestos':XL['@quotes']||'Quotes';
 function Lx(d){
  const lang=d.lang||'fr',x={...T[lang]};
  if(lang==='fr'){x.S=qw();x.accept=dv()?'Bon pour accord':'Acceptation du client';x.accepted=dv()?'ACCEPTÉ':'ACCEPTÉE';x.dep=`${depWord()} requis`}
@@ -1119,8 +1142,8 @@ const P={
  dep:()=>num(state.profile.dep,30),
  validDays:()=>num(state.profile.validDays,30),
  dueDays:()=>num(state.profile.dueDays,30),
- termsDef:l=>({en:`${P.dep()}% deposit upon acceptance. Balance due upon completion of the work.`,es:`Anticipo del ${P.dep()} % al aceptar. Saldo a pagar al finalizar la obra.`})[l||UIL]||`${depWord()} de ${P.dep()} % à l’acceptation. Solde payable à la fin des travaux.`,
- termsFDef:l=>({en:`Payable within ${P.dueDays()} days. Thank you for your business!`,es:`Pago a ${P.dueDays()} días. ¡Gracias por su confianza!`})[l||UIL]||`Payable dans les ${P.dueDays()} jours. Merci de votre confiance!`,
+ termsDef:l=>({en:`${P.dep()}% deposit upon acceptance. Balance due upon completion of the work.`,es:`Anticipo del ${P.dep()} % al aceptar. Saldo a pagar al finalizar la obra.`})[l||UDL]||`${depWord()} de ${P.dep()} % à l’acceptation. Solde payable à la fin des travaux.`,
+ termsFDef:l=>({en:`Payable within ${P.dueDays()} days. Thank you for your business!`,es:`Pago a ${P.dueDays()} días. ¡Gracias por su confianza!`})[l||UDL]||`Payable dans les ${P.dueDays()} jours. Merci de votre confiance!`,
  terms:l=>state.profile.terms||P.termsDef(l),
  termsF:l=>state.profile.termsF||P.termsFDef(l),
  exempt:()=>state.profile.exempt||region(state.profile.region).ex
@@ -1149,7 +1172,7 @@ const SAMPLE_TX={
  es:{bath:['Demolición y retirada de escombros','Fontanería: traslado del desagüe de la ducha','Revestimiento cerámico de paredes y suelo, colocación','Mueble de baño con encimera de cuarzo, suministro e instalación','Pintura y acabados'],deck:['Pilotes de tornillo, suministro e instalación','Estructura y entarimado de madera tratada','Barandilla de aluminio','Escalera de 4 peldaños'],floor:['Retirada del suelo existente','Lamas de vinilo comercial, suministro e instalación','Zócalos y perfiles de transición'],door:['Mano de obra','Herrajes y burletes'],ti:['Reforma completa del baño','Terraza de madera tratada de 12 × 16 pies','Terraza de madera tratada de 18 m²','Cambio del suelo del comedor','Reparación de la puerta trasera'],nS:()=>'Anticipo del 30 % al aceptar. Saldo a pagar al finalizar la obra.',nF:'Pago a 30 días. ¡Gracias por su confianza!',nFloor:'Pago a 30 días. ¡Gracias por su confianza!',nDoor:'Pago a 30 días.'}
 };
 function sample(code){
- const X=SAMPLE_TX[UIL],SL=UIL,r=region(code),t=todayISO(),y=t.slice(0,4),imp=imperial(r),k=FX[r.cur]||1,S=r.qw==='Devis'?'D':'S',ca=r.group==='Canada';
+ const X=SAMPLE_TX[UDL],SL=UDL,r=region(code),t=todayISO(),y=t.slice(0,4),imp=imperial(r),k=FX[r.cur]||1,S=r.qw==='Devis'?'D':'S',ca=r.group==='Canada';
  const pr=v=>{const x=v*k;return k>=50?Math.round(x/50)*50:k>=5?Math.round(x):r2(x)};
  const Ln=(d,qi,ui,pi,qm,um,pm)=>imp?{d:'',dd:d,q:'',qd:qi,u:ui,p:'',pd:pr(pi)}:{d:'',dd:d,q:'',qd:qm??qi,u:um??ui,p:'',pd:pr(pm??pi)};
  const bath=()=>[Ln(X.bath[0],1,'f',1200),Ln(X.bath[1],14,'h',95),Ln(X.bath[2],180,'pi2',12.5,17,'m2',135),Ln(X.bath[3],1,'u',2450),Ln(X.bath[4],1,'f',650)];
@@ -1573,7 +1596,7 @@ document.addEventListener('focusin',e=>{const t=e.target;if(!(t.matches&&t.match
 function newDoc(type,keepSamples){
  if(!keepSamples)dropSamples();
  const p=state.profile,t=todayISO(),S=type==='S',taxes=(p.taxList||[]).map(taxEff);
- const d={id:uid(),type,num:nextNum(type),clientId:'',title:'',date:t,valid:S?addDays(t,P.validDays()):'',due:S?'':addDays(t,P.dueDays()),status:'brouillon',lang:UIL,lines:[{d:'',q:'',u:'f',p:''}],taxes:!!p.taxes&&taxes.length>0,tx:taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''})),cur:p.currency,dep:'',depDef:S?P.dep():0,notes:'',notesDef:S?P.terms():P.termsF(),paidDate:'',updated:Date.now()};
+ const d={id:uid(),type,num:nextNum(type),clientId:'',title:'',date:t,valid:S?addDays(t,P.validDays()):'',due:S?'':addDays(t,P.dueDays()),status:'brouillon',lang:UDL,lines:[{d:'',q:'',u:'f',p:''}],taxes:!!p.taxes&&taxes.length>0,tx:taxes.map(x=>({n:x.n,en:x.en,es:x.es,dr:x.r,r:''})),cur:p.currency,dep:'',depDef:S?P.dep():0,notes:'',notesDef:S?P.terms():P.termsF(),paidDate:'',updated:Date.now()};
  d.counted=true;d.createdAt=todayISO();state.docs.push(d);save();return d;
 }
 
@@ -2274,7 +2297,7 @@ async function goPay(){
 }
 async function setLang(l){
  $('#langmenu').hidden=true;$('#lang').setAttribute('aria-expanded','false');
- if(l===UIL||!['fr','en','es'].includes(l))return;
+ if(l===UIL||!LANGS.includes(l))return;
  try{localStorage.setItem('carnet.ui',l)}catch(e){}
  try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
  const v=$$('.view').find(x=>!x.hidden);try{sessionStorage.setItem('carnet.back',JSON.stringify({v:v?v.id.slice(2):'docs',id:cur}))}catch(e){}
@@ -2318,7 +2341,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){['adlg','pdlg','mdl
 
 /* Textes fixes (HTML et textes simples) : traduits à l'affichage quand la langue n'est pas le français. Le document (#paper) et la page du client gardent leur propre langue. */
 const TR_ATTR=['placeholder','title','aria-label','label','alt','data-l'],TR_SKIP='#paper,#share-body,[data-nt]',TR_RAW=/^(TEXTAREA|SCRIPT|STYLE)$/;
-const trS=s=>{if(!s)return null;const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(s),x=m[2]&&I18N[m[2]];return x?m[1]+x[UIX]+m[3]:null};
+const trS=s=>{if(!s)return null;const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(s),x=m[2]?trK(m[2]):null;return x!=null?m[1]+x+m[3]:null};
 function trAttrs(el){for(const a of TR_ATTR){const v=el.getAttribute(a),r=v&&trS(v);if(r&&r!==v)el.setAttribute(a,r)}}
 function trNode(n){
  if(n.nodeType===3){const p=n.parentElement;if(!p||TR_RAW.test(p.tagName)||p.closest(TR_SKIP))return;const r=trS(n.data);if(r&&r!==n.data)n.data=r;return}
@@ -2328,14 +2351,14 @@ function trNode(n){
  let x;while((x=w.nextNode()))if(x.nodeType===3){const r=trS(x.data);if(r&&r!==x.data)x.data=r}
 }
 if(!SHARE){
- document.documentElement.lang=UIL;
+ document.documentElement.lang=UIL;if(UIL==='ar')document.documentElement.dir='rtl';
  if(UIL!=='fr'){
   document.title=_t(document.title);trNode(document.body);
   new MutationObserver(ms=>{for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(trNode);else if(m.type==='characterData')trNode(m.target);else if(m.target.nodeType===1&&!m.target.closest(TR_SKIP)){const a=m.attributeName,v=m.target.getAttribute(a),r=v&&trS(v);if(r&&r!==v)m.target.setAttribute(a,r)}}}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:TR_ATTR});
  }
 }
 if(SHARE)openShare();else{
- $('#toast-b').textContent=({fr:'Annuler',en:'Undo',es:'Deshacer'})[UIL];
+ $('#toast-b').textContent=({fr:'Annuler',en:'Undo',es:'Deshacer'})[UIL]||XL['@undo']||'Undo';
  chrome();renderDocs();
  if(!sb){recReady=true;runRecurring()}
  setInterval(runRecurring,36e5);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')runRecurring()});
