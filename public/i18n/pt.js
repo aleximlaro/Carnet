@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: orçament
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"Em “Minha empresa”, cole seu próprio link de pagamento (Stripe, PayPal, Square…). Um botão “Pagar online” aparece então nas suas faturas e nos seus e-mails. O dinheiro vai direto para sua conta: o Carnet não cobra comissão.",
 "@quote":"Orçamento",
 "@quotes":"Orçamentos",
-"@undo":"Desfazer"};
+"@undo":"Desfazer",
+"Avis sur cet appareil":"Avisos neste aparelho",
+"Avis activés sur cet appareil.":"Avisos ativados neste aparelho.",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"Receba um aviso neste aparelho quando um cliente aceitar um documento online ou uma fatura estiver atrasada, mesmo com o Carnet fechado.",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"Os avisos estão bloqueados para este site nas configurações do navegador. Permita-os e recarregue a página.",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"No iPhone, primeiro adicione o Carnet à Tela de Início (botão Compartilhar e depois “Adicionar à Tela de Início”) e abra o Carnet por lá.",
+"Ce navigateur n’offre pas les avis.":"Este navegador não oferece avisos.",
+"Activer les avis":"Ativar os avisos",
+"Désactiver":"Desativar",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"Avisos ativados. Você será avisado mesmo com o Carnet fechado.",
+"Avis non activés.":"Avisos não ativados.",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"Não foi possível ativar os avisos. Tente de novo mais tarde.",
+"Avis désactivés sur cet appareil.":"Avisos desativados neste aparelho."};

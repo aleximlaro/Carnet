@@ -1,5 +1,5 @@
 /* Carnet : garde l'application disponible sans Internet (au chantier, par exemple). */
-const CACHE = 'carnet-v4';
+const CACHE = 'carnet-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/favicon-48.png'];
 
 self.addEventListener('install', e => {
@@ -37,11 +37,21 @@ self.addEventListener('fetch', e => {
   }
 });
 
-// Clic sur un avis (ex. : un client a accepté une soumission) : on ouvre Carnet, ou on revient sur l'onglet déjà ouvert.
+// Avis envoyé par la fonction Supabase push-notify (client qui accepte, factures en retard), même quand Carnet est fermé.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Carnet', {
+    body: d.body || '', icon: './icons/icon-192.png', tag: d.tag || 'carnet', renotify: true, data: { url: d.url || './' }
+  }));
+});
+
+// Clic sur un avis : on revient sur l'onglet Carnet déjà ouvert, sinon on ouvre Carnet.
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) { if ('focus' in c) return c.focus(); }
-    return self.clients.openWindow('./');
+    for (const c of list) { if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus(); }
+    return self.clients.openWindow(url);
   }));
 });

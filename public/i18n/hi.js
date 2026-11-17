@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: कोट
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"“मेरा व्यवसाय” में अपना भुगतान लिंक पेस्ट करें (Stripe, PayPal, Square…)। फिर आपके इनवॉइस और ईमेल में “ऑनलाइन भुगतान करें” बटन दिखता है। पैसा सीधे आपके खाते में जाता है: Carnet कोई कमीशन नहीं लेता।",
 "@quote":"कोटेशन",
 "@quotes":"कोटेशन",
-"@undo":"पूर्ववत करें"};
+"@undo":"पूर्ववत करें",
+"Avis sur cet appareil":"इस डिवाइस पर सूचनाएँ",
+"Avis activés sur cet appareil.":"इस डिवाइस पर सूचनाएँ चालू हैं।",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"जब कोई ग्राहक ऑनलाइन दस्तावेज़ स्वीकार करे या कोई इनवॉइस बकाया हो जाए, तो इस डिवाइस पर सूचना पाएँ, भले ही Carnet बंद हो।",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"इस साइट के लिए सूचनाएँ ब्राउज़र की सेटिंग में ब्लॉक हैं। उन्हें अनुमति दें, फिर पेज रीलोड करें।",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"iPhone पर पहले Carnet को होम स्क्रीन पर जोड़ें (शेयर बटन, फिर “होम स्क्रीन पर जोड़ें”), फिर वहीं से Carnet खोलें।",
+"Ce navigateur n’offre pas les avis.":"यह ब्राउज़र सूचनाएँ नहीं देता।",
+"Activer les avis":"सूचनाएँ चालू करें",
+"Désactiver":"बंद करें",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"सूचनाएँ चालू हो गईं। Carnet बंद होने पर भी आपको सूचना मिलेगी।",
+"Avis non activés.":"सूचनाएँ चालू नहीं हुईं।",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"सूचनाएँ चालू नहीं हो सकीं। बाद में फिर कोशिश करें।",
+"Avis désactivés sur cet appareil.":"इस डिवाइस पर सूचनाएँ बंद कर दी गईं।"};

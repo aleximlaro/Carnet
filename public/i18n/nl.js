@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: offertes 
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"Plak in “Mijn bedrijf” je eigen betaallink (Stripe, PayPal, Square…). Er verschijnt dan een knop “Online betalen” op je facturen en in je e-mails. Het geld gaat rechtstreeks naar je rekening: Carnet neemt geen commissie.",
 "@quote":"Offerte",
 "@quotes":"Offertes",
-"@undo":"Ongedaan maken"};
+"@undo":"Ongedaan maken",
+"Avis sur cet appareil":"Meldingen op dit toestel",
+"Avis activés sur cet appareil.":"Meldingen staan aan op dit toestel.",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"Krijg een melding op dit toestel wanneer een klant een document online accepteert of een factuur achterstallig is, ook als Carnet gesloten is.",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"Meldingen zijn voor deze site geblokkeerd in de browserinstellingen. Sta ze toe en herlaad de pagina.",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"Zet Carnet op een iPhone eerst op het beginscherm (knop Deel, dan “Zet op beginscherm”) en open Carnet van daaruit.",
+"Ce navigateur n’offre pas les avis.":"Deze browser ondersteunt geen meldingen.",
+"Activer les avis":"Meldingen aanzetten",
+"Désactiver":"Uitzetten",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"Meldingen staan aan. Je wordt verwittigd, ook als Carnet gesloten is.",
+"Avis non activés.":"Meldingen niet aangezet.",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"Meldingen konden niet worden aangezet. Probeer het later opnieuw.",
+"Avis désactivés sur cet appareil.":"Meldingen uitgezet op dit toestel."};

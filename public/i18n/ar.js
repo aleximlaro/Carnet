@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: عروض 
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"في «شركتي»، الصق رابط الدفع الخاص بك (Stripe أو PayPal أو Square…). يظهر حينها زر «الدفع عبر الإنترنت» على فواتيرك وفي رسائلك. يذهب المال مباشرة إلى حسابك: لا يأخذ Carnet أي عمولة.",
 "@quote":"عرض سعر",
 "@quotes":"عروض الأسعار",
-"@undo":"تراجع"};
+"@undo":"تراجع",
+"Avis sur cet appareil":"الإشعارات على هذا الجهاز",
+"Avis activés sur cet appareil.":"الإشعارات مفعّلة على هذا الجهاز.",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"تلقَّ إشعارًا على هذا الجهاز عندما يقبل عميل مستندًا عبر الإنترنت أو تتأخر فاتورة، حتى عندما يكون Carnet مغلقًا.",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"الإشعارات محظورة لهذا الموقع في إعدادات المتصفح. اسمح بها ثم أعد تحميل الصفحة.",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"على iPhone، أضف Carnet أولًا إلى الشاشة الرئيسية (زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»)، ثم افتح Carnet من هناك.",
+"Ce navigateur n’offre pas les avis.":"هذا المتصفح لا يدعم الإشعارات.",
+"Activer les avis":"تفعيل الإشعارات",
+"Désactiver":"إيقاف",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"تم تفعيل الإشعارات. ستصلك التنبيهات حتى عندما يكون Carnet مغلقًا.",
+"Avis non activés.":"لم يتم تفعيل الإشعارات.",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"تعذّر تفعيل الإشعارات. حاول مجددًا لاحقًا.",
+"Avis désactivés sur cet appareil.":"تم إيقاف الإشعارات على هذا الجهاز."};

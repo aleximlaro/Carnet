@@ -148,3 +148,75 @@ create policy "photos: voir son dossier" on storage.objects
   for select to authenticated using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
 create policy "photos: effacer dans son dossier" on storage.objects
   for delete to authenticated using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- 5. Avis (notifications) sur le téléphone ou l'ordinateur de l'entrepreneur, même quand Carnet est fermé
+--    Le site enregistre l'abonnement de l'appareil (push_subscribe) ; la fonction Edge « push-notify » envoie les avis.
+create table if not exists public.push_subs (
+  endpoint   text primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  keys       jsonb not null,
+  lang       text not null default 'fr',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.push_subs enable row level security;
+revoke all on public.push_subs from anon, authenticated;   -- seulement par les deux fonctions ci-dessous
+
+create or replace function public.push_subscribe(p_endpoint text, p_keys jsonb, p_lang text) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or p_endpoint !~ '^https://' or length(p_endpoint) > 1000
+     or coalesce(p_keys->>'p256dh', '') = '' or coalesce(p_keys->>'auth', '') = '' then return false; end if;
+  insert into public.push_subs (endpoint, user_id, keys, lang)
+  values (p_endpoint, auth.uid(), jsonb_build_object('p256dh', p_keys->>'p256dh', 'auth', p_keys->>'auth'), coalesce(nullif(left(p_lang, 5), ''), 'fr'))
+  on conflict (endpoint) do update set user_id = excluded.user_id, keys = excluded.keys, lang = excluded.lang, updated_at = now();
+  return true;
+end $$;
+
+create or replace function public.push_unsubscribe(p_endpoint text) returns void
+language sql security definer set search_path = public as $$
+  delete from public.push_subs where endpoint = p_endpoint and user_id = auth.uid();
+$$;
+
+revoke all on function public.push_subscribe(text, jsonb, text) from public, anon;
+revoke all on function public.push_unsubscribe(text) from public, anon;
+grant execute on function public.push_subscribe(text, jsonb, text) to authenticated;
+grant execute on function public.push_unsubscribe(text) to authenticated;
+
+alter table public.shares add column if not exists notified_at timestamptz;
+
+-- Appel de la fonction push-notify par la base (pg_net). Le secret partagé est dans le coffre (Vault), nommé « carnet_push_secret » :
+--   select vault.create_secret('<secret>', 'carnet_push_secret');   (même valeur que le secret CARNET_PUSH_SECRET de la fonction)
+create extension if not exists pg_net with schema extensions;
+create extension if not exists pg_cron;
+
+create or replace function public.push_call(p_body jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare s text;
+begin
+  select decrypted_secret into s from vault.decrypted_secrets where name = 'carnet_push_secret' limit 1;
+  if s is null then return; end if;
+  perform net.http_post(
+    url := 'https://ebfjdefiklftqfikffwv.supabase.co/functions/v1/push-notify',
+    body := p_body,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-carnet-secret', s));
+exception when others then null;   -- un avis raté ne doit jamais bloquer l'acceptation
+end $$;
+revoke all on function public.push_call(jsonb) from public, anon, authenticated;
+
+-- Un client accepte une soumission : avis immédiat
+create or replace function public.shares_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = 'accepted' and old.status is distinct from 'accepted' then
+    perform public.push_call(jsonb_build_object('share', new.id));
+  end if;
+  return new;
+end $$;
+drop trigger if exists shares_notify on public.shares;
+create trigger shares_notify after update of status on public.shares
+  for each row execute function public.shares_notify();
+
+-- Chaque matin à 13 h UTC (8 h ou 9 h au Québec) : factures en retard
+select cron.unschedule(jobid) from cron.job where jobname = 'carnet-retards';
+select cron.schedule('carnet-retards', '0 13 * * *', $$select public.push_call('{"daily": true}'::jsonb)$$);

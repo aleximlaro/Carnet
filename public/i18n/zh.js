@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet：报价�
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"在“我的企业”中粘贴您自己的付款链接（Stripe、PayPal、Square…）。“在线付款”按钮随后会显示在您的发票和邮件中。款项直接进入您的账户：Carnet 不收取任何佣金。",
 "@quote":"报价单",
 "@quotes":"报价单",
-"@undo":"撤销"};
+"@undo":"撤销",
+"Avis sur cet appareil":"此设备上的通知",
+"Avis activés sur cet appareil.":"此设备已开启通知。",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"当客户在线接受文档或发票逾期时，即使 Carnet 已关闭，也会在此设备上收到通知。",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"此网站的通知已在浏览器设置中被阻止。请允许通知，然后刷新页面。",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"在 iPhone 上，请先将 Carnet 添加到主屏幕（分享按钮，然后“添加到主屏幕”），再从主屏幕打开 Carnet。",
+"Ce navigateur n’offre pas les avis.":"此浏览器不支持通知。",
+"Activer les avis":"开启通知",
+"Désactiver":"关闭",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"通知已开启。即使 Carnet 已关闭，您也会收到通知。",
+"Avis non activés.":"未开启通知。",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"无法开启通知。请稍后再试。",
+"Avis désactivés sur cet appareil.":"已关闭此设备上的通知。"};

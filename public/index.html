@@ -134,6 +134,9 @@ h3{font-size:18px;margin:0 0 12px}
 .todo li>div{min-width:0}
 .todo .sub{font-size:13px}
 .todo .btn{flex:none}
+.pushbox{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.pushbox h4{margin:0 0 4px;font-size:15px}
+.pushbox .sub{margin:0 0 10px}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:15px}
 .chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -554,7 +557,7 @@ const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(LANGS.includes(
 /* Langue des nouveaux documents : seulement fr, en ou es (celle de l'interface si possible, sinon celle du pays, sinon l'anglais) */
 const gl=GEO_LANG(GEO.c),UDL=['fr','en','es'].includes(UIL)?UIL:gl==='fr'||gl==='es'?gl:'en';
 window.CARNET_LANGS=LANGS;window.CARNET_GEO=GEO;window.CARNET_UIL=UIL;window.CARNET_UDL=UDL;
-if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=1"><\/script>');
+if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=2"><\/script>');
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
@@ -1049,6 +1052,18 @@ const I18N={
 "Relancer le client":["Follow up with the client","Dar seguimiento al cliente"],
 "Paiement en ligne":["Online payment","Pago en línea"],
 "Bouton « Payer en ligne » sur vos factures":["“Pay online” button on your invoices","Botón «Pagar en línea» en sus facturas"],
+"Avis sur cet appareil":["Notifications on this device","Avisos en este dispositivo"],
+"Avis activés sur cet appareil.":["Notifications are on for this device.","Avisos activados en este dispositivo."],
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":["Get a notification on this device when a client accepts a document online or an invoice is overdue, even when Carnet is closed.","Reciba un aviso en este dispositivo cuando un cliente acepte un documento en línea o una factura esté vencida, incluso con Carnet cerrado."],
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":["Notifications are blocked for this site in the browser settings. Allow them, then reload the page.","Los avisos están bloqueados para este sitio en la configuración del navegador. Permítalos y vuelva a cargar la página."],
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":["On iPhone, first add Carnet to your Home Screen (Share button, then “Add to Home Screen”), then open Carnet from there.","En iPhone, primero añada Carnet a la pantalla de inicio (botón Compartir y luego «Añadir a pantalla de inicio») y abra Carnet desde allí."],
+"Ce navigateur n’offre pas les avis.":["This browser doesn’t support notifications.","Este navegador no ofrece avisos."],
+"Activer les avis":["Turn on notifications","Activar los avisos"],
+"Désactiver":["Turn off","Desactivar"],
+"Avis activés. Vous serez averti même quand Carnet est fermé.":["Notifications on. You’ll be notified even when Carnet is closed.","Avisos activados. Recibirá avisos incluso con Carnet cerrado."],
+"Avis non activés.":["Notifications not turned on.","Avisos no activados."],
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":["Notifications couldn’t be turned on. Try again later.","No se pudieron activar los avisos. Inténtelo más tarde."],
+"Avis désactivés sur cet appareil.":["Notifications turned off for this device.","Avisos desactivados en este dispositivo."],
 "Comment mes clients paient-ils en ligne ?":["How do my clients pay online?","¿Cómo pagan mis clientes en línea?"],
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":["In “My business”, paste your own payment link (Stripe, PayPal, Square…). A “Pay online” button then appears on your invoices and in your emails. The money goes straight to your account: Carnet takes no commission.","En «Mi empresa», pegue su propio enlace de pago (Stripe, PayPal, Square…). Aparecerá un botón «Pagar en línea» en sus facturas y correos. El dinero va directamente a su cuenta: Carnet no cobra comisión."],
 };
@@ -1875,7 +1890,8 @@ const CFG={
  trialDays:7,
  portalLink:'https://billing.stripe.com/p/login/3cI4gAdckfYEdJj1KX1ZS00', /* portail client Stripe (mode réel) */
  price:'11,99 $ CA par mois',
- freeLimit:3
+ freeLimit:3,
+ vapid:'BNEgRN4J1MF4O6Zv_He2h2kz-PLt6w2un_alXdMGj2wmaG9D2-3yzs33vuysLMvf_kTJK7TZlv28PI_yZM0tPwc' /* clé publique des avis (VAPID) ; la clé privée est seulement dans les secrets Supabase */
 };
 let sb=null,user=null,sub=null,pushT=0,syncSt='',authMode='login',recovering=false;
 try{if(window.supabase&&window.supabase.createClient)sb=window.supabase.createClient(CFG.sbUrl,CFG.sbKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}catch(e){sb=null}
@@ -1984,8 +2000,9 @@ function renderAccount(){
  <p style="margin:0 0 12px"><span class="sync" id="sync-st"></span></p>
  ${st}
  <p style="margin:0 0 14px">${pro?`<b>Carnet Pro</b><span class="pro-tag">PRO</span><br><span class="sub">${subLine(end)}</span>`:`<b>Forfait gratuit</b><br><span class="sub">${_t`${monthUsed()} document${monthUsed()>1?'s':''} sur ${CFG.freeLimit} utilisés ce mois-ci`}</span>`}</p>
- <div class="acts">${payLate()?`<button class="btn yel" data-act="card">Mettre à jour ma carte</button>`:pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}${pro?`<button class="btn ghost" data-act="card">Mettre à jour ma carte</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>`;
- setSync(syncSt||'ok');
+ <div class="acts">${payLate()?`<button class="btn yel" data-act="card">Mettre à jour ma carte</button>`:pro?'':`<button class="btn yel" data-act="pay">${esc(ctaLabel())}</button>`}${pro||(sub&&sub.stripe_customer_id)?`<button class="btn ghost" data-act="portal">Gérer mon abonnement</button>`:''}${pro?`<button class="btn ghost" data-act="card">Mettre à jour ma carte</button>`:''}<button class="btn ghost" data-act="logout">Se déconnecter</button></div>
+ <div class="pushbox" id="push-box"></div>`;
+ setSync(syncSt||'ok');renderPush();
 }
 
 function setPw(on){
@@ -2033,6 +2050,7 @@ $('#aform').addEventListener('submit',async e=>{
 async function setUser(u){
  const was=user&&user.id;user=u||null;
  if(user&&user.id!==was){await pull();await loadSub();checkShares()}
+ if(user&&user.id!==was&&pushOK()&&Notification.permission==='granted')pushOn(false).then(renderPush);
  if(user){if(noSamples()){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}if(!$('#v-edit').hidden&&!doc())show('docs')}
  if(!user){sub=null;if(hadSession&&!state.docs.length&&!state.clients.length){const f=sample(state.profile.region);state.docs=f.docs;state.clients=f.clients}} /* session expirée : on remet les exemples */
  refreshView();
@@ -2171,13 +2189,51 @@ if(!SHARE){setInterval(checkShares,60000);document.addEventListener('visibilityc
 /* Avis du navigateur (client qui accepte) quand Carnet est ouvert mais pas à l'écran. La permission est demandée à l'envoi d'un lien d'acceptation. */
 function notify(title,body){
  try{
-  if(!('Notification' in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
+  if(pushActive||!('Notification' in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
   const o={body,icon:'icons/icon-192.png',tag:'carnet',lang:UIL};
   if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(title,o)).catch(()=>{});
   else new Notification(title,o);
  }catch(e){}
 }
-function askNotify(){try{if('Notification' in window&&Notification.permission==='default'){const p=Notification.requestPermission();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+async function askNotify(){try{if(pushOK()&&Notification.permission==='default')await Notification.requestPermission();if(pushOK()&&Notification.permission==='granted'){await pushOn(false);renderPush()}}catch(e){}}
+
+/* ---------- Avis sur cet appareil (Web Push), même quand Carnet est fermé : client qui accepte, factures en retard ----------
+   L'appareil s'abonne (pushManager) et l'abonnement est enregistré dans push_subs (fonction push_subscribe) ; la fonction Edge push-notify envoie les avis. */
+let pushActive=false;
+const pushOK=()=>!SHARE&&!embedded&&!!CFG.vapid&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=()=>(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+const u8=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s);return Uint8Array.from(b,c=>c.charCodeAt(0))};
+const pushReg=()=>Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),8000))]).catch(()=>null);
+/* Active les avis sur cet appareil. ask : demander la permission au besoin. Retourne 'on', 'off', 'denied', 'ios', 'unsupported' ou 'error'. */
+async function pushOn(ask){
+ if(!pushOK())return isIOS()&&!standalone()?'ios':'unsupported';
+ if(!sb||!user)return 'error';
+ let p=Notification.permission;
+ if(p==='default'&&ask){try{p=await Notification.requestPermission()}catch(e){}}
+ if(p!=='granted')return p==='denied'?'denied':'off';
+ const reg=await pushReg();if(!reg)return 'error';
+ try{
+  let s=await reg.pushManager.getSubscription();
+  if(!s)s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(CFG.vapid)});
+  const j=s.toJSON(),{data,error}=await sb.rpc('push_subscribe',{p_endpoint:j.endpoint,p_keys:j.keys,p_lang:UIL});
+  pushActive=!error&&data===true;return pushActive?'on':'error';
+ }catch(e){return 'error'}
+}
+async function pushOff(){
+ pushActive=false;if(!pushOK())return;
+ try{const reg=await pushReg(),s=reg&&await reg.pushManager.getSubscription();if(s){if(sb&&user)await sb.rpc('push_unsubscribe',{p_endpoint:s.endpoint});await s.unsubscribe()}}catch(e){}
+}
+async function renderPush(){
+ const el=$('#push-box');if(!el)return;
+ let st='off';
+ if(!pushOK())st=isIOS()&&!standalone()?'ios':'unsupported';
+ else if(Notification.permission==='denied')st='denied';
+ else if(Notification.permission==='granted'){const reg=await pushReg();let s=null;try{s=reg&&await reg.pushManager.getSubscription()}catch(e){}if(s)st='on'}
+ if(!$('#push-box'))return;
+ const msg={on:'Avis activés sur cet appareil.',off:'Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.',denied:'Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.',ios:'Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.',unsupported:'Ce navigateur n’offre pas les avis.'}[st];
+ el.innerHTML=`<h4>Avis sur cet appareil</h4><p class="sub">${msg}</p>${st==='on'?`<button class="btn ghost sm" data-act="push-off">Désactiver</button>`:st==='off'?`<button class="btn sm" data-act="push-on">Activer les avis</button>`:''}`;
+}
 
 /* ---------- Factures qui reviennent : copies créées à l'ouverture de Carnet (après la connexion et la lecture de l'abonnement) ---------- */
 let recReady=false,recWarned=false;
@@ -2333,8 +2389,10 @@ document.addEventListener('click',async e=>{
   case 'card':goPortal('card');break;
   case 'lang':{const m=$('#langmenu'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',String(o));if(o){const c=m.querySelector('[aria-checked=true]')||m.querySelector('button');c.focus()}break}
   case 'lang-set':setLang(b.dataset.l);break;
+  case 'push-on':{b.disabled=true;const r=await pushOn(true);renderPush();toast(r==='on'?'Avis activés. Vous serez averti même quand Carnet est fermé.':r==='denied'?'Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.':r==='off'?'Avis non activés.':'Les avis n’ont pas pu être activés. Réessayez plus tard.');break}
+  case 'push-off':await pushOff();renderPush();toast('Avis désactivés sur cet appareil.');break;
   case 'logout':
-   clearTimeout(pushT);await pushNow();try{await sb.auth.signOut()}catch(x){}
+   clearTimeout(pushT);await pushNow();await pushOff();try{await sb.auth.signOut()}catch(x){}
    user=null;sub=null;state=freshState(state.profile.region);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(x){}
    show('docs');toast('Déconnecté. Vos documents restent sauvegardés dans votre compte.');break;
  }

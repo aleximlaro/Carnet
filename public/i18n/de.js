@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: Angebote 
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"Fügen Sie unter „Mein Unternehmen“ Ihren eigenen Zahlungslink ein (Stripe, PayPal, Square…). Eine Schaltfläche „Online bezahlen“ erscheint dann auf Ihren Rechnungen und in Ihren E-Mails. Das Geld geht direkt auf Ihr Konto: Carnet nimmt keine Provision.",
 "@quote":"Angebot",
 "@quotes":"Angebote",
-"@undo":"Rückgängig"};
+"@undo":"Rückgängig",
+"Avis sur cet appareil":"Benachrichtigungen auf diesem Gerät",
+"Avis activés sur cet appareil.":"Benachrichtigungen sind auf diesem Gerät aktiv.",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"Erhalten Sie eine Benachrichtigung auf diesem Gerät, wenn ein Kunde ein Dokument online annimmt oder eine Rechnung überfällig ist, auch wenn Carnet geschlossen ist.",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"Benachrichtigungen sind für diese Website in den Browser-Einstellungen blockiert. Erlauben Sie sie und laden Sie die Seite neu.",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"Fügen Sie Carnet auf dem iPhone zuerst zum Home-Bildschirm hinzu (Teilen, dann „Zum Home-Bildschirm“) und öffnen Sie Carnet von dort.",
+"Ce navigateur n’offre pas les avis.":"Dieser Browser unterstützt keine Benachrichtigungen.",
+"Activer les avis":"Benachrichtigungen aktivieren",
+"Désactiver":"Deaktivieren",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"Benachrichtigungen aktiv. Sie werden auch informiert, wenn Carnet geschlossen ist.",
+"Avis non activés.":"Benachrichtigungen nicht aktiviert.",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"Benachrichtigungen konnten nicht aktiviert werden. Versuchen Sie es später erneut.",
+"Avis désactivés sur cet appareil.":"Benachrichtigungen auf diesem Gerät deaktiviert."};

@@ -500,4 +500,16 @@ window.CARNET_I18N={"Carnet : soumissions, devis et factures":"Carnet: preventiv
 "Dans « Mon entreprise », collez votre propre lien de paiement (Stripe, PayPal, Square…). Un bouton « Payer en ligne » s’affiche alors sur vos factures et dans vos courriels. L’argent va directement dans votre compte : Carnet ne prend aucune commission.":"In «La mia azienda», incolla il tuo link di pagamento (Stripe, PayPal, Square…). Un pulsante «Paga online» appare allora sulle tue fatture e nelle tue email. Il denaro va direttamente sul tuo conto: Carnet non prende commissioni.",
 "@quote":"Preventivo",
 "@quotes":"Preventivi",
-"@undo":"Annulla"};
+"@undo":"Annulla",
+"Avis sur cet appareil":"Notifiche su questo dispositivo",
+"Avis activés sur cet appareil.":"Notifiche attive su questo dispositivo.",
+"Recevez un avis sur cet appareil quand un client accepte un document en ligne ou qu’une facture est en retard, même quand Carnet est fermé.":"Ricevi una notifica su questo dispositivo quando un cliente accetta un documento online o una fattura è in ritardo, anche quando Carnet è chiuso.",
+"Les avis sont bloqués pour ce site dans les réglages du navigateur. Autorisez-les, puis rechargez la page.":"Le notifiche sono bloccate per questo sito nelle impostazioni del browser. Consentile, poi ricarica la pagina.",
+"Sur iPhone, ajoutez d’abord Carnet à l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvrez Carnet à partir de là.":"Su iPhone, aggiungi prima Carnet alla schermata Home (pulsante Condividi, poi «Aggiungi alla schermata Home»), poi apri Carnet da lì.",
+"Ce navigateur n’offre pas les avis.":"Questo browser non supporta le notifiche.",
+"Activer les avis":"Attiva le notifiche",
+"Désactiver":"Disattiva",
+"Avis activés. Vous serez averti même quand Carnet est fermé.":"Notifiche attive. Sarai avvisato anche quando Carnet è chiuso.",
+"Avis non activés.":"Notifiche non attivate.",
+"Les avis n’ont pas pu être activés. Réessayez plus tard.":"Non è stato possibile attivare le notifiche. Riprova più tardi.",
+"Avis désactivés sur cet appareil.":"Notifiche disattivate su questo dispositivo."};
