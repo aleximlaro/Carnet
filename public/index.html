@@ -567,7 +567,7 @@ const UIL=(()=>{try{const v=localStorage.getItem('carnet.ui');if(LANGS.includes(
 /* Langue des nouveaux documents : seulement fr, en ou es (celle de l'interface si possible, sinon celle du pays, sinon l'anglais) */
 const gl=GEO_LANG(GEO.c),UDL=['fr','en','es'].includes(UIL)?UIL:gl==='fr'||gl==='es'?gl:'en';
 window.CARNET_LANGS=LANGS;window.CARNET_GEO=GEO;window.CARNET_UIL=UIL;window.CARNET_UDL=UDL;
-if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=3"><\/script>');
+if(!/[?&]s=/.test(location.search)&&!['fr','en','es'].includes(UIL))document.write('<script src="i18n/'+UIL+'.js?v=4"><\/script>');
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
@@ -956,7 +956,7 @@ const I18N={
 "Renouvellement":["Renews automatically","Renovación automática"],
 "Aucuns frais pendant {} jours · ":["No charge for {} days · ","Sin cargo durante {} días · "],
 "Aucuns frais pendant {} jours · Annulable en tout temps, sans engagement":["No charge for {} days · Cancel anytime, no commitment","Sin cargo durante {} días · Cancele cuando quiera, sin compromiso"],
-"Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu":["Secure payment by Stripe · Cancel anytime, no commitment · Taxes extra where applicable","Pago seguro con Stripe · Cancele cuando quiera, sin compromiso · Impuestos aparte si corresponde"],
+"Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Prix final, rien de plus à payer":["Secure payment by Stripe · Cancel anytime, no commitment · Final price, nothing more to pay","Pago seguro con Stripe · Cancele cuando quiera, sin compromiso · Precio final, nada más que pagar"],
 "Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement":["Secure payment by Stripe · Cancel anytime, no commitment","Pago seguro con Stripe · Cancele cuando quiera, sin compromiso"],
 "{} jours gratuits":["{} days free","{} días gratis"],
 "puis {}":["then {}","luego {}"],
@@ -2007,7 +2007,7 @@ function renderPro(){
    <button type="button" class="tier" role="radio" aria-checked="${payPlan==='m'}" data-act="plan" data-p="m"><span class="dot" aria-hidden="true"></span><span class="pk">Au mois</span><b>${esc(_t(CFG.price))}</b><span class="ps">Annulable en tout temps</span></button>
    <button type="button" class="tier" role="radio" aria-checked="${payPlan==='y'}" data-act="plan" data-p="y"><span class="dot" aria-hidden="true"></span><span class="save">${esc(_t`Économisez ${CFG.yearSave} %`)}</span><span class="pk">À l’année</span><b>${esc(_t(CFG.priceYear))}</b><span class="ps">${esc(_t`2 mois gratuits : revient à ${money(CFG.yearMonth,UIL,'CAD')} par mois`)}</span></button>
   </div>`:''}<button class="btn yel big" data-act="pay" data-here="1">${esc(ctaLabel())}</button>`}
- <p class="reassure">${tr&&!pro?_t`Aucuns frais pendant ${d} jours · `:''}${_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Taxes en sus s’il y a lieu')}</p>
+ <p class="reassure">${tr&&!pro?_t`Aucuns frais pendant ${d} jours · `:''}${_t('Paiement sécurisé par Stripe · Annulable en tout temps, sans engagement · Prix final, rien de plus à payer')}</p>
  <section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions fréquentes</h2>
  ${tr||(sub&&sub.status==='trialing')?q('Comment fonctionne l’essai gratuit ?',_t`Vous entrez votre carte chez Stripe, mais rien n’est prélevé pendant ${d} jours. Si vous annulez avant la fin de l’essai avec « Gérer mon abonnement », vous ne payez rien. Sinon, l’abonnement commence tout seul à ${esc(_t(priceOf()))}. L’essai est offert une seule fois par compte.`):''}
  ${q('Comment mon client accepte-t-il en ligne ?',_t(dv()?'Dans un devis, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Accepté » dans Carnet, avec sa signature.':'Dans une soumission, cliquez sur « Faire accepter en ligne ». Votre client reçoit un lien : il voit le document sur son téléphone ou son ordi, écrit son nom et signe avec son doigt. Le document passe à « Acceptée » dans Carnet, avec sa signature.'))}
