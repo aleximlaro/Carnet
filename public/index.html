@@ -2575,8 +2575,8 @@ if(!SHARE){
 if(SHARE)openShare();else{
  $('#toast-b').textContent=({fr:'Annuler',en:'Undo',es:'Deshacer'})[UIL]||XL['@undo']||'Undo';
  chrome();renderDocs();
- /* nouveau visiteur (jamais connecté, aucun document à lui) : page d'accueil */
- if(!hadSession&&!state.docs.some(d=>!d.sample))show('home');
+ /* au démarrage, tout le monde arrive sur la page d'accueil (demande du propriétaire, 17 nov. 2026) */
+ show('home');
  if(!sb){recReady=true;runRecurring()}
  setInterval(runRecurring,36e5);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')runRecurring()});
  try{const b=JSON.parse(sessionStorage.getItem('carnet.back')||'null');sessionStorage.removeItem('carnet.back');if(b){if(b.v==='edit'&&b.id&&state.docs.some(d=>d.id===b.id))openEditor(b.id);else if(['home','docs','clients','profil','pro'].includes(b.v))show(b.v)}}catch(e){}
